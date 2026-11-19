@@ -1,30 +1,62 @@
-# Publicação Cloudflare (separada da calculadora local)
+# Cloudflare — versão online da calculadora
 
-**Endereço público ativo:** https://77-statlab-estatistica.on7.workers.dev/
+Este diretório existe apenas para publicar a calculadora na nuvem.
 
-A versão online usa um **Cloudflare Python Worker**. Ele importa `calculos.py`, exatamente como `app.py` no computador. A interface é igual nos dois ambientes. Não são necessários banco de dados, serviços externos ou o computador ligado para usar a versão publicada.
+## Qual arquivo faz o quê?
 
-## Arquivos e responsabilidade
+- `worker.py`: recebe os pedidos HTTP do navegador e chama o Python.
+- `gerar_assets.py`: prepara cópias do Python original e dos textos visuais.
+- `calculos.py` (gerado): cópia automática do `../calculos.py`.
+- `web_assets.py` (gerado): conteúdo do HTML, CSS e JavaScript.
 
-- `worker.py`: adaptador HTTP para o Python Worker. Não contém fórmulas.
-- `gerar_assets.py`: copia o núcleo Python e empacota os arquivos visuais em `web_assets.py`.
-- `calculos.py` **na raiz do projeto**: única fonte para editar fórmulas.
-- `web/`: única fonte para editar os campos, botões e estilos.
+**Não edite as duas cópias geradas**. A correção sempre deve ser feita na raiz do projeto; depois execute o gerador novamente.
 
-Para preparar novamente os módulos Python da Cloudflare, execute na raiz:
+## Regerar os arquivos, após editar o código
+
+Na pasta principal `Calculadora-Estatistica`, execute:
 
 ```bash
 python cloudflare/gerar_assets.py
 ```
 
-O comando cria `cloudflare/calculos.py` e `cloudflare/web_assets.py` (ambos gerados, ignorados no Git). Esses arquivos são auxiliares para a publicação de um Worker, não devem ser editados manualmente.
+O comando copia o `calculos.py` atualizado e incorpora o conteúdo dos arquivos em `web/`. Não exige instalações.
 
-**Atenção:** a implantação na Cloudflare foi feita pela API. Um `git push` posterior **não atualiza automaticamente** o site publicado. Depois de alterar o código, será necessário efetuar uma nova publicação na Cloudflare. A documentação oficial para publicar Workers Python com `pywrangler` está em https://developers.cloudflare.com/workers/languages/python/ .
+## Publicação no Worker
 
-## Plano B para apresentação
+O Worker já publicado para este projeto usa Python e o sinalizador de compatibilidade `python_workers` (com `disable_python_external_sdk` para evitar dependências adicionais no envio direto pela API).
 
-- PC sem internet: `python app.py`.
-- Celular na mesma rede do computador: `python app.py --rede`.
-- PC ou celular com internet: use o endereço público acima.
+Para atualizar via API ou ferramentas de publicação, envie como módulos Python os arquivos gerados:
 
-O modo local não exige instalar ferramentas da Cloudflare. Evite inserir dados sigilosos nos exemplos da página pública.
+```text
+worker.py
+calculos.py
+web_assets.py
+```
+
+A configuração do Worker informa `main_module: worker.py` e a data de compatibilidade atual da implantação. O código de estatística é idêntico ao do PC.
+
+> **Importante:** fazer um commit no GitHub NÃO implica atualizar automaticamente o Worker. A publicação deve ser feita novamente depois de gerar os arquivos. Consulte o painel Cloudflare Workers para configurar uma integração automática caso deseje.
+
+## Rotas para testar
+
+- `/` — calculadora no navegador.
+- `/app.js` — código da interface.
+- `/styles.css` — estilos para PC.
+- `/mobile.css` — estilos para celular.
+- `/api/saude` — confirmação de funcionamento do Python.
+- `/api/calcular` — recebe uma requisição POST em JSON e responde com a conta.
+
+A versão Cloudflare não usa Flask, banco de dados, credenciais nem serviços externos para calcular.
+
+## Se a publicação apresentar erro
+
+1. Teste a pasta local primeiro com `python app.py`.
+2. Execute `python -m unittest discover -s tests -v`.
+3. Rode `python cloudflare/gerar_assets.py` novamente.
+4. Confirme o nome dos três módulos enviados.
+5. Confirme que a flag `python_workers` está ativa no Worker.
+6. Refaça o teste em `/api/saude` e, por último, abra a interface.
+
+## Por que não existem fórmulas duplicadas?
+
+O mesmo `calculos.py` é usado na máquina local e na Cloudflare. Se você corrigir a conta em apenas um lugar, os dois ambientes passam a ter a mesma correção na próxima publicação.

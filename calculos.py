@@ -1,7 +1,14 @@
-"""Fórmulas de Estatística Aplicada usadas na calculadora.
+"""CONTAS DA CALCULADORA — ESTA É A PARTE MAIS IMPORTANTE DO PROJETO.
 
-Este arquivo concentra TODAS as contas. A interface apenas envia os dados.
-Não é necessário instalar bibliotecas externas.
+LEIA PRIMEIRO SE ALGO DER ERRADO:
+- A tela NÃO faz contas de estatística. Ela manda valores para este arquivo.
+- Cada função tem um título grande e comentários imediatamente acima.
+- Para corrigir uma conta, encontre a seção pelo nome da fórmula.
+- Não edite o HTML ou o CSS para consertar um resultado matemático.
+- Não usamos bibliotecas externas; basta o Python.
+
+As respostas ficam no formato de um dicionário: titulo, resultado, passos etc.
+O navegador lê esse dicionário e desenha o visor e o fluxograma.
 """
 
 import math
@@ -13,6 +20,8 @@ import math
 
 def numero(valor, nome):
     """Transforma texto em número; aceita 1,75 ou 1.75."""
+    # O navegador pode mandar números como texto. Tiramos espaços e vírgulas.
+    # Ex.: o valor 1,75 passa a ser 1.75, que o Python entende.
     try:
         texto = str(valor).strip().replace(' ', '')
         # Se alguém colar 1.250,50, removemos o ponto de milhar.
@@ -21,6 +30,7 @@ def numero(valor, nome):
         resultado = float(texto.replace(',', '.'))
     except (ValueError, TypeError):
         raise ValueError(f'{nome}: digite um número válido.') from None
+    # 'NaN' e infinito são números especiais que poderiam estragar as contas.
     if not math.isfinite(resultado):
         raise ValueError(f'{nome}: use um número finito.')
     return resultado
@@ -28,6 +38,7 @@ def numero(valor, nome):
 
 def inteiro(valor, nome):
     """Confere se o valor é inteiro e maior que zero."""
+    # Quantidade de alunos / observações não pode ser 2,5 nem negativa.
     n = numero(valor, nome)
     if not n.is_integer() or n < 1:
         raise ValueError(f'{nome}: informe um número inteiro maior que zero.')
@@ -50,6 +61,8 @@ def lista_numeros(valor, nome):
     """
     if not isinstance(valor, str) or not valor.strip():
         raise ValueError(f'{nome}: informe ao menos dois valores.')
+    # Aceitamos dados colados do Excel por linhas, tabulação ou separados por ';'.
+    # A vírgula é guardada para o separador DECIMAL brasileiro.
     texto = valor.replace('\r', '\n').replace('\t', ';').replace('\n', ';')
     partes = [parte.strip() for parte in texto.split(';') if parte.strip()]
     if len(partes) < 2:
@@ -60,6 +73,8 @@ def lista_numeros(valor, nome):
 def z_critico(conf):
     """Usa os mesmos valores arredondados da tabela da professora."""
     confianca = numero(conf, 'Grau de confiança')
+    # Os três valores são os da tabela Z usada pela professora.
+    # Se outra tabela for exigida, é somente AQUI que devemos alterar.
     tabela = {90: 1.645, 95: 1.96, 99: 2.575}
     if confianca not in tabela:
         raise ValueError('Confiança: selecione 90%, 95% ou 99%.')
@@ -70,6 +85,7 @@ def texto_num(n, casas=4):
     """Formata um resultado com vírgula decimal, sem zeros desnecessários."""
     if not math.isfinite(n):
         raise ValueError('O resultado ultrapassou o limite numérico. Use valores menores.')
+    # Um resultado muito pequeno é mostrado como 0, não como '-0'.
     if abs(n) < 0.5 * 10 ** (-casas):
         n = 0.0
     return f'{n:.{casas}f}'.rstrip('0').rstrip('.').replace('.', ',')
@@ -77,6 +93,7 @@ def texto_num(n, casas=4):
 
 def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso=''):
     """Padroniza os dados entregues à tela do PC e do celular."""
+    # Todas as fórmulas devolvem as mesmas chaves, facilitando a interface.
     return dict(titulo=titulo, resultado=resultado, formula=formula,
                 passos=passos, explicacao=explicacao, detalhes=detalhes or [], aviso=aviso)
 
@@ -89,12 +106,16 @@ def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso='
 
 def somas_pares(dados, permitir_y_constante=False):
     """Calcula as médias e as somas que correlação e regressão compartilham."""
+    # Cada posição das listas forma um par: primeiro X com primeiro Y.
     xs = lista_numeros(dados.get('x', ''), 'Valores de X')
     ys = lista_numeros(dados.get('y', ''), 'Valores de Y')
     if len(xs) != len(ys):
         raise ValueError('X e Y devem ter a mesma quantidade de valores.')
+    # 1) Encontramos as médias das duas colunas.
     media_x = math.fsum(xs) / len(xs)
     media_y = math.fsum(ys) / len(ys)
+    # 2) Calculamos as três somas que a fórmula usa.
+    # sxx: dispersão de X; syy: dispersão de Y; sxy: como variam juntos.
     sxx = math.fsum((x - media_x) ** 2 for x in xs)
     syy = math.fsum((y - media_y) ** 2 for y in ys)
     sxy = math.fsum((x - media_x) * (y - media_y) for x, y in zip(xs, ys))
@@ -103,6 +124,8 @@ def somas_pares(dados, permitir_y_constante=False):
     if sxx <= 0 or (syy <= 0 and not permitir_y_constante):
         raise ValueError('Não é possível calcular: X e Y precisam variar (não podem ser constantes).')
     # Quando Y é constante, a reta existe, mas o coeficiente r não é definido.
+    # 3) Dividimos a variação conjunta pelo produto dos desvios.
+    # O max/min mantém r entre -1 e +1, inclusive se houver arredondamento.
     r = None if syy <= 0 else max(-1.0, min(1.0, sxy / math.sqrt(sxx * syy)))
     return xs, ys, media_x, media_y, sxx, sxy, r
 
@@ -110,6 +133,8 @@ def somas_pares(dados, permitir_y_constante=False):
 def correlacao(dados):
     """Calcula r e descreve a força/direção da relação linear."""
     xs, ys, mx, my, sxx, sxy, r = somas_pares(dados)
+    # A intensidade vem do tamanho de r, sem considerar o sinal.
+    # O sinal serve somente para dizer se a direção é positiva ou negativa.
     intensidade = 'forte' if abs(r) >= 0.7 else 'moderada' if abs(r) >= 0.3 else 'fraca'
     direcao = 'positiva' if r > 0 else 'negativa' if r < 0 else 'nula'
     if abs(r) >= 1 - 1e-12:
@@ -134,7 +159,9 @@ def correlacao(dados):
 def regressao(dados):
     """Ajusta a reta por mínimos quadrados e faz previsão opcional."""
     xs, ys, mx, my, sxx, sxy, r = somas_pares(dados, permitir_y_constante=True)
+    # 1) Inclinação: quanto Y varia quando X aumenta uma unidade.
     a = sxy / sxx
+    # 2) Intercepto: o Y que a reta prevê quando X vale zero.
     b = my - a * mx
     equacao = f'ŷ = {texto_num(a, 6)} × x {"+" if b >= 0 else "−"} {texto_num(abs(b), 6)}'
     passos = [f'1. Média de X = {texto_num(mx)}; média de Y = {texto_num(my)}',
@@ -143,6 +170,8 @@ def regressao(dados):
               f'4. Equação: {equacao}']
     detalhes = ([f'r = {texto_num(r, 6)}', f'R² = {texto_num(r*r, 6)}']
                 if r is not None else ['r e R² não definidos (Y constante)'])
+    # 3) A professora pode pedir apenas a equação.
+    # Se o campo de novo X estiver vazio, NÃO fazemos uma previsão extra.
     novo = str(dados.get('prever', '')).strip()
     if novo:
         x_novo = numero(novo, 'Valor X para previsão')
@@ -166,7 +195,10 @@ def ic_media(dados):
     dp = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
     n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
     z = z_critico(dados.get('confianca', 95))
+    # 1) Escolher z (confiança) e calcular a margem de erro.
+    # Aumentar o n diminui a margem porque n fica dentro da raiz.
     erro = z * dp / math.sqrt(n)
+    # 2) Subtrair e somar essa margem à média para achar os limites.
     inferior, superior = media - erro, media + erro
     aviso = ('A aula utiliza o valor Z. Se o desvio for AMOSTRAL e n ≤ 30, '
              'pode ser necessário usar a distribuição t de Student.' if n <= 30 else '')
@@ -192,6 +224,8 @@ def ic_proporcao(dados):
     """Aceita a quantidade de sucessos OU a proporção informada em %."""
     n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
     sucessos = str(dados.get('sucessos', '')).strip()
+    # A pessoa pode informar uma CONTAGEM ou uma PORCENTAGEM.
+    # A interface deixa só um desses modos visível por vez.
     if sucessos:
         k = numero(sucessos, 'Quantidade de sucessos')
         if not k.is_integer() or not 0 <= k <= n:
@@ -205,6 +239,8 @@ def ic_proporcao(dados):
         p = percentual / 100
         origem = f'{texto_num(percentual)}% / 100'
     z = z_critico(dados.get('confianca', 95))
+    # Aqui p está entre 0 e 1, não entre 0 e 100.
+    # A margem de erro também sai em proporção; no visor viramos %.
     erro = z * math.sqrt(p * (1 - p) / n)
     inferior, superior = p - erro, p + erro
     aviso = ('A aproximação normal pode ser inadequada se n×p ou n×(1−p) for pequeno; '
@@ -231,6 +267,8 @@ def escore(dados):
     x = numero(dados.get('valor', ''), 'Valor observado')
     media = numero(dados.get('media', ''), 'Média')
     dp = positivo(dados.get('desvio', ''), 'Desvio-padrão')
+    # 1) Subtraímos a média para descobrir a distância.
+    # 2) Dividimos pelo desvio para medir essa distância em desvios-padrão.
     z = (x - media) / dp
     classificacao = ('Incomum (|z| > 2)' if abs(z) > 2
                      else 'No limite (|z| = 2)' if math.isclose(abs(z), 2, abs_tol=1e-10)
@@ -260,6 +298,8 @@ def tamanho_amostra(dados):
     if tipo == 'media':
         dp = positivo(dados.get('desvio', ''), 'Desvio-padrão')
         erro = positivo(dados.get('erro', ''), 'Margem de erro')
+        # Média: primeiro calculamos z vezes o desvio, dividido pelo erro.
+        # Depois elevamos ao quadrado para obter a quantidade necessária.
         valor = (z * dp / erro) ** 2
         formula = 'n = (z × σ / E)²'
         conta = f'({texto_num(z, 3)} × {texto_num(dp)} / {texto_num(erro)})²'
@@ -271,6 +311,8 @@ def tamanho_amostra(dados):
         pct = numero(p_texto, 'Proporção estimada em %') if p_texto else 50.0
         if not 0 < pct < 100:
             raise ValueError('Proporção estimada: use um valor entre 0% e 100%.')
+        # Porcentagens como 3% precisam ser divididas por 100.
+        # Se p não foi informado, usamos 50%, que exige a maior amostra.
         p, erro = pct / 100, erro_pct / 100
         valor = (z*z*p*(1-p)) / (erro*erro)
         formula = 'n = z² × p × (1 − p) / E²'
@@ -279,6 +321,7 @@ def tamanho_amostra(dados):
         raise ValueError('Escolha média ou proporção para o tamanho da amostra.')
     if not math.isfinite(valor) or valor > 10**12:
         raise ValueError('A amostra calculada é grande demais. Revise os dados.')
+    # Nunca arredonde para baixo! Uma parte decimal já exige mais um item.
     n = max(1, math.ceil(valor))
     return saida('Tamanho mínimo da amostra', f'n = {n:,}'.replace(',', '.') + ' observações',
                  formula,
@@ -286,6 +329,46 @@ def tamanho_amostra(dados):
                   f'2. Aplicar a fórmula: {conta} = {texto_num(valor, 6)}',
                   f'3. Arredondar sempre para cima: n = {n}'],
                  'O tamanho da amostra é arredondado para cima para cumprir a margem de erro.')
+
+
+# ============================================================
+# FUNCIONAMENTO DAS TECLAS COMUNS DA CALCULADORA
+# Aqui ficam +, -, ×, ÷ e %. São separadas das fórmulas da disciplina.
+# O teclado JavaScript só envia os números; até essa conta é feita no Python.
+# ============================================================
+
+def basica(dados):
+    """Resolve uma operação pequena do teclado comum."""
+    operador = dados.get('operacao', '')
+    segundo = numero(dados.get('segundo', ''), 'Número')
+
+    # A tecla % usa um número só. As demais têm primeiro e segundo.
+    if operador == 'percentual':
+        valor = segundo / 100
+        conta = f'{texto_num(segundo)}%'
+    else:
+        primeiro = numero(dados.get('primeiro', ''), 'Primeiro número')
+        if operador == '+':
+            valor = primeiro + segundo
+            simbolo = '+'
+        elif operador == '-':
+            valor = primeiro - segundo
+            simbolo = '−'
+        elif operador == '*':
+            valor = primeiro * segundo
+            simbolo = '×'
+        elif operador == '/':
+            if segundo == 0:
+                raise ValueError('Não é possível dividir por zero.')
+            valor = primeiro / segundo
+            simbolo = '÷'
+        else:
+            raise ValueError('Operação inválida no teclado.')
+        conta = f'{texto_num(primeiro)} {simbolo} {texto_num(segundo)}'
+
+    # Reaproveitamos a função de texto para mostrar vírgula decimal.
+    resultado = texto_num(valor, 10)
+    return {'numero': resultado, 'formula': conta}
 
 
 # ============================================================
@@ -298,6 +381,7 @@ FORMULAS = {
     'ic_proporcao': ic_proporcao,
     'escore': escore,
     'amostra': tamanho_amostra,
+    'basica': basica,
 }
 
 
@@ -305,6 +389,8 @@ def calcular(dados):
     """Escolhe a fórmula solicitada e devolve um resultado legível."""
     if not isinstance(dados, dict):
         raise ValueError('Envie os dados da calculadora em formato válido.')
+    # O botão da interface manda o identificador da fórmula.
+    # Exemplo de identificador interno: 'ic_media' (não é um exemplo no app).
     escolha = dados.get('formula', '')
     if escolha not in FORMULAS:
         raise ValueError('Selecione uma das fórmulas disponíveis.')

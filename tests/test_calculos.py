@@ -189,3 +189,59 @@ class ServidorHttp(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+# ============================================================
+# TESTES DAS TECLAS BÁSICAS E DA ESTRUTURA DA INTERFACE
+# Estes testes também dispensam bibliotecas extras.
+# ============================================================
+
+class TecladoBasico(unittest.TestCase):
+    """Confere que as operações do teclado passam pelo mesmo Python."""
+
+    def test_soma(self):
+        resposta = calcular({'formula': 'basica', 'operacao': '+', 'primeiro': '7', 'segundo': '3'})
+        self.assertEqual('10', resposta['numero'])
+
+    def test_subtracao(self):
+        resposta = calcular({'formula': 'basica', 'operacao': '-', 'primeiro': '7', 'segundo': '3'})
+        self.assertEqual('4', resposta['numero'])
+
+    def test_multiplicacao(self):
+        resposta = calcular({'formula': 'basica', 'operacao': '*', 'primeiro': '2', 'segundo': '4'})
+        self.assertEqual('8', resposta['numero'])
+
+    def test_divisao(self):
+        resposta = calcular({'formula': 'basica', 'operacao': '/', 'primeiro': '7', 'segundo': '2'})
+        self.assertEqual('3,5', resposta['numero'])
+
+    def test_percentual(self):
+        resposta = calcular({'formula': 'basica', 'operacao': 'percentual', 'segundo': '25'})
+        self.assertEqual('0,25', resposta['numero'])
+
+    def test_divisao_por_zero(self):
+        with self.assertRaisesRegex(ValueError, 'dividir por zero'):
+            calcular({'formula': 'basica', 'operacao': '/', 'primeiro': '10', 'segundo': '0'})
+
+    def test_operador_desconhecido(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula': 'basica', 'operacao': 'eval', 'primeiro': '2', 'segundo': '2'})
+
+
+class InterfaceSemExemplos(unittest.TestCase):
+    """Evita reintroduzir elementos que o usuário pediu para retirar."""
+
+    def test_nao_ha_botoes_de_exemplos(self):
+        from pathlib import Path
+        pasta = Path(__file__).resolve().parents[1]
+        pagina = (pasta / 'web' / 'index.html').read_text(encoding='utf-8')
+        self.assertNotIn('Exemplos prontos', pagina)
+        self.assertNotIn('data-exemplo', pagina)
+        self.assertIn('data-formula="correlacao"', pagina)
+        self.assertIn('id="painel-ajuda"', pagina)
+        self.assertIn('id="fluxo"', pagina)
+
+    def test_arquivos_do_celular_separados(self):
+        from pathlib import Path
+        pasta = Path(__file__).resolve().parents[1]
+        self.assertTrue((pasta / 'web' / 'mobile.css').exists())
+        self.assertTrue((pasta / 'cloudflare' / 'worker.py').exists())
