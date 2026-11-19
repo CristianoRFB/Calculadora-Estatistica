@@ -128,6 +128,94 @@ const MODULOS = {
       simbolos: 'n é a quantidade mínima. z é o valor crítico da confiança. σ é o desvio-padrão. E é a margem de erro tolerada.',
       cuidado: 'O tamanho calculado é sempre arredondado para CIMA, mesmo que a parte decimal seja pequena.'
     }
+  },
+  // ========================================================
+  // FÓRMULAS AUXILIARES. O PYTHON FAZ AS CONTAS.
+  // Estas teclas ficam dentro de "Cálculos auxiliares".
+  // ========================================================
+  media_amostral: {
+    nome: 'Média amostral',
+    formula: 'x̄ = (x1 + x2 + ... + xn) / n',
+    pista: 'Digite os valores da amostra. A calculadora soma e divide pela quantidade.',
+    fluxo: ['Dados', 'Quantidade', 'Soma', 'Divisão', 'Média'],
+    campos: [{id:'valores', titulo:'Valores da amostra', dica:'Separe por ponto e vírgula ou uma linha para cada número.', tipo:'lista'}],
+    guia: {
+      conceito:'A média amostral representa o valor médio dos dados coletados. É usada, por exemplo, no intervalo de confiança para a média.',
+      reconhecer:'"Calcule a média", "média amostral", "média aritmética" ou "valor médio".',
+      entradas:'Informe todos os valores observados, separando-os por ponto e vírgula ou quebras de linha.',
+      simbolos:'x̄ é a média amostral. Σ indica soma. n é a quantidade de valores.',
+      cuidado:'A vírgula dentro de um número é decimal. Use ponto e vírgula para separar valores.'
+    }
+  },
+  desvio_padrao: {
+    nome: 'Desvio-padrão',
+    formula: 'Amostral: s = √[Σ(xi − x̄)²/(n − 1)]  |  Populacional: σ = √[Σ(xi − μ)²/N]',
+    pista: 'Informe os valores e escolha se são uma amostra ou toda a população.',
+    fluxo: ['Valores', 'Média', 'Desvios²', 'Variância', 'Desvio-padrão'],
+    campos: [
+      {id:'tipo', titulo:'Tipo de dados', tipo:'tipo_dispersao'},
+      {id:'valores', titulo:'Valores', dica:'Separe por ; ou uma linha por número.', tipo:'lista'}
+    ],
+    guia: {
+      conceito:'Mostra o quanto os valores se espalham em torno da média. Quanto maior o desvio-padrão, mais dispersos os valores.',
+      reconhecer:'"Desvio-padrão", "dispersão" ou quando um intervalo de confiança pede σ ou s.',
+      entradas:'Informe os valores. Escolha AMOSTRAL se são apenas parte do grupo; POPULACIONAL se representam todo o grupo.',
+      simbolos:'s é desvio amostral (divide por n−1). σ é desvio populacional (divide por N).',
+      cuidado:'Para o desvio AMOSTRAL são necessários no mínimo dois dados. Não confunda desvio com variância.'
+    }
+  },
+  variancia: {
+    nome: 'Variância',
+    formula: 'Amostral: s² = Σ(xi − x̄)²/(n − 1)  |  Populacional: σ² = Σ(xi − μ)²/N',
+    pista: 'Informe os valores e escolha amostral ou populacional.',
+    fluxo: ['Valores', 'Média', 'Desvios²', 'Divisor', 'Variância'],
+    campos: [
+      {id:'tipo', titulo:'Tipo de dados', tipo:'tipo_dispersao'},
+      {id:'valores', titulo:'Valores', dica:'Separe por ; ou uma linha por número.', tipo:'lista'}
+    ],
+    guia: {
+      conceito:'A variância mede a dispersão dos valores ao quadrado. A raiz da variância é o desvio-padrão.',
+      reconhecer:'"Variância", "dispersão ao quadrado", "s²" ou "σ²".',
+      entradas:'Informe os valores e identifique se os dados formam uma amostra ou a população inteira.',
+      simbolos:'Σ é soma; x̄ é média; n−1 é o divisor amostral; N é o divisor populacional.',
+      cuidado:'Para a variância amostral é preciso ao menos dois números.'
+    }
+  },
+  proporcao_amostral: {
+    nome: 'Proporção amostral',
+    formula: 'p̂ = quantidade com característica / total',
+    pista: 'Informe quantos casos têm a característica e quantos existem no total.',
+    fluxo: ['Total', 'Casos', 'Divisão', 'Proporção', 'Porcentagem'],
+    campos: [
+      {id:'sucessos', titulo:'Quantidade com a característica', tipo:'texto'},
+      {id:'n', titulo:'Quantidade total', tipo:'texto'}
+    ],
+    guia: {
+      conceito:'Calcula que parte da amostra apresenta uma característica, expressa em número decimal ou porcentagem.',
+      reconhecer:'"Quantos de um total", "taxa de defeitos", "proporção" ou "porcentagem da amostra".',
+      entradas:'Informe uma quantidade inteira com a característica e a quantidade total de itens.',
+      simbolos:'p̂ é a proporção amostral; n é o total; a quantidade favorável nunca pode superar n.',
+      cuidado:'Para obter a porcentagem, multiplique a proporção decimal por 100.'
+    }
+  },
+  erro_padrao: {
+    nome: 'Erro-padrão',
+    formula: 'Média: EP = s / √n  |  Proporção: EP = √[p̂(1 − p̂) / n]',
+    pista: 'O erro-padrão é usado antes da margem de erro em um intervalo de confiança.',
+    fluxo: ['Tipo', 'Amostra', 'Fórmula', 'Resultado', 'Erro-padrão'],
+    campos: [
+      {id:'tipo', titulo:'Qual o tipo?', tipo:'tipo_amostra'},
+      {id:'n', titulo:'Quantidade de observações (n)', tipo:'texto'},
+      {id:'desvio', titulo:'Desvio-padrão (σ ou s)', tipo:'texto', mostrar:'media'},
+      {id:'percentual', titulo:'Proporção observada (%)', tipo:'texto', mostrar:'proporcao'}
+    ],
+    guia: {
+      conceito:'O erro-padrão mede a variação esperada de uma média ou proporção amostral entre amostras.',
+      reconhecer:'"Erro-padrão", "erro da média" ou a etapa anterior à margem de erro no intervalo de confiança.',
+      entradas:'Para média: desvio-padrão e n. Para proporção: porcentagem observada e n.',
+      simbolos:'EP é erro-padrão, n é tamanho da amostra, s ou σ é desvio-padrão, p̂ é proporção.',
+      cuidado:'O erro-padrão não é igual à margem de erro; para obter a margem, multiplica-se pelo valor crítico z.'
+    }
   }
 };
 
@@ -155,15 +243,14 @@ let digitandoNovoNumero = false;
 // 03 — SELECIONAR UMA FUNÇÃO OU VOLTAR AO TECLADO BÁSICO
 // ---------------------------------------------------------------------------
 function selecionarFormula(id) {
-  // Clicar novamente na mesma fórmula volta ao modo de calculadora comum.
-  formulaSelecionada = formulaSelecionada === id ? null : id;
-  versaoDosCampos += 1;
-  ultimoResultado = null;
-  respostaPython = null;
+  formulaSelecionada = id;
   campoAtivo = null;
+  versaoDosCampos += 1;
+  respostaPython = null;
+  ultimoResultado = null;
   andamento = 'vazio';
-  el('erro').hidden = true;
   el('painel-resultado').hidden = true;
+  el('erro').hidden = true;
 
   document.querySelectorAll('.tecla-formula').forEach(botao => {
     botao.classList.toggle('selecionada', botao.dataset.formula === formulaSelecionada);
@@ -171,24 +258,19 @@ function selecionarFormula(id) {
   });
 
   if (!formulaSelecionada) {
-    el('nome-formula').textContent = 'Escolha uma função';
-    el('pista').textContent = 'Selecione a conta que a professora pediu. Os campos aparecerão aqui.';
-    el('formula-escrita').hidden = true;
+    el('nome-formula').textContent = 'Informe os dados';
+    el('pista').textContent = 'Selecione uma função para abrir os campos necessários.';
     el('campos').replaceChildren();
     el('acoes').hidden = true;
-    el('botao-ajuda').disabled = true;
     atualizarVisor('Calculadora básica', numeroAtual);
     desenharFluxo();
     return;
   }
 
   const modulo = MODULOS[formulaSelecionada];
-  el('nome-formula').textContent = modulo.nome;
+  el('nome-formula').textContent = 'Informe os dados';
   el('pista').textContent = modulo.pista;
-  el('formula-escrita').textContent = modulo.formula;
-  el('formula-escrita').hidden = false;
   el('acoes').hidden = false;
-  el('botao-ajuda').disabled = false;
   atualizarVisor(modulo.nome, '0');
   construirCampos();
   desenharFluxo();
@@ -219,12 +301,14 @@ function construirCampos() {
 
     // Select é usado somente para escolhas; os números ficam em inputs/textareas.
     let campo;
-    if (definicao.tipo === 'confianca' || definicao.tipo === 'modo_proporcao' || definicao.tipo === 'tipo_amostra') {
+    if (['confianca', 'modo_proporcao', 'tipo_amostra', 'tipo_dispersao'].includes(definicao.tipo)) {
       campo = document.createElement('select');
       const opcoes = definicao.tipo === 'confianca'
         ? [['90', '90%'], ['95', '95%'], ['99', '99%']]
         : definicao.tipo === 'modo_proporcao'
         ? [['contagem', 'Tenho a quantidade'], ['porcentagem', 'Tenho a porcentagem']]
+        : definicao.tipo === 'tipo_dispersao'
+        ? [['amostral', 'Amostral (n − 1)'], ['populacional', 'Populacional (N)']]
         : [['media', 'Média'], ['proporcao', 'Proporção']];
       for (const [valor, titulo] of opcoes) {
         const opcao = new Option(titulo, valor);
@@ -359,7 +443,6 @@ async function calcularFormula(evento) {
     andamento = 'feito';
     atualizarVisor(resposta.titulo, resposta.resultado);
     mostrarResultado(resposta);
-    el('historico-atual').textContent = `${resposta.titulo}: ${resposta.resultado}`;
   } catch (erro) {
     if (versaoDaRequisicao !== versaoDosCampos) return;
     andamento = 'erro';
@@ -402,7 +485,91 @@ function atualizarVisor(expressao, resultado) {
 // 06 — NODE-RED SIMPLIFICADO: NÓS E FIOS COM ESTADO VERDE
 // A cor informa a etapa. A conta de verdade continua no Python.
 // ---------------------------------------------------------------------------
+function rotuloCurto(campo, valor) {
+  if (valor === undefined || valor === null || String(valor).trim() === '') return '';
+  const nomes = {
+    x: 'X', y: 'Y', media: 'x̄', desvio: 'σ', n: 'n', valor: 'x', erro: 'E',
+    confianca: 'Confiança', percentual: 'p', sucessos: 'sucessos', prever: 'novo X'
+  };
+  return `${nomes[campo] || campo}=${valor}`;
+}
+
+function resumoNoFluxo(indice) {
+  const dados = lerCampos();
+  if (!formulaSelecionada) return indice === 0 ? 'Escolha a função' : '—';
+
+  const porFormula = {
+    correlacao: [
+      (() => {
+        const x = (dados.x || '').split(/[;\n]/).filter(parte => parte.trim()).length;
+        const y = (dados.y || '').split(/[;\n]/).filter(parte => parte.trim()).length;
+        return x || y ? `X=${x} · Y=${y}` : 'Informe X e Y';
+      })(),
+      'Médias de X e Y',
+      'Desvios dos pares',
+      respostaPython ? (respostaPython.passos[3] || '').replace(/^\d+\.\s*/, '') : 'Coeficiente r',
+      respostaPython ? respostaPython.resultado : 'Resultado'
+    ],
+    regressao: [
+      (() => {
+        const x = (dados.x || '').split(/[;\n]/).filter(parte => parte.trim()).length;
+        const y = (dados.y || '').split(/[;\n]/).filter(parte => parte.trim()).length;
+        return x || y ? `X=${x} · Y=${y}` : 'Informe X e Y';
+      })(),
+      'Médias de X e Y',
+      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Inclinação a',
+      respostaPython ? (respostaPython.passos[2] || '').replace(/^\d+\.\s*/, '') : 'Intercepto b',
+      respostaPython ? respostaPython.resultado : 'Equação / previsão'
+    ],
+    ic_media: [
+      [rotuloCurto('media', dados.media), rotuloCurto('desvio', dados.desvio), rotuloCurto('n', dados.n)].filter(Boolean).join(' · ') || 'Informe média, desvio e n',
+      dados.confianca ? `Confiança=${dados.confianca}%` : 'Escolha a confiança',
+      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Margem E',
+      respostaPython ? (respostaPython.passos[2] || '').replace(/^\d+\.\s*/, '') : 'Limites do intervalo',
+      respostaPython ? respostaPython.resultado : 'Intervalo final'
+    ],
+    ic_proporcao: [
+      rotuloCurto('n', dados.n) || 'Informe o total n',
+      dados.modo === 'porcentagem'
+        ? (dados.percentual ? `p=${dados.percentual}%` : 'Informe a porcentagem')
+        : (dados.sucessos ? `sucessos=${dados.sucessos}` : 'Informe a quantidade'),
+      dados.confianca ? `Confiança=${dados.confianca}%` : 'Escolha a confiança',
+      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Margem E',
+      respostaPython ? respostaPython.resultado : 'Intervalo final'
+    ],
+    escore: [
+      [rotuloCurto('valor', dados.valor), rotuloCurto('media', dados.media)].filter(Boolean).join(' · ') || 'Informe x e μ',
+      dados.valor && dados.media ? 'x − μ' : 'Diferença x − μ',
+      rotuloCurto('desvio', dados.desvio) || 'Informe σ',
+      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Divisão final',
+      respostaPython ? respostaPython.resultado : 'Escore z'
+    ],
+    amostra: [
+      dados.tipo === 'proporcao' ? 'Objetivo: proporção' : dados.tipo === 'media' ? 'Objetivo: média' : 'Escolha o objetivo',
+      dados.confianca ? `Confiança=${dados.confianca}%` : 'Escolha a confiança',
+      rotuloCurto('erro', dados.erro) || 'Informe a margem E',
+      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Cálculo de n',
+      respostaPython ? respostaPython.resultado : 'Amostra final'
+    ]
+  };
+  // Essas cinco fórmulas auxiliares mostram as mesmas cinco etapas
+  // devolvidas pelo Python, sem refazer nenhuma conta no navegador.
+  const auxiliares = ['media_amostral', 'desvio_padrao', 'variancia', 'proporcao_amostral', 'erro_padrao'];
+  if (auxiliares.includes(formulaSelecionada)) {
+    if (respostaPython) return (respostaPython.passos[indice] || '').replace(/^\d+\.\s*/, '');
+    if (indice === 0) {
+      if (dados.valores) return `${dados.valores.split(/[;\n]/).filter(v => v.trim()).length} valor(es)`;
+      if (dados.sucessos) return `Quantidade = ${dados.sucessos}`;
+      if (dados.tipo) return `Tipo = ${dados.tipo}`;
+    }
+    return '—';
+  }
+  const lista = porFormula[formulaSelecionada] || [];
+  return lista[indice] || '—';
+}
+
 function resumirEntrada() {
+
   const dados = lerCampos();
   if (!formulaSelecionada) return 'Escolha no teclado';
   if (formulaSelecionada === 'correlacao' || formulaSelecionada === 'regressao') {
@@ -440,33 +607,7 @@ function desenharFluxo() {
 
     const detalhe = document.createElement('span');
     detalhe.className = 'no-dado';
-    if (respostaPython) {
-      // O primeiro bloco mostra os dados; os seguintes mostram as etapas reais.
-      // 'passos' vem do Python, portanto a interface NÃO faz as contas de novo.
-      const indicesPassos = {
-        correlacao: [null, 1, 2, 3, null],
-        regressao: [null, 0, 1, 2, null],
-        ic_media: [null, 0, 1, 2, null],
-        ic_proporcao: [null, 0, 1, 2, null],
-        escore: [null, 0, null, 1, null],
-        amostra: [null, 0, null, 1, null]
-      };
-      const passoId = indicesPassos[formulaSelecionada][indice];
-      if (indice === 0) detalhe.textContent = resumirEntrada();
-      else if (indice === 4) detalhe.textContent = respostaPython.resultado;
-      else if (formulaSelecionada === 'escore' && indice === 2) detalhe.textContent = 'σ = ' + lerCampos().desvio;
-      else if (formulaSelecionada === 'amostra' && indice === 2) detalhe.textContent = 'E = ' + lerCampos().erro;
-      else detalhe.textContent = (respostaPython.passos[passoId] || '').replace(/^\d+\.\s*/, '');
-    } else if (indice === 0 && modulo) {
-      detalhe.textContent = resumirEntrada();
-    } else if (indice === indiceAtivo) {
-      detalhe.textContent = andamento === 'erro' ? 'Corrija os campos' :
-        andamento === 'calculando' ? 'Python processando' :
-        andamento === 'pronto' ? 'Pronto para calcular' :
-        andamento === 'editando' ? 'Preencha os restantes' : 'Aguardando';
-    } else {
-      detalhe.textContent = '—';
-    }
+    detalhe.textContent = resumoNoFluxo(indice);
     detalhe.title = detalhe.textContent;
     no.append(detalhe);
     fluxo.append(no);
@@ -480,9 +621,7 @@ function desenharFluxo() {
   const estado = el('estado-fluxo');
   estado.textContent = rotulos[andamento];
   estado.className = 'estado-fluxo' + (andamento === 'feito' ? ' ok' : andamento === 'erro' ? ' erro' : '');
-  el('fluxo-instrucao').textContent = modulo ?
-    'Os blocos mostram a ordem da resolução. O verde indica onde o cálculo está.' :
-    'Selecione uma função no teclado da calculadora.';
+  el('fluxo-instrucao').textContent = modulo ? 'Os blocos mostram a ordem da resolução.' : 'Selecione uma função para começar.';
 }
 
 // ---------------------------------------------------------------------------
@@ -602,7 +741,6 @@ async function calcularBasico(segundo, operador, primeiro = '') {
     const resposta = await pedirAoPython({formula:'basica', operacao:operador, primeiro, segundo});
     numeroAtual = resposta.numero;
     atualizarVisor(resposta.formula, numeroAtual);
-    el('historico-atual').textContent = resposta.formula + ' = ' + numeroAtual;
     primeiroNumero = null;
     operacaoPendente = null;
     digitandoNovoNumero = true;
@@ -649,16 +787,12 @@ function iniciarBotoes() {
     botao.addEventListener('click', () => tecladoBasico(botao.dataset.key));
   });
   el('formulario').addEventListener('submit', calcularFormula);
-  el('botao-ajuda').addEventListener('click', () => abrirAjuda(formulaSelecionada));
   el('fechar-ajuda').addEventListener('click', fecharAjuda);
   el('fundo-ajuda').addEventListener('click', fecharAjuda);
   el('limpar-campos').addEventListener('click', () => {
     el('campos').querySelectorAll('input, textarea').forEach(campo => campo.value = '');
     camposAlterados();
     atualizarVisor(MODULOS[formulaSelecionada].nome, '0');
-  });
-  el('limpar-historico').addEventListener('click', () => {
-    el('historico-atual').textContent = 'Nenhuma conta realizada.';
   });
 
   // Atalho de teclado: quando um input está focado, o navegador escreve nele.

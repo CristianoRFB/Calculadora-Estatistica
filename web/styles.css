@@ -59,32 +59,26 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   position: sticky; top: 20px; background: var(--painel); border: 1px solid var(--borda);
   border-radius: 12px; padding: 16px; box-shadow: 0 9px 28px #0002;
 }
-.calc-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.calc-cabecalho { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
 .calc-nome { font-weight: 650; font-size: 19px; }
 .calc-nome span { color: var(--muted); font-size: 15px; margin-right: 12px; }
-.historico-botao { border: 0; background: none; color: var(--muted); font-size: 12px; padding: 8px; }
-.historico-botao:hover, .link-ajuda:hover { color: var(--texto); }
+.link-ajuda:hover { color: var(--texto); }
 
 /* 05 — VISOR DA CALCULADORA */
 .visor { min-height: 130px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; padding: 15px 4px 16px; }
 .visor-expressao { min-height: 25px; font-size: 13px; color: var(--muted); text-align: right; word-break: break-word; }
 .visor-resultado { font-size: clamp(30px, 4vw, 46px); font-weight: 600; line-height: 1.15; text-align: right; word-break: break-word; max-width: 100%; }
-.historico { border-top: 1px solid var(--borda); padding: 12px 2px 14px; min-height: 54px; display: flex; gap: 12px; align-items: center; }
-.microtitulo { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
-.historico-texto { color: #c6c8cc; font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.historico, .microtitulo, .historico-texto { display: none; }
 
 /* 06 — BOTÕES DAS FÓRMULAS. 3 POR LINHA PARA TER NOMES LEGÍVEIS. */
-.atalhos-titulo, .teclado-titulo { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; margin-bottom: 9px; letter-spacing: .5px; }
-.atalhos-ajuda, .teclado-titulo span:last-child { color: #92999c; font-size: 11px; letter-spacing: 0; text-align: right; }
+.atalhos-titulo, .teclado-titulo { display: flex; justify-content: flex-start; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; margin-bottom: 9px; letter-spacing: .5px; }
 .teclas-formulas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .tecla { border: 1px solid #383838; border-radius: 5px; background: var(--tecla); transition: background .12s ease, border-color .12s ease; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .tecla:hover { background: var(--tecla-hover); }
 .tecla:active { background: #505050; }
-.tecla-formula { min-height: 68px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #e4edf0; }
-.tecla-formula strong { font-size: 21px; font-weight: 500; letter-spacing: -.25px; }
-.tecla-formula small { font-size: 11px; color: #bcc5cb; }
+.tecla-formula { min-height: 72px; padding: 10px 8px; display: flex; align-items: center; justify-content: center; color: #e4edf0; text-align: center; }
+.tecla-formula span { font-size: 14px; font-weight: 600; line-height: 1.25; }
 .tecla-formula.selecionada { background: #183944; border-color: var(--azul); color: #e1f7ff; }
-.tecla-formula.selecionada small { color: #b8e0ec; }
 .teclado-titulo { margin: 18px 0 9px; }
 
 /* 07 — TECLADO NUMÉRICO PADRÃO, PARECIDO COM O DO WINDOWS */
@@ -94,8 +88,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .tecla-operador, .tecla-controle { background: #2c2c2c; font-size: 20px !important; }
 .tecla-igual { background: #80c3e9; color: #152834; border-color: #80c3e9; font-weight: 600 !important; }
 .tecla-igual:hover { background: #a2d6f0; }
-.teclado-nota { margin: 13px 0 0; color: var(--muted); font-size: 11px; }
-.so-touch { display: none; }
+.teclado-nota, .so-touch { display: none; }
 
 /* 08 — PAINÉIS À DIREITA */
 .area-trabalho { min-width: 0; display: grid; gap: 16px; }
@@ -108,28 +101,28 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .estado-fluxo.erro { background: #502927; border-color: #8b4844; color: #ffd2d0; }
 
 /* 09 — DIAGRAMA DE FLUXO INSPIRADO EM NODE-RED */
-.fluxo { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 22px 4px 12px; min-height: 118px; scrollbar-width: thin; }
-.no-fluxo { flex: 1 0 100px; min-width: 0; border: 1px solid #555e63; border-radius: 7px; background: #343e42; padding: 12px 10px; color: #d9e3e6; position: relative; min-height: 86px; }
+.fluxo { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 18px 4px 10px; min-height: 132px; scrollbar-width: thin; }
+.no-fluxo { flex: 1 1 0; min-width: 110px; border: 1px solid #555e63; border-radius: 8px; background: #343e42; padding: 12px 12px; color: #d9e3e6; position: relative; min-height: 94px; }
 .no-fluxo::before, .no-fluxo::after { content: ""; position: absolute; height: 10px; width: 10px; border: 1px solid #65747a; border-radius: 3px; background: #9db4ba; top: calc(50% - 5px); }
 .no-fluxo::before { left: -6px; }
 .no-fluxo::after { right: -6px; }
 .no-fluxo .no-titulo { display: block; font-size: 11px; font-weight: 650; }
-.no-fluxo .no-dado { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: 5px; font-size: 10px; color: #a9bdc4; overflow-wrap: anywhere; line-height: 1.35; }
+.no-fluxo .no-dado { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; margin-top: 6px; font-size: 11px; color: #a9bdc4; overflow-wrap: anywhere; line-height: 1.38; }
 .no-fluxo.concluido { background: #1d3b2d; border-color: #448f64; }
 .no-fluxo.concluido::before, .no-fluxo.concluido::after { background: #6beaab; border-color: #57a876; }
 .no-fluxo.ativo { background: #214f35; border-color: var(--verde); box-shadow: 0 0 0 1px #52e29b, 0 0 18px #39e89153; color: #f1fff8; }
 .no-fluxo.ativo .no-dado, .no-fluxo.concluido .no-dado { color: #c0efcf; }
 .no-fluxo.ativo::before, .no-fluxo.ativo::after { background: #73ffc0; border-color: #34bb78; }
 .no-fluxo.falhou { border-color: #e68c80; background: #4d2b2b; }
-.ligacao { flex: 0 0 21px; align-self: center; height: 2px; background: #6a7276; position: relative; }
+.ligacao { flex: 0 0 16px; align-self: center; height: 2px; background: #6a7276; position: relative; }
 .ligacao.concluida { background: #60e6a3; box-shadow: 0 0 8px #60e6a38c; }
 .ligacao::after { content: ""; width: 0; height: 0; border-left: 5px solid #7d959b; border-top: 4px solid transparent; border-bottom: 4px solid transparent; position: absolute; right: 0; top: -3px; }
 .ligacao.concluida::after { border-left-color: #60e6a3; }
 .fluxo-instrucao { font-size: 12px; color: #b3b9bc; margin: 0; }
 
 /* 10 — FORMULÁRIO. OS CAMPOS APARECEM DE ACORDO COM A FUNÇÃO SELECIONADA. */
-.pista { color: #c4c8ca; font-size: 13px; margin: 14px 0; }
-.formula-escrita { padding: 9px 12px; margin: 10px 0 18px; background: #2b3032; border-left: 2px solid var(--azul); font-family: "Cambria Math", Georgia, serif; font-size: 16px; color: #d7edf6; overflow-wrap: anywhere; }
+.pista { color: #c4c8ca; font-size: 13px; margin: 10px 0 16px; }
+.formula-escrita { display: none; }
 .campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .campo { min-width: 0; }
 .campo.inteiro { grid-column: 1 / -1; }
@@ -148,7 +141,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .botao-calcular:hover { background: #a2d6f0; }
 .botao-limpar { background: #343434; }
 .botao-limpar:hover { background: #424242; }
-.link-ajuda { background: none; border: 1px solid #535353; border-radius: 5px; color: var(--azul); padding: 6px 10px; font-size: 12px; }
+.link-ajuda { display: none; }
 .erro { margin-top: 15px; color: #ffc4bb; background: #472d2a; border: 1px solid #7a4541; border-radius: 7px; padding: 10px; font-size: 13px; }
 
 /* 11 — RESPOSTA LONGA E ETAPAS */
@@ -176,5 +169,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .area-principal { grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); gap: 14px; padding: 14px; }
   .calculadora { padding: 12px; }
   .bloco { padding: 15px; }
-  .no-fluxo { flex: 0 0 102px; }
+  .no-fluxo { flex: 0 0 128px; }
 }
+
+/* ============================================================
+   CÁLCULOS AUXILIARES: UMA ÚNICA LINHA ENQUANTO RECOLHIDOS.
+   Não interfere no teclado nem na calculadora principal.
+   ============================================================ */
+.auxiliares { margin-top: 11px; border-top: 1px solid var(--borda); }
+.auxiliares > summary {
+  cursor: pointer; padding: 12px 2px 6px; color: #d0d0d0; font-size: 13px;
+  font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between;
+}
+.auxiliares > summary::-webkit-details-marker { display: none; }
+.auxiliares > summary::after { content: '⌄'; color: var(--muted); font-size: 18px; }
+.auxiliares[open] > summary::after { content: '⌃'; }
+.teclas-auxiliares { margin-top: 6px; }
+.teclas-auxiliares .tecla-formula { min-height: 57px; }
+.teclas-auxiliares .tecla-formula span { font-size: 12px; }

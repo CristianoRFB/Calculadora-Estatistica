@@ -30,11 +30,17 @@
   .bloco { padding: 15px; }
   .bloco-cabecalho h2 { font-size: 18px; }
   .fluxo { padding: 16px 3px 10px; }
-  .no-fluxo { flex: 0 0 112px; min-height: 71px; }
+  .no-fluxo { flex: 0 0 135px; min-height: 78px; }
   .ligacao { flex-basis: 18px; }
   .campos { grid-template-columns: 1fr; }
   .campo.inteiro { grid-column: auto; }
   .acoes { flex-wrap: wrap; }
   .botao-limpar { flex: 0 0 auto; }
   .painel-ajuda { width: min(420px, 100vw); padding: 21px; }
+}
+
+/* Deixar os botões auxiliares compactos no celular. */
+@media (max-width: 760px) {
+  .teclas-auxiliares .tecla-formula { min-height: 54px; padding: 6px 3px; }
+  .teclas-auxiliares .tecla-formula span { font-size: 11px; }
 }

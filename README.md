@@ -10,18 +10,39 @@ Este projeto foi escrito para que **uma pessoa iniciante em programação consig
 
 A calculadora segue a organização visual da calculadora científica do Windows: visor, teclas numéricas, operações básicas e uma faixa de teclas estatísticas. A calculadora fica imóvel na coluna esquerda; a coluna direita mostra os campos e o fluxograma do procedimento.
 
-Há **seis botões estatísticos**:
+Há **seis botões principais de estatística**, com mais cinco fórmulas auxiliares recolhidas logo abaixo:
 
 | Botão | Conta | Pergunta que ajuda a responder |
 | --- | --- | --- |
-| `r` | Correlação de Pearson | Existe uma relação linear? Qual a direção e a força? |
-| `ŷ` | Regressão linear simples | Qual é a equação da reta? Qual Y seria previsto? |
-| `IC μ` | Intervalo de confiança para a média | Entre quais limites deve ficar a média populacional? |
-| `IC p` | Intervalo de confiança para a proporção | Entre quais porcentagens deve ficar uma taxa populacional? |
-| `z` | Escore Z | Quantos desvios-padrão um valor está da média? |
-| `n` | Tamanho de amostra | Quantas observações serão necessárias? |
+| `Correlação` | Correlação de Pearson | Existe uma relação linear? Qual a direção e a força? |
+| `Regressão` | Regressão linear simples | Qual é a equação da reta? Qual Y seria previsto? |
+| `Intervalo da média` | Intervalo de confiança para a média | Entre quais limites deve ficar a média populacional? |
+| `Intervalo da proporção` | Intervalo de confiança para a proporção | Entre quais porcentagens deve ficar uma taxa populacional? |
+| `Escore` | Escore Z | Quantos desvios-padrão um valor está da média? |
+| `Tamanho da amostra` | Tamanho de amostra | Quantas observações serão necessárias? |
 
 Também há as operações básicas `+`, `−`, `×`, `÷` e `%`.
+
+### Cálculos auxiliares (novos)
+
+Quando o exercício informa **os valores brutos da amostra** em vez da média ou do desvio-padrão já prontos, abra **Cálculos auxiliares** na calculadora. Esse grupo fica recolhido para a tela principal continuar limpa.
+
+| Botão auxiliar | Para que serve | Fórmula |
+| --- | --- | --- |
+| Média amostral | Encontrar a média dos valores | `x̄ = Σx / n` |
+| Desvio-padrão | Verificar quanto os dados variam em torno da média | `s = √[Σ(x−x̄)²/(n−1)]` (amostral) ou `σ = √[Σ(x−μ)²/N]` (populacional) |
+| Variância | Calcular a dispersão antes de tirar a raiz | `s² = Σ(x−x̄)²/(n−1)` ou `σ² = Σ(x−μ)²/N` |
+| Proporção | Transformar uma contagem em taxa (%) | `p̂ = quantidade com a característica / total` |
+| Erro-padrão | Obter uma etapa da margem de erro | Média: `EP = s / √n`; proporção: `EP = √[p̂(1−p̂)/n]` |
+
+**Amostra e população não são a mesma coisa:** a variância amostral divide por `n − 1`. A populacional divide por `N`. A tela pergunta qual dos dois é o caso antes de calcular. Para usar desvio-padrão *amostral*, informe pelo menos duas observações.
+
+**Como digitar:** valores como `2; 4; 6; 8` usam o ponto e vírgula para separar; valores decimais como `1,5` usam vírgula decimal. Também é possível colar um valor por linha. Essas regras são as mesmas para PC e celular.
+
+**Como chegar ao intervalo de confiança da média:** primeiro calcule a média amostral e o desvio-padrão quando o enunciado entregar somente uma lista de observações. Anote `x̄`, `s` e `n`; depois entre em **Intervalo da média** e informe esses números, junto do grau de confiança. Os slides da professora usam a fórmula Z e permitem usar `s` no lugar de `σ` com `n > 30`; para amostras pequenas e desvio populacional desconhecido pode ser necessário aplicar a distribuição t, que não foi acrescentada à calculadora.
+
+**O que é da aula e o que é complemento:** o material da aula apresenta média amostral, desvio-padrão e proporção como informações para estimativas e intervalos. Os cinco botões auxiliares acrescentam a etapa de calcular essas informações quando apenas os valores brutos estão disponíveis. As contas seguem as definições estatísticas usuais, mantendo o fluxo ensinado para os intervalos.
+
 
 **Não há exercícios pré-preenchidos, cartões de exemplos nem dados de demonstração na tela.** É preciso informar os números do enunciado que for apresentado.
 
@@ -261,7 +282,7 @@ python app.py --rede
 
 Descubra o IP local do PC e, no telefone conectado ao mesmo Wi-Fi, acesse `http://IP-DO-PC:8765`. O Firewall do Windows pode solicitar permissão. Use essa opção somente em uma rede confiável.
 
-No celular, os blocos ficam empilhados, os campos ocupam toda a largura e a sequência do fluxo pode ser deslizada horizontalmente sem deslocar o restante da página. **Para abrir a explicação de uma tecla, mantenha-a pressionada**; o botão `? Entenda` também funciona.
+No celular, o grupo "Cálculos auxiliares" também começa recolhido e pode ser expandido ao tocar no título. Os blocos ficam empilhados, os campos ocupam toda a largura e a sequência do fluxo pode ser deslizada horizontalmente sem deslocar o restante da página. **Para abrir a explicação de uma tecla, mantenha-a pressionada**; as explicações podem ser consultadas pelo toque longo.
 
 ## 9. Versão Cloudflare: como os arquivos se relacionam
 
@@ -292,3 +313,19 @@ Leia `cloudflare/LEIA-ME.md` para instruções sobre como publicar e atualizar o
 Calculadora desenvolvida para prática dos tópicos ministrados em **Estatística Aplicada, Fatec**. Fórmulas e organização pedagógica baseadas nos materiais de aula: Correlação e Regressão Linear; Intervalo de Confiança da Média; Intervalo de Confiança da Proporção; Medida de Posição Relativa (Escore); e Tamanho da Amostra.
 
 Projeto educacional, sem coleta de dados pessoais e sem dependências externas para o modo local.
+
+
+## 12. Onde alterar as cinco fórmulas auxiliares
+
+Todas estão em `calculos.py`, separadas pelos títulos `FÓRMULA DA MÉDIA`, `FÓRMULA DA VARIÂNCIA`, `FÓRMULA DA PROPORÇÃO AMOSTRAL` e `FÓRMULA DO ERRO-PADRÃO`.
+
+- `dados_de_uma_amostra`: lê a lista e calcula média e soma dos desvios ao quadrado.
+- `media_amostral`: soma os valores e divide por `n`.
+- `medidas_de_dispersao`: concentra a lógica comum de variância e desvio-padrão, distinguindo amostral e populacional.
+- `variancia` / `desvio_padrao`: selecionam qual das medidas mostrar.
+- `proporcao_amostral`: divide a quantidade com a característica pelo total.
+- `erro_padrao`: aplica a fórmula apropriada para média ou proporção.
+
+Em `web/app.js`, procure `media_amostral`, `desvio_padrao`, `variancia`, `proporcao_amostral` e `erro_padrao` dentro da constante `MODULOS`: lá ficam os nomes dos campos, os textos de orientação e as etapas do fluxograma. Em `web/index.html` fica a área recolhível `id="auxiliares"`. Em `web/styles.css` ficam as regras de tamanho e cor.
+
+**Para testar depois de corrigir uma fórmula:** `python -m unittest discover -s tests -v`. Os testes novos verificam também a diferença entre `n` e `n−1`, os valores decimais, as contagens e os limites das entradas.

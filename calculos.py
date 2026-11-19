@@ -54,7 +54,7 @@ def positivo(valor, nome, aceita_zero=False):
     return n
 
 
-def lista_numeros(valor, nome):
+def lista_numeros(valor, nome, minimo=2):
     """Lê uma sequência separada por ponto e vírgula ou por linhas.
 
     A vírgula dentro de um valor é decimal: 1,5; 2,5; 3,5.
@@ -65,8 +65,8 @@ def lista_numeros(valor, nome):
     # A vírgula é guardada para o separador DECIMAL brasileiro.
     texto = valor.replace('\r', '\n').replace('\t', ';').replace('\n', ';')
     partes = [parte.strip() for parte in texto.split(';') if parte.strip()]
-    if len(partes) < 2:
-        raise ValueError(f'{nome}: separe ao menos dois valores por ; (ponto e vírgula).')
+    if len(partes) < minimo:
+        raise ValueError(f'{nome}: informe ao menos {minimo} valor(es), separados por ; (ponto e vírgula).')
     return [numero(parte, f'{nome}, valor {i}') for i, parte in enumerate(partes, 1)]
 
 
@@ -332,6 +332,158 @@ def tamanho_amostra(dados):
 
 
 # ============================================================
+# CÁLCULOS AUXILIARES — QUANDO A QUESTÃO DÁ OS VALORES BRUTOS
+# Estas contas preparam os números usados em intervalo de confiança,
+# regressão e escore. Não exigem bibliotecas externas.
+# ============================================================
+
+
+def dados_de_uma_amostra(dados, minimo=2):
+    """Lê os números e devolve a quantidade, a média e a soma quadrática.
+
+    Usamos uma função comum para não ter cópias diferentes da mesma
+    conta em média, variância e desvio-padrão.
+    """
+    valores = lista_numeros(dados.get('valores', ''), 'Valores da amostra', minimo)
+    n = len(valores)
+    media = math.fsum(valores) / n
+    # Para cada valor: tirar a média, elevar ao quadrado e somar.
+    quadrados = math.fsum((valor - media) ** 2 for valor in valores)
+    if not all(math.isfinite(v) for v in (media, quadrados)):
+        raise ValueError('Os números são grandes demais. Use valores menores.')
+    return n, media, quadrados
+
+
+# ============================================================
+# FÓRMULA DA MÉDIA ARITMÉTICA AMOSTRAL
+# x̄ = (x1 + x2 + ... + xn) / n
+# ============================================================
+
+def media_amostral(dados):
+    """Soma os valores da amostra e divide pela quantidade de números."""
+    n, media, _ = dados_de_uma_amostra(dados, minimo=1)
+    valores = lista_numeros(dados.get('valores', ''), 'Valores da amostra', minimo=1)
+    soma = math.fsum(valores)
+    return saida('Média amostral', f'x̄ = {texto_num(media, 6)}', 'x̄ = Σxi / n',
+                 [f'1. Valores recebidos: {n} observação(ões)',
+                  f'2. Quantidade n = {n}',
+                  f'3. Soma dos valores Σx = {texto_num(soma, 6)}',
+                  f'4. Divisão: {texto_num(soma, 6)} ÷ {n}',
+                  f'5. Média amostral x̄ = {texto_num(media, 6)}'],
+                 'A média é a soma de todos os valores dividida pela quantidade.',
+                 [f'n = {n}'])
+
+
+# ============================================================
+# FÓRMULA DA VARIÂNCIA
+# AMOSTRAL: s² = Σ(xi − x̄)² / (n − 1)
+# POPULACIONAL: σ² = Σ(xi − μ)² / N
+# ============================================================
+
+def medidas_de_dispersao(dados, calcular_desvio):
+    """Resolve variância ou desvio-padrão e explica a escolha do divisor."""
+    tipo = dados.get('tipo', 'amostral')
+    if tipo not in ('amostral', 'populacional'):
+        raise ValueError('Escolha amostral ou populacional.')
+    # A variância AMOSTRAL só existe se houver pelo menos dois valores.
+    # Na população inteira, um valor isolado pode ter variância zero.
+    minimo = 2 if tipo == 'amostral' else 1
+    n, media, soma_quadrados = dados_de_uma_amostra(dados, minimo)
+    divisor = n - 1 if tipo == 'amostral' else n
+    variancia = soma_quadrados / divisor
+    resultado = math.sqrt(variancia) if calcular_desvio else variancia
+    nome = 'Desvio-padrão' if calcular_desvio else 'Variância'
+    simbolo = ('s' if tipo == 'amostral' else 'σ')
+    if not calcular_desvio:
+        simbolo += '²'
+    divisor_texto = f'n − 1 = {divisor}' if tipo == 'amostral' else f'N = {n}'
+    formula_variancia = 'Σ(xi − x̄)² / (n − 1)' if tipo == 'amostral' else 'Σ(xi − μ)² / N'
+    formula = ('√[' + formula_variancia + ']') if calcular_desvio else formula_variancia
+    passos = [f'1. Quantidade de valores = {n}',
+              f'2. Média = {texto_num(media, 6)}',
+              f'3. Soma dos desvios ao quadrado = {texto_num(soma_quadrados, 6)}',
+              f'4. Divisor: {divisor_texto}; variância = {texto_num(variancia, 6)}',
+              f'5. {nome} {simbolo} = {texto_num(resultado, 6)}']
+    explicacao = ('No cálculo amostral, divide-se por n − 1 para estimar a dispersão da população.'
+                  if tipo == 'amostral' else 'No cálculo populacional, divide-se pela quantidade total N.')
+    return saida(nome + ' ' + tipo, f'{simbolo} = {texto_num(resultado, 6)}',
+                 f'{simbolo} = {formula}', passos, explicacao,
+                 [f'Média = {texto_num(media, 6)}', f'n = {n}', f'Variância = {texto_num(variancia, 6)}'])
+
+
+def variancia(dados):
+    """Variância: mede a dispersão ao quadrado."""
+    return medidas_de_dispersao(dados, calcular_desvio=False)
+
+
+def desvio_padrao(dados):
+    """Desvio-padrão: raiz quadrada da variância."""
+    return medidas_de_dispersao(dados, calcular_desvio=True)
+
+
+# ============================================================
+# FÓRMULA DA PROPORÇÃO AMOSTRAL
+# p̂ = quantidade com característica / quantidade total
+# ============================================================
+
+def proporcao_amostral(dados):
+    """Converte uma contagem dentro de um total em proporção e porcentagem."""
+    n = inteiro(dados.get('n', ''), 'Quantidade total')
+    k = numero(dados.get('sucessos', ''), 'Quantidade com a característica')
+    if not k.is_integer() or k < 0 or k > n:
+        raise ValueError('A quantidade com a característica deve ser inteira e estar entre 0 e n.')
+    k = int(k)
+    p = k / n
+    pct = p * 100
+    return saida('Proporção amostral', f'p̂ = {texto_num(pct, 4)}%', 'p̂ = k / n',
+                 [f'1. Quantidade total n = {n}',
+                  f'2. Quantidade com a característica k = {k}',
+                  '3. Separar a parte do total: k / n',
+                  f'4. Proporção p̂ = {k} ÷ {n} = {texto_num(p, 6)}',
+                  f'5. Porcentagem = {texto_num(pct, 4)}%'],
+                 'A proporção indica qual parte do total tem a característica.',
+                 [f'Proporção decimal = {texto_num(p, 6)}'])
+
+
+# ============================================================
+# FÓRMULA DO ERRO-PADRÃO
+# MÉDIA: EP = desvio-padrão / √n
+# PROPORÇÃO: EP = √[p(1 − p)/n]
+# ============================================================
+
+def erro_padrao(dados):
+    """Mostra a dispersão estimada da média ou da proporção amostral."""
+    tipo = dados.get('tipo', 'media')
+    n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
+    if tipo == 'media':
+        dp = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
+        ep = dp / math.sqrt(n)
+        formula = 'EP = s / √n (ou σ / √n)'
+        passo = f'3. Dividir o desvio pela raiz de n: {texto_num(dp)} / √{n}'
+        detalhe = f'Desvio-padrão informado = {texto_num(dp)}'
+        resultado = f'EP = {texto_num(ep, 6)}'
+    elif tipo == 'proporcao':
+        porcentagem = numero(dados.get('percentual', ''), 'Proporção em %')
+        if not 0 <= porcentagem <= 100:
+            raise ValueError('Proporção: use um valor de 0% a 100%.')
+        p = porcentagem / 100
+        ep = math.sqrt(p * (1 - p) / n)
+        formula = 'EP = √[p̂(1 − p̂) / n]'
+        passo = f'3. Substituir: √[{texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {n}]'
+        detalhe = f'Proporção p̂ = {texto_num(porcentagem)}%'
+        resultado = f'EP = {texto_num(ep, 6)} ({texto_num(ep*100, 4)} p.p.)'
+    else:
+        raise ValueError('Escolha média ou proporção para o erro-padrão.')
+    return saida('Erro-padrão da ' + ('média' if tipo == 'media' else 'proporção'), resultado,
+                 formula, [f'1. Tipo: {"média" if tipo == "media" else "proporção"}',
+                           f'2. Tamanho da amostra n = {n}', passo,
+                           f'4. Erro-padrão em decimal = {texto_num(ep, 6)}',
+                           f'5. Resultado: {resultado}'],
+                 'O erro-padrão é usado para calcular a margem de erro do intervalo de confiança.',
+                 [detalhe])
+
+
+# ============================================================
 # FUNCIONAMENTO DAS TECLAS COMUNS DA CALCULADORA
 # Aqui ficam +, -, ×, ÷ e %. São separadas das fórmulas da disciplina.
 # O teclado JavaScript só envia os números; até essa conta é feita no Python.
@@ -381,6 +533,11 @@ FORMULAS = {
     'ic_proporcao': ic_proporcao,
     'escore': escore,
     'amostra': tamanho_amostra,
+    'media_amostral': media_amostral,
+    'desvio_padrao': desvio_padrao,
+    'variancia': variancia,
+    'proporcao_amostral': proporcao_amostral,
+    'erro_padrao': erro_padrao,
     'basica': basica,
 }
 

@@ -245,3 +245,101 @@ class InterfaceSemExemplos(unittest.TestCase):
         pasta = Path(__file__).resolve().parents[1]
         self.assertTrue((pasta / 'web' / 'mobile.css').exists())
         self.assertTrue((pasta / 'cloudflare' / 'worker.py').exists())
+
+
+# ============================================================
+# TESTES DOS CÁLCULOS AUXILIARES
+# Esses números podem ser conferidos à mão: a intenção é detectar
+# uma alteração errada antes de apresentar o programa.
+# ============================================================
+class CalculosAuxiliares(unittest.TestCase):
+    def test_media_amostral(self):
+        r = calcular({'formula':'media_amostral', 'valores':'2; 4; 6; 8'})
+        self.assertEqual('x̄ = 5', r['resultado'])
+
+    def test_media_decimal_virgula(self):
+        r = calcular({'formula':'media_amostral', 'valores':'1,5; 2,5; 3,5'})
+        self.assertEqual('x̄ = 2,5', r['resultado'])
+
+    def test_media_um_valor(self):
+        r = calcular({'formula':'media_amostral', 'valores':'9'})
+        self.assertEqual('x̄ = 9', r['resultado'])
+
+    def test_media_multiplas_linhas(self):
+        r = calcular({'formula':'media_amostral', 'valores':'2\n4\n6'})
+        self.assertEqual('x̄ = 4', r['resultado'])
+
+    def test_variancia_amostral(self):
+        r = calcular({'formula':'variancia','tipo':'amostral','valores':'2;4;6;8'})
+        self.assertEqual('s² = 6,666667', r['resultado'])
+
+    def test_variancia_populacional(self):
+        r = calcular({'formula':'variancia','tipo':'populacional','valores':'2;4;6;8'})
+        self.assertEqual('σ² = 5', r['resultado'])
+
+    def test_desvio_amostral(self):
+        r = calcular({'formula':'desvio_padrao','tipo':'amostral','valores':'2;4;6;8'})
+        self.assertEqual('s = 2,581989', r['resultado'])
+        self.assertIn('n − 1',r['passos'][3])
+
+    def test_desvio_populacional(self):
+        r = calcular({'formula':'desvio_padrao','tipo':'populacional','valores':'2;4;6;8'})
+        self.assertEqual('σ = 2,236068', r['resultado'])
+
+    def test_variancia_populacional_um_valor(self):
+        r=calcular({'formula':'variancia','tipo':'populacional','valores':'4'})
+        self.assertEqual('σ² = 0',r['resultado'])
+
+    def test_proporcao_amostral(self):
+        r = calcular({'formula':'proporcao_amostral','sucessos':'34','n':'200'})
+        self.assertEqual('p̂ = 17%',r['resultado'])
+
+    def test_proporcao_zero(self):
+        r = calcular({'formula':'proporcao_amostral','sucessos':'0','n':'100'})
+        self.assertEqual('p̂ = 0%',r['resultado'])
+
+    def test_proporcao_cem(self):
+        r = calcular({'formula':'proporcao_amostral','sucessos':'10','n':'10'})
+        self.assertEqual('p̂ = 100%',r['resultado'])
+
+    def test_erro_padrao_media(self):
+        r = calcular({'formula':'erro_padrao','tipo':'media','desvio':'10','n':'25'})
+        self.assertEqual('EP = 2',r['resultado'])
+
+    def test_erro_padrao_proporcao(self):
+        r = calcular({'formula':'erro_padrao','tipo':'proporcao','percentual':'50','n':'100'})
+        self.assertIn('0,05',r['resultado'])
+        self.assertIn('5 p.p.',r['resultado'])
+
+    def test_desvio_amostral_um_valor_invalido(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'desvio_padrao','tipo':'amostral','valores':'4'})
+
+    def test_tipo_dispersao_invalido(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'variancia','tipo':'invalido','valores':'2;4;6'})
+
+    def test_proporcao_invalida(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'proporcao_amostral','sucessos':'11','n':'10'})
+
+    def test_proporcao_nao_inteira(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'proporcao_amostral','sucessos':'3,5','n':'10'})
+
+    def test_erro_padrao_divisor_zero(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'erro_padrao','tipo':'media','desvio':'4','n':'0'})
+
+    def test_erro_padrao_pct_invalido(self):
+        with self.assertRaises(ValueError):
+            calcular({'formula':'erro_padrao','tipo':'proporcao','percentual':'120','n':'100'})
+
+    def test_interface_auxiliares_recolhidos(self):
+        from pathlib import Path
+        base=Path(__file__).resolve().parents[1]
+        pagina=(base/'web'/'index.html').read_text(encoding='utf-8')
+        self.assertIn('<details class="auxiliares"',pagina)
+        self.assertIn('data-formula="media_amostral"',pagina)
+        self.assertIn('data-formula="desvio_padrao"',pagina)
+        self.assertIn('data-formula="erro_padrao"',pagina)

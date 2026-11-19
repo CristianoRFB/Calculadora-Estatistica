@@ -10,18 +10,17 @@
   <script src="/app.js" defer></script>
 </head>
 <body>
-  <!-- BARRA SUPERIOR: apenas o nome do programa e o estado da conexão. -->
+  <!-- BARRA SUPERIOR -->
   <header class="barra-superior">
     <div class="marca"><span class="marca-icone" aria-hidden="true">▦</span> Calculadora <span class="marca-detalhe">/ Estatística</span></div>
     <span class="conexao" id="conexao"><span class="ponto"></span> Python conectado</span>
   </header>
 
-  <!-- ÁREA PRINCIPAL: a calculadora fica sempre na mesma coluna. -->
+  <!-- ÁREA PRINCIPAL -->
   <main class="area-principal">
-    <section class="calculadora" aria-label="Calculadora científica">
+    <section class="calculadora" aria-label="Calculadora estatística">
       <div class="calc-cabecalho">
-        <div class="calc-nome"><span aria-hidden="true">☰</span> Científica</div>
-        <button class="historico-botao" id="limpar-historico" title="Apagar o histórico de contas">Limpar histórico</button>
+        <div class="calc-nome"><span aria-hidden="true">☰</span> Estatística</div>
       </div>
 
       <div class="visor" aria-live="polite">
@@ -29,27 +28,34 @@
         <div id="visor" class="visor-resultado">0</div>
       </div>
 
-      <div class="historico">
-        <span class="microtitulo">HISTÓRICO</span>
-        <span id="historico-atual" class="historico-texto">Nenhuma conta realizada.</span>
-      </div>
-
-      <!-- BOTÕES ESTATÍSTICOS: o clique seleciona; o botão direito abre a explicação. -->
       <div class="atalhos-titulo">
         <span>FUNÇÕES DA DISCIPLINA</span>
-        <span class="atalhos-ajuda">Botão direito: explicação <span aria-hidden="true">ⓘ</span></span>
       </div>
       <div class="teclas-formulas" id="teclas-formulas">
-        <button class="tecla tecla-formula" data-formula="correlacao" title="Correlação de Pearson · botão direito para aprender"><strong>r</strong><small>Correlação</small></button>
-        <button class="tecla tecla-formula" data-formula="regressao" title="Regressão linear · botão direito para aprender"><strong>ŷ</strong><small>Regressão</small></button>
-        <button class="tecla tecla-formula" data-formula="ic_media" title="Intervalo da média · botão direito para aprender"><strong>IC μ</strong><small>Média</small></button>
-        <button class="tecla tecla-formula" data-formula="ic_proporcao" title="Intervalo da proporção · botão direito para aprender"><strong>IC p</strong><small>Proporção</small></button>
-        <button class="tecla tecla-formula" data-formula="escore" title="Escore padronizado · botão direito para aprender"><strong>z</strong><small>Escore</small></button>
-        <button class="tecla tecla-formula" data-formula="amostra" title="Tamanho de amostra · botão direito para aprender"><strong>n</strong><small>Amostra</small></button>
+        <button class="tecla tecla-formula" data-formula="correlacao" title="Correlação de Pearson"><span>Correlação</span></button>
+        <button class="tecla tecla-formula" data-formula="regressao" title="Regressão linear simples"><span>Regressão</span></button>
+        <button class="tecla tecla-formula" data-formula="ic_media" title="Intervalo de confiança da média"><span>Intervalo da média</span></button>
+        <button class="tecla tecla-formula" data-formula="ic_proporcao" title="Intervalo de confiança da proporção"><span>Intervalo da proporção</span></button>
+        <button class="tecla tecla-formula" data-formula="escore" title="Escore Z"><span>Escore</span></button>
+        <button class="tecla tecla-formula" data-formula="amostra" title="Tamanho da amostra"><span>Tamanho da amostra</span></button>
       </div>
 
-      <!-- TECLADO: funciona sozinho e também preenche o campo selecionado à direita. -->
-      <div class="teclado-titulo"><span>TECLADO</span><span>Use também o teclado físico</span></div>
+      <!-- CÁLCULOS AUXILIARES
+           Ficam recolhidos para manter a calculadora limpa.
+           São os cálculos preparatórios: média, desvio, variância etc.
+           O clique direito continua abrindo as explicações. -->
+      <details class="auxiliares" id="auxiliares">
+        <summary>Cálculos auxiliares</summary>
+        <div class="teclas-formulas teclas-auxiliares">
+          <button class="tecla tecla-formula" data-formula="media_amostral"><span>Média amostral</span></button>
+          <button class="tecla tecla-formula" data-formula="desvio_padrao"><span>Desvio-padrão</span></button>
+          <button class="tecla tecla-formula" data-formula="variancia"><span>Variância</span></button>
+          <button class="tecla tecla-formula" data-formula="proporcao_amostral"><span>Proporção</span></button>
+          <button class="tecla tecla-formula" data-formula="erro_padrao"><span>Erro-padrão</span></button>
+        </div>
+      </details>
+
+      <div class="teclado-titulo"><span>TECLADO</span></div>
       <div class="teclado" id="teclado">
         <button class="tecla tecla-controle" data-key="C" title="Limpar o número ou o campo">C</button>
         <button class="tecla tecla-controle" data-key="back" title="Apagar o último dígito">⌫</button>
@@ -72,27 +78,23 @@
         <button class="tecla tecla-numero" data-key=",">,</button>
         <button class="tecla tecla-igual" data-key="=" title="Calcular">=</button>
       </div>
-      <p class="teclado-nota">Para digitar nos dados da fórmula, clique primeiro no campo desejado. <span class="so-touch">No celular, segure uma função para abrir sua explicação.</span></p>
     </section>
 
-    <!-- COLUNA DIREITA: primeiro o processo estilo Node-RED; depois os campos. -->
     <section class="area-trabalho" aria-label="Resolução estatística">
       <div class="bloco fluxo-bloco">
         <div class="bloco-cabecalho">
-          <div><div class="rotulo-sutil">ACOMPANHAMENTO</div><h2>Fluxo do cálculo</h2></div>
+          <div><h2>Fluxo do cálculo</h2></div>
           <span id="estado-fluxo" class="estado-fluxo">Aguardando função</span>
         </div>
         <div id="fluxo" class="fluxo" aria-live="polite"></div>
-        <p class="fluxo-instrucao" id="fluxo-instrucao">Selecione uma função no teclado da calculadora.</p>
+        <p class="fluxo-instrucao" id="fluxo-instrucao">Selecione uma função para começar.</p>
       </div>
 
       <div class="bloco dados-bloco">
         <div class="bloco-cabecalho bloco-cabecalho-dados">
-          <div><div class="rotulo-sutil">DADOS E ENUNCIADO</div><h2 id="nome-formula">Escolha uma função</h2></div>
-          <button class="link-ajuda" id="botao-ajuda" disabled title="Explicações à esquerda">? Entenda</button>
+          <div><div class="rotulo-sutil">DADOS E ENUNCIADO</div><h2 id="nome-formula">Informe os dados</h2></div>
         </div>
-        <p id="pista" class="pista">Selecione a conta que a professora pediu. Os campos aparecerão aqui.</p>
-        <div id="formula-escrita" class="formula-escrita" hidden></div>
+        <p id="pista" class="pista">Selecione uma função para abrir os campos necessários.</p>
         <form id="formulario" novalidate>
           <div id="campos" class="campos"></div>
           <div class="acoes" id="acoes" hidden>
@@ -113,7 +115,6 @@
     </section>
   </main>
 
-  <!-- PAINEL DE AJUDA: cobre a esquerda, sem deslocar ou desmontar a calculadora. -->
   <div class="fundo-ajuda" id="fundo-ajuda" hidden></div>
   <aside class="painel-ajuda" id="painel-ajuda" aria-label="Entendendo a fórmula" aria-modal="true" role="dialog" hidden>
     <div class="ajuda-cabecalho"><div><span class="rotulo-sutil">GUIA DA FÓRMULA</span><h2 id="ajuda-titulo"></h2></div><button id="fechar-ajuda" class="fechar-ajuda" title="Fechar explicação" aria-label="Fechar explicação">×</button></div>
