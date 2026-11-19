@@ -2,6 +2,12 @@
 
 Projeto didático feito em **Python puro (sem dependências externas)** para apresentar exercícios de Estatística Aplicada. A interface funciona no navegador do PC, e a versão celular usa **o mesmo Python**; não há duas versões das fórmulas para manter.
 
+## Abrir online no PC ou no celular
+
+**Link público:** https://77-statlab-estatistica.on7.workers.dev/
+
+A versão online é hospedada num **Cloudflare Python Worker** e não depende de deixar o seu computador ligado. Os cálculos usam as mesmas funções do arquivo `calculos.py`. Se a internet falhar na apresentação, utilize a versão local abaixo.
+
 ## Abrir no computador (Windows, Linux ou macOS)
 
 1. Instale o Python 3.10 ou superior, se ainda não tiver.
@@ -79,6 +85,8 @@ O programa também contém uma rota de diagnóstico: `http://127.0.0.1:8765/api/
 
 ## Cloudflare e acesso fora de casa
 
-Uma instalação Python local **não é executada diretamente em Cloudflare Pages**. Para compartilhar exatamente o mesmo motor Python sem duplicar fórmulas, é possível usar **Cloudflare Tunnel**, que encaminha requisições para o PC onde `python app.py` está rodando. O computador deve permanecer ligado e conectado. Não exponha o serviço publicamente sem configurar proteção de acesso. Veja o arquivo `cloudflare/LEIA-ME.md`.
+A calculadora já está publicada em **https://77-statlab-estatistica.on7.workers.dev/**. A Cloudflare executa Python e entrega os mesmos arquivos visuais, de maneira independente do computador da apresentação.
 
-**Plano B no dia:** mantenha a pasta deste projeto salva no PC. A calculadora funciona sem internet, sem CDN e sem instalação de bibliotecas Python extras.
+O código referente à hospedagem está na pasta `cloudflare/`, separado do motor das fórmulas e do visual de celular. A publicação atual foi feita pela API da Cloudflare; **atualizações no GitHub não atualizam automaticamente o site online**. Consulte `cloudflare/LEIA-ME.md` para detalhes.
+
+**Plano B no dia:** mantenha esta pasta salva no PC. A calculadora local funciona sem internet, sem CDN e sem bibliotecas Python externas.
