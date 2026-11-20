@@ -67,7 +67,11 @@ const MODULOS = {
       {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista',
        dica:'Cole os números de uma coluna do Excel ou separe por ponto e vírgula.'},
       {id:'tipo_dispersao', titulo:'Tipo de desvio', tipo:'tipo_dispersao', entrada:'lista'},
-      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'}
+      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'},
+      {id:'margem_informada', titulo:'Margem de erro informada (opcional)', tipo:'texto', opcional:true,
+       dica:'Em branco = calcular automaticamente. Se informada, use a mesma unidade da média.'},
+      {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
+       dica:'Só se a professora informar o total de indivíduos; não é a amostra n.'}
     ],
     guia: {
       conceito:'Estima a faixa onde pode estar a média verdadeira. O Excel INT.CONFIANÇA retorna a margem de erro, não os dois limites.',
@@ -92,7 +96,11 @@ const MODULOS = {
       {id:'percentual', titulo:'Porcentagem (%)', tipo:'texto', mostrar:'porcentagem', entrada:'direto'},
       {id:'valores', titulo:'Respostas da amostra', tipo:'lista', entrada:'lista',
        dica:'Uma resposta por linha: 1/0 ou sim/não.'},
-      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'}
+      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'},
+      {id:'margem_informada', titulo:'Margem de erro informada em p.p. (opcional)', tipo:'texto', opcional:true,
+       dica:'Exemplo: 8 significa 8 pontos percentuais. Em branco, a calculadora determina E.'},
+      {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
+       dica:'Informe o total conhecido para projetar pessoas e corrigir população finita.'}
     ],
     guia:{
       conceito:'Estima um intervalo para uma proporção percentual.',
@@ -100,6 +108,35 @@ const MODULOS = {
       entradas:'Dados informados: total e quantidade ou porcentagem. Lista: informe 1 ou sim para cada ocorrência e 0 ou não para cada ausência.',
       simbolos:'p é a proporção decimal, n é o total, E é a margem de erro; resultado em porcentagens.',
       cuidado:'Em amostras pequenas ou proporções extremas a aproximação normal pode ser imprecisa.'
+    }
+  },
+  // ESTIMATIVA POPULACIONAL: recebe uma amostra e o tamanho TOTAL N.
+  // O valor da população não é deduzido da margem; precisa ser conhecido.
+  populacao: {
+    nome:'Estimativa da população',
+    formula:'Casos esperados ≈ N × p; faixa ≈ N × (p ± E)',
+    pista:'Estima quantas pessoas da população têm uma característica, a partir da amostra.',
+    fluxo:['Amostra', 'Proporção p', 'Margem E', 'População N', 'Estimativa'],
+    campos:[
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'n', titulo:'Quantidade na amostra (n)', tipo:'texto', entrada:'direto'},
+      {id:'modo', titulo:'Dado disponível', tipo:'modo_proporcao', entrada:'direto'},
+      {id:'sucessos', titulo:'Quantidade com característica', tipo:'texto', mostrar:'contagem', entrada:'direto'},
+      {id:'percentual', titulo:'Porcentagem da amostra (%)', tipo:'texto', mostrar:'porcentagem', entrada:'direto'},
+      {id:'valores', titulo:'Respostas da amostra', tipo:'lista', entrada:'lista',
+       dica:'Uma resposta por linha: 1/0 ou sim/não.'},
+      {id:'populacao', titulo:'Tamanho da população (N)', tipo:'texto',
+       dica:'Total conhecido de pessoas ou itens na população (não é n).'},
+      {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'},
+      {id:'margem_informada', titulo:'Margem de erro em p.p. (opcional)', tipo:'texto', opcional:true,
+       dica:'Se a professora forneceu a margem, digite aqui. Caso contrário, calculamos.'}
+    ],
+    guia:{
+      conceito:'Projeta a quantidade de pessoas com uma característica usando os dados amostrais e o tamanho conhecido da população.',
+      reconhecer:'Quando a questão informar a população N e perguntar aproximadamente quantas pessoas preferem, compram ou apresentam algo.',
+      entradas:'Informe o tamanho da amostra e a quantidade positiva, ou cole as respostas; informe também N. Margem é opcional.',
+      simbolos:'N é a população total; n é a amostra; p é a proporção amostral; E é a margem em decimal.',
+      cuidado:'É uma estimativa, não uma contagem real. A margem de erro sozinha nunca revela o tamanho da população.'
     }
   },
   // ESCORE: valor observado é sempre necessário. Os outros dois
@@ -140,7 +177,9 @@ const MODULOS = {
        dica:'Média: números. Proporção: 1/0 ou sim/não.'},
       {id:'tipo_dispersao', titulo:'Tipo de desvio piloto', tipo:'tipo_dispersao', mostrar:'media', entrada:'lista'},
       {id:'erro', titulo:'Margem de erro desejada', tipo:'texto'},
-      {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'}
+      {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'},
+      {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
+       dica:'Se N é conhecido, aplicamos correção de população finita ao tamanho da amostra.'}
     ],
     guia:{
       conceito:'Estima a quantidade necessária para atingir a precisão e confiança desejadas.',
@@ -394,9 +433,16 @@ function construirLinhasResultado() {
   // Os números inferidos da amostra ficam em "linhas-derivadas" logo acima.
   const container = el('linhas-resultado');
   container.replaceChildren();
-  const linhas = ['ic_media', 'ic_proporcao'].includes(formulaSelecionada)
-    ? [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']]
-    : [['resultado', 'Resultado']];
+  let linhas;
+  if (formulaSelecionada === 'ic_media') {
+    linhas = [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']];
+  } else if (formulaSelecionada === 'ic_proporcao') {
+    linhas = [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']];
+  } else if (formulaSelecionada === 'populacao') {
+    linhas = [['projecao', 'Pessoas estimadas'], ['projecao_intervalo', 'Faixa estimada']];
+  } else {
+    linhas = [['resultado', 'Resultado']];
+  }
 
   for (const [chave, titulo] of linhas) {
     const linha = document.createElement('div');
@@ -428,7 +474,7 @@ function linhasQueFazemSentido() {
   const itens = [];
   const adicionar = (chave, texto) => itens.push([chave, texto]);
 
-  if (formula === 'ic_proporcao' || formula === 'proporcao_amostral' ||
+  if (formula === 'ic_proporcao' || formula === 'populacao' || formula === 'proporcao_amostral' ||
       ((formula === 'amostra' || formula === 'erro_padrao') && tipo === 'proporcao')) {
     adicionar('p_pct', formula === 'amostra' ? 'Proporção prevista (sim)' : 'Sucesso / com característica');
     adicionar('q_pct', 'Fracasso / sem característica');
@@ -440,9 +486,13 @@ function linhasQueFazemSentido() {
         adicionar('sucessos', 'Quantidade com característica');
       }
     }
-    if (formula === 'ic_proporcao') {
+    if (formula === 'ic_proporcao' || formula === 'populacao') {
       adicionar('z', 'Valor crítico z');
       adicionar('ep_pct', 'Erro-padrão da proporção');
+      if (formula === 'ic_proporcao') {
+        adicionar('projecao', 'Pessoas estimadas na população');
+        adicionar('projecao_intervalo', 'Faixa estimada de pessoas');
+      }
     }
     if (formula === 'amostra') adicionar('z', 'Valor crítico z');
     return itens;
@@ -456,6 +506,7 @@ function linhasQueFazemSentido() {
     }
     adicionar('z', 'Valor crítico z');
     adicionar('ep', 'Erro-padrão da média');
+    adicionar('correcao', 'Fator de população finita');
   } else if (formula === 'escore') {
     if (lista) {
       adicionar('media', 'Média obtida da lista');
@@ -468,6 +519,7 @@ function linhasQueFazemSentido() {
       adicionar('desvio', 'Desvio-padrão piloto');
     }
     adicionar('z', 'Valor crítico z');
+    adicionar('amostra_sem_correcao', 'Amostra sem correção');
   } else if (formula === 'erro_padrao') {
     if (lista) {
       adicionar('n', 'Quantidade de valores');
@@ -761,7 +813,7 @@ function rotuloCurto(campo, valor) {
   if (valor === undefined || valor === null || String(valor).trim() === '') return '';
   const nomes = {
     x: 'X', y: 'Y', media: 'x̄', desvio: 'σ', n: 'n', valor: 'x', erro: 'E',
-    confianca: 'Confiança', percentual: 'p', sucessos: 'sucessos', prever: 'novo X'
+    confianca: 'Confiança', percentual: 'p', sucessos: 'sucessos', prever: 'novo X', populacao: 'N'
   };
   return `${nomes[campo] || campo}=${valor}`;
 }
@@ -802,7 +854,7 @@ function resumoNoFluxo(indice) {
         ? `${(dados.valores || '').split(/[;\n]/).filter(x => x.trim()).length} observações`
         : [rotuloCurto('media', dados.media),rotuloCurto('desvio', dados.desvio),rotuloCurto('n', dados.n)].filter(Boolean).join(' · ') || 'Informe os dados',
       respostaPython ? `z = ${respostaPython.valores_calculados.z}` : `Confiança = ${dados.confianca || 95}%`,
-      respostaPython ? `E = ${respostaPython.valores_calculados.margem}` : 'Margem a calcular',
+      respostaPython ? `E = ${respostaPython.valores_calculados.margem} (${respostaPython.valores_calculados.origem_margem})` : 'Margem informada ou calculada',
       respostaPython ? `Inf.: ${respostaPython.valores_calculados.inferior} · Sup.: ${respostaPython.valores_calculados.superior}` : 'Limites a calcular',
       respostaPython ? respostaPython.valores_calculados.intervalo : 'Intervalo final'
     ],
@@ -812,7 +864,7 @@ function resumoNoFluxo(indice) {
       respostaPython ? `p = ${respostaPython.valores_calculados.p}` :
         dados.modo === 'porcentagem' ? `p = ${dados.percentual || '—'}%` : `Casos = ${dados.sucessos || '—'}`,
       respostaPython ? `z = ${respostaPython.valores_calculados.z}` : `Confiança = ${dados.confianca || 95}%`,
-      respostaPython ? `E = ${respostaPython.valores_calculados.margem}` : 'Margem a calcular',
+      respostaPython ? `E = ${respostaPython.valores_calculados.margem} (${respostaPython.valores_calculados.origem_margem})` : 'Margem informada ou calculada',
       respostaPython ? respostaPython.valores_calculados.intervalo : 'Intervalo final'
     ],
     escore: [
@@ -821,6 +873,13 @@ function resumoNoFluxo(indice) {
       rotuloCurto('desvio', dados.desvio) || 'Informe σ',
       respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Divisão final',
       respostaPython ? respostaPython.resultado : 'Escore z'
+    ],
+    populacao: [
+      dados.entrada === 'lista' ? 'Respostas informadas' : [rotuloCurto('n',dados.n),rotuloCurto('sucessos',dados.sucessos)].filter(Boolean).join(' · ') || 'Informe a amostra',
+      respostaPython ? `p = ${respostaPython.valores_calculados.p}` : 'Dividir casos pelo total',
+      respostaPython ? `E = ${respostaPython.valores_calculados.margem}` : 'Margem informada ou calculada',
+      rotuloCurto('populacao',dados.populacao) || 'Informe N',
+      respostaPython ? respostaPython.resultado : 'Pessoas estimadas'
     ],
     amostra: [
       dados.tipo === 'proporcao' ? 'Objetivo: proporção' : dados.tipo === 'media' ? 'Objetivo: média' : 'Escolha o objetivo',
@@ -857,7 +916,8 @@ const EXPLICACOES_FLUXO = {
   ic_media: ['Lemos ou calculamos média, desvio e n.', 'A confiança determina o z.', 'Multiplicamos z pelo erro-padrão.', 'Subtraímos e somamos a margem.', 'A faixa encontrada estima a média.'],
   ic_proporcao: ['Contamos o total de respostas.', 'Dividimos os casos positivos pelo total.', 'A confiança determina o z.', 'Usamos p, q, n e z para achar E.', 'Subtraímos e somamos E à proporção.'],
   escore: ['Lemos o valor que será comparado.', 'Subtraímos a média do valor.', 'Identificamos o desvio-padrão.', 'Dividimos a diferença pelo desvio.', 'O z mostra quantos desvios separam.'],
-  amostra: ['Escolhemos média ou proporção.', 'A confiança define o valor z.', 'Usamos o erro máximo permitido.', 'Substituímos os dados na fórmula.', 'Arredondamos o tamanho para cima.'],
+  amostra: ['Escolhemos média ou proporção.', 'A confiança define o valor z.', 'Usamos o erro máximo permitido.', 'Se N foi dado, corrigimos a amostra.', 'Arredondamos o tamanho para cima.'],
+  populacao: ['Lemos a amostra.', 'Dividimos casos positivos pelo total.', 'Usamos a margem dada ou calculada.', 'Multiplicamos a proporção por N.', 'Exibimos a estimativa, não uma contagem real.'],
   media_amostral: ['Lemos todos os valores.', 'Contamos quantos existem.', 'Somamos os valores.', 'Dividimos a soma pela quantidade.', 'Encontramos a média.'],
   desvio_padrao: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Dividimos por n−1 ou N.', 'Tiramos a raiz da variância.'],
   variancia: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Escolhemos n−1 ou N.', 'A divisão resulta na variância.'],
@@ -893,7 +953,17 @@ function desenharFluxo() {
     detalhe.textContent = resumoNoFluxo(indice);
     detalhe.title = detalhe.textContent;
     no.append(detalhe);
-    const frases = EXPLICACOES_FLUXO[formulaSelecionada];
+    // Quando a professora forneceu a margem, não dizer que nós a calculamos.
+    // O texto é didático e acompanha a operação realmente executada pelo Python.
+    let frases = EXPLICACOES_FLUXO[formulaSelecionada];
+    if (frases && respostaPython && ['ic_media','ic_proporcao','populacao'].includes(formulaSelecionada)) {
+      const dados = lerCampos();
+      if (dados.margem_informada) {
+        frases = [...frases];
+        const indiceMargem = formulaSelecionada === 'ic_proporcao' ? 3 : 2;
+        frases[indiceMargem] = 'Usamos a margem dada no enunciado.';
+      }
+    }
     if (frases && respostaPython && andamento === 'feito' && indice <= indiceAtivo) {
       const explicacao = document.createElement('span');
       explicacao.className = 'no-explicacao';

@@ -317,3 +317,29 @@ Na revisão da versão 6, **85 testes automáticos Python** e testes de interfac
 A organização dos dois intervalos, a escolha de alfa e os valores críticos Z foram conferidos com as apresentações **Intervalo de confiança — Média**, **Intervalo de confiança — Proporção** e **Tamanho da amostra**. Correlação, regressão e escore seguem os conteúdos correspondentes. O programa oferece recursos auxiliares e dois modos de entrada para facilitar a digitação durante a apresentação, mas **não substitui a escolha do método estatístico exigido no enunciado**.
 
 A apresentação oral é mais simples se a sequência for: **identificar o objetivo → escolher a função → escolher como o enunciado forneceu os dados → calcular → explicar o resultado**.
+
+
+## Margem informada e estimativa da população — versão 8
+
+### Para que servem os campos novos?
+
+- **Margem de erro informada** (opcional): preencha quando a questão já trouxer E. Em intervalos de média, E usa a unidade da média. Em intervalos de proporção, E usa **pontos percentuais** (8 significa 8 p.p., ou 0,08 em decimal). Quando o campo fica vazio, a calculadora obtém E pela fórmula normal.
+- **Tamanho da população (N)** (opcional nos intervalos e tamanho da amostra): informe apenas se a questão mencionar o total de pessoas/itens da população. N é diferente de **n**, que é o tamanho da amostra.
+- **Estimar população**, dentro de Cálculos auxiliares: informe uma amostra (por quantidade, percentual ou lista) e o total populacional N. O aplicativo estima quantos indivíduos da população podem ter a característica e apresenta uma faixa aproximada. É sempre uma estimativa amostral; não é o total real contado.
+
+### Diferenças matemáticas importantes
+
+1. Na proporção, use `p = sucessos / n` e `q = 1 - p`. A margem do enunciado é expressa em p.p. (pontos percentuais), não em número de indivíduos.
+2. No intervalo da proporção, `IC = p ± E`. Se N é conhecido, a estimativa de casos é `N × p` e os limites projetados são `N × (p ± E)`. A projeção de pessoas não é contagem exata. Os limites de contagem ficam no intervalo possível de zero até N.
+3. Ao calcular E pela fórmula, se N é conhecido e a amostragem foi **aleatória simples sem reposição**, aplica-se a **correção de população finita** `√[(N−n)/(N−1)]`. Se N não foi informado, o fator é 1 (o resultado clássico do Excel). **Se E foi informada, ela não é corrigida de novo.**
+4. Para tamanho da amostra, `n0` é o cálculo habitual sem correção. Com N conhecido, o tamanho corrigido é `n = N × n0 / (N + n0 − 1)`, sempre arredondado para cima e no máximo N.
+5. **Não é possível deduzir o número de pessoas que existem numa população usando apenas a margem de erro.** A calculadora exige N quando o objetivo for projetar a quantidade de casos na população.
+
+### Se algo der errado no código
+
+- **Conta da margem ou correção de população**: abra `calculos.py` e procure `margem_fornecida`, `fator_populacao_finita`, `ic_media`, `ic_proporcao` ou `tamanho_amostra`.
+- **Estimar o número de casos**: procure `projecao_de_casos` e `estimativa_populacao`.
+- **Um campo desapareceu ou está errado**: abra `web/app.js`, procure `MODULOS` e a lista `campos` da fórmula correspondente.
+- **Layout da tela**: abra `web/styles.css` ou `web/mobile.css` (celular).
+- **Hospedagem**: `cloudflare/worker.py` só atende requisições. Não deve conter fórmulas.
+

@@ -293,89 +293,208 @@ def resumo_mostrado(media=None, desvio=None, n=None, p=None, sucessos=None):
 
 
 # ============================================================
+# MARGEM INFORMADA E POPULAÇÃO FINITA — FUNÇÕES USADAS EM VÁRIOS MÓDULOS
+# ============================================================
+
+def populacao_conhecida(dados, n=None):
+    """Lê a quantidade TOTAL de indivíduos, quando o problema a informa.
+
+    N não é o tamanho da amostra n. Se você entrevistou 100 pessoas
+    em uma cidade de 5.000, n=100 e N=5.000. A função devolve None
+    quando o enunciado não informou N: não é permitido inventá-lo.
+    """
+    raw = str(dados.get('populacao', '')).strip()
+    if not raw:
+        return None
+    N = inteiro(raw, 'Tamanho da população (N)')
+    if n is not None and N < n:
+        raise ValueError('A população (N) não pode ser menor que a amostra (n).')
+    return N
+
+
+def fator_populacao_finita(N, n):
+    """Quanto a amostragem sem reposição reduz a margem de erro.
+
+    Sem N informado, usamos o cálculo habitual do Excel, fator 1.
+    Com N conhecido e amostragem aleatória simples sem reposição,
+    multiplicamos pela raiz de (N - n) / (N - 1).
+    Se todos os indivíduos foram avaliados (n=N), não há erro amostral.
+    """
+    if N is None:
+        return 1.0
+    if N == n:
+        return 0.0
+    if N < 2:
+        raise ValueError('População inválida para correção finita.')
+    return math.sqrt((N-n)/(N-1))
+
+
+def margem_fornecida(dados, proporcao=False):
+    """Lê E opcional. Proporção usa pontos percentuais (8 = 8 p.p.).
+
+    Sem margem digitada, devolve None e a função calcula pelo z.
+    Na média a unidade é a original (minutos, centímetros, reais).
+    """
+    texto = str(dados.get('margem_informada', '')).strip()
+    if not texto:
+        return None
+    e = positivo(texto, 'Margem de erro informada', aceita_zero=True)
+    if proporcao and e > 100:
+        raise ValueError('Na proporção, a margem deve ficar entre 0 e 100 pontos percentuais.')
+    return e/100 if proporcao else e
+
+
+def projecao_de_casos(N, p, inferior, superior):
+    """Projeta casos na população, mas nunca afirma conhecer a contagem real.
+
+    Ex.: 40% na amostra de uma cidade com N=1000 estimam 400 pessoas.
+    Isto NÃO revela a população N nem prova que exatamente 400 têm
+    a característica. Multiplicamos por N para dar uma ESTIMATIVA.
+    """
+    limites = (max(0.0, inferior)*N, min(1.0, superior)*N)
+    return {
+        'populacao': str(N),
+        'projecao': '≈ ' + texto_num(N*p, 2) + ' pessoas',
+        'projecao_intervalo': texto_num(limites[0], 2) + ' a ' + texto_num(limites[1], 2) + ' pessoas',
+    }
+
+
+# ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DE IC PARA A MÉDIA
 # Margem E = z * desvio_padrao / raiz(n)
 # IC = (média - E, média + E)
 # ============================================================
 
 def ic_media(dados):
-    """Intervalo Z da média: aceita resumo pronto ou lista de observações."""
+    """Intervalo da média: E calculado OU a margem já dada no enunciado."""
     entrada = modo_entrada(dados)
     media, dp, n, tipo_dp = media_desvio_da_questao(dados)
     z = z_critico(dados.get('confianca', 95))
 
-    # A fórmula do Excel INT.CONFIANÇA usa o desvio e o tamanho já prontos.
-    # Quando há lista, primeiro calculamos esses dados automaticamente.
-    erro = z * dp / math.sqrt(n)
+    # Passo 1. A população TOTAL só altera o erro calculado quando N
+    # foi informado e a amostragem é sem reposição.
+    N = populacao_conhecida(dados, n)
+    fator = fator_populacao_finita(N, n)
+    margem_manual = margem_fornecida(dados)
+
+    # Passo 2. Se a professora já deu a margem, NÃO recalculamos E.
+    # Caso contrário usamos o Z da aula, com correção finita se houver N.
+    margem_calculada = z * dp / math.sqrt(n) * fator
+    erro = margem_manual if margem_manual is not None else margem_calculada
     inferior, superior = media - erro, media + erro
+    if not all(math.isfinite(x) for x in (erro, inferior, superior)):
+        raise ValueError('Resultado muito grande: confira os dados.')
 
     aviso = ''
     if tipo_dp == 'amostral' and n <= 30:
-        aviso = ('A aula usa intervalo Z; para amostras pequenas com desvio ' 
-                 'AMOSTRAL, confira se a professora exige t de Student.')
+        aviso = ('O método Z com desvio amostral pode ser inadequado para n pequeno; '
+                 'a professora pode exigir t de Student.')
     elif tipo_dp == 'informado' and n <= 30:
-        aviso = ('Para n pequeno, confirme se o desvio informado é ' 
-                 'populacional (σ). Se for amostral (s), pode ser necessário t de Student.')
-    passos = []
+        aviso = ('Para n pequeno, confira se o desvio informado é populacional (σ) '
+                 'ou se a questão exige t de Student.')
+
     if entrada == 'lista':
-        passos += [f'1. Da lista: n = {n}; média = {texto_num(media, 6)}; '
-                   f'desvio {tipo_dp} = {texto_num(dp, 6)}']
+        inicio = f'Da lista: n={n}; média={texto_num(media, 6)}; desvio={texto_num(dp, 6)}'
     else:
-        passos += [f'1. Dados informados: média = {texto_num(media)}; '
-                   f'desvio = {texto_num(dp)}; n = {n}']
-    passos += [f'2. Grau de confiança: {dados.get("confianca", 95)}% → z = {texto_num(z, 3)}',
-              f'3. Margem E = {texto_num(z, 3)} × {texto_num(dp, 6)} ÷ √{n} = {texto_num(erro, 6)}',
-              f'4. Limite inferior: {texto_num(media, 6)} − {texto_num(erro, 6)} = {texto_num(inferior, 6)}',
-              f'5. Limite superior: {texto_num(media, 6)} + {texto_num(erro, 6)} = {texto_num(superior, 6)}']
+        inicio = f'Dados informados: média={texto_num(media)}; desvio={texto_num(dp)}; n={n}'
+    passos = [f'1. {inicio}',
+              f'2. Confiança={dados.get("confianca", 95)}%; z={texto_num(z,3)}']
+    if margem_manual is not None:
+        passos.append(f'3. Margem dada no enunciado: E={texto_num(erro, 6)} (não calculamos outra margem)')
+    else:
+        passos.append(f'3. E = z × desvio / √n × correção = {texto_num(erro, 6)}')
+    if N is not None:
+        passos.append(f'População conhecida: N={N}; fator={texto_num(fator, 6)}')
+    passos += [f'4. Limite inferior={texto_num(media, 6)} − {texto_num(erro, 6)} = {texto_num(inferior, 6)}',
+               f'5. Limite superior={texto_num(media, 6)} + {texto_num(erro, 6)} = {texto_num(superior, 6)}']
     valores = resumo_mostrado(media=media, desvio=dp, n=n)
-    # O fluxograma usa estes valores; a tela apenas exibe o que o Python manda.
     valores.update(z=texto_num(z, 3),
                    inferior=texto_num(inferior, 6), superior=texto_num(superior, 6),
                    margem=f'{erro:.2f}'.replace('.', ','),
-                   intervalo=f'{inferior:.2f} a {superior:.2f}'.replace('.', ','))
+                   intervalo=f'{inferior:.2f} a {superior:.2f}'.replace('.', ','),
+                   origem_margem='Informada' if margem_manual is not None else 'Calculada')
+    if N is not None:
+        valores['populacao'] = str(N)
+        valores['correcao'] = texto_num(fator, 6)
     return saida('Intervalo de confiança da média',
                  f'IC = ({texto_num(inferior, 6)}; {texto_num(superior, 6)})',
-                 'E = z × σ / √n; IC = (x̄ − E; x̄ + E)', passos,
+                 'IC = (média − E; média + E)', passos,
                  'O intervalo estima a média verdadeira da população.',
-                 [f'Margem de erro: ±{texto_num(erro, 6)}'], aviso, valores)
+                 ['Margem de erro: ±' + texto_num(erro, 6)], aviso, valores)
+
 
 # ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DE IC PARA A PROPORÇÃO
-# p = sucessos / n
-# E = z * raiz(p * (1-p) / n)
-# IC = (p - E, p + E)
+# p = quantidade positiva / tamanho da amostra
+# IC = (p − E; p + E). E é fornecida ou calculada pelo Z.
 # ============================================================
 
 def ic_proporcao(dados):
-    """Intervalo da proporção: aceita contagem, percentual ou lista 1/0."""
+    """Intervalo da proporção, com margem pronta e população N opcionais."""
     entrada = modo_entrada(dados)
     p, n, k, origem = proporcao_da_questao(dados)
     z = z_critico(dados.get('confianca', 95))
-    erro = z * math.sqrt(p * (1 - p) / n)
-    inferior, superior = p - erro, p + erro
-    aviso = ('Com poucas ocorrências, o intervalo normal pode ser inadequado; '
-             'confira se a questão pede outro método.'
-             if min(n * p, n * (1 - p)) < 5 else '')
-    passos = [f'1. {"Da lista" if entrada == "lista" else "Dados informados"}: '
-              f'p = {origem} = {texto_num(p, 6)}; n = {n}',
-              f'2. Confiança = {dados.get("confianca", 95)}%; z = {texto_num(z, 3)}',
-              f'3. Margem E = {texto_num(z, 3)} × √[{texto_num(p, 6)} × '
-              f'(1 − {texto_num(p, 6)}) / {n}] = {texto_num(erro, 6)}',
-              f'4. Limite inferior = {texto_num(inferior * 100, 4)}%',
-              f'5. Limite superior = {texto_num(superior * 100, 4)}%']
+    N = populacao_conhecida(dados, n)
+    fator = fator_populacao_finita(N, n)
+    margem_manual = margem_fornecida(dados, proporcao=True)
+
+    # A entrada manual está em p.p.; transformamos em decimal ANTES de
+    # subtrair de p. Por exemplo, 8 p.p. vira 0,08 (não 8!).
+    calculada = z * math.sqrt(p*(1-p)/n) * fator
+    erro = margem_manual if margem_manual is not None else calculada
+    inferior, superior = p-erro, p+erro
+    if not all(math.isfinite(x) for x in (erro, inferior, superior)):
+        raise ValueError('Resultado muito grande: confira os dados.')
+
+    aviso = ('Para poucos casos ou proporção extrema, a aproximação normal '
+             'pode ser imprecisa.' if min(n*p, n*(1-p)) < 5 else '')
+    passos = [f'1. {"Da lista" if entrada == "lista" else "Dados informados"}: p={origem} = {texto_num(p, 6)}; n={n}',
+              f'2. Confiança={dados.get("confianca",95)}%; z={texto_num(z,3)}']
+    if margem_manual is not None:
+        passos.append(f'3. Margem dada: {texto_num(erro*100, 4)} pontos percentuais')
+    else:
+        passos.append(f'3. Margem calculada: E=z × √[p(1−p)/n] × correção = {texto_num(erro*100, 4)} p.p.')
+    if N is not None:
+        passos.append(f'População conhecida: N={N}; fator={texto_num(fator, 6)}')
+    passos += [f'4. Limite inferior: {texto_num(inferior*100, 4)}%',
+               f'5. Limite superior: {texto_num(superior*100, 4)}%']
     valores = resumo_mostrado(n=n, p=p, sucessos=k)
-    # Para o Node-RED, p, z, margem e limites ficam separados.
     valores.update(z=texto_num(z, 3),
-                   inferior=f'{texto_num(inferior * 100, 4)}%',
-                   superior=f'{texto_num(superior * 100, 4)}%',
-                   margem=f'{erro * 100:.2f}'.replace('.', ',') + ' p.p.',
-                   intervalo=f'{inferior * 100:.2f}% a {superior * 100:.2f}%'.replace('.', ','))
+                   inferior=texto_num(inferior*100, 4)+'%',
+                   superior=texto_num(superior*100, 4)+'%',
+                   margem=f'{erro*100:.2f}'.replace('.', ',')+' p.p.',
+                   intervalo=f'{inferior*100:.2f}% a {superior*100:.2f}%'.replace('.', ','),
+                   origem_margem='Informada' if margem_manual is not None else 'Calculada')
+    if N is not None:
+        valores.update(projecao_de_casos(N, p, inferior, superior))
+        valores['correcao'] = texto_num(fator, 6)
+        passos.append(f'Projeção: {valores["projecao"]}; faixa: {valores["projecao_intervalo"]} (estimativas, não contagem real)')
     return saida('Intervalo de confiança da proporção',
-                 f'IC = ({texto_num(inferior * 100, 4)}%; {texto_num(superior * 100, 4)}%)',
-                 'p = sucessos / n; E = z × √[p(1 − p) / n]; IC = (p − E; p + E)',
-                 passos, 'Este intervalo estima a proporção na população.',
-                 [f'p = {texto_num(p * 100, 4)}%',
-                  f'Margem: ±{texto_num(erro * 100, 4)} pontos percentuais'], aviso, valores)
+                 f'IC = ({texto_num(inferior*100, 4)}%; {texto_num(superior*100, 4)}%)',
+                 'IC = (p − E; p + E)', passos,
+                 'A faixa estima a proporção da população. Se N foi informado, também mostramos uma projeção de pessoas.',
+                 ['p='+texto_num(p*100,4)+'%', 'Margem ±'+texto_num(erro*100,4)+' p.p.'], aviso, valores)
+
+
+# ============================================================
+# ESTIMATIVA DA POPULAÇÃO — NÃO DESCOBRE O TAMANHO TOTAL N
+# ============================================================
+
+def estimativa_populacao(dados):
+    """Estima o número de casos numa população TOTAL informada pela pessoa.
+
+    A pessoa precisa informar N e dados de uma AMOSTRA. O código
+    reaproveita o IC da proporção; não há uma segunda fórmula oculta.
+    """
+    if not str(dados.get('populacao', '')).strip():
+        raise ValueError('Informe o tamanho TOTAL conhecido da população (N).')
+    resposta = ic_proporcao(dados)
+    valores = resposta['valores_calculados']
+    resposta['titulo'] = 'Estimativa de casos na população'
+    resposta['resultado'] = valores['projecao']
+    resposta['explicacao'] = ('Este número é uma projeção baseada na amostra. '
+                             'Não significa que contamos essas pessoas; a margem delimita a faixa estimada.')
+    return resposta
 
 # ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DO ESCORE Z
@@ -456,12 +575,25 @@ def tamanho_amostra(dados):
 
     if not math.isfinite(calculado) or calculado > 10**12:
         raise ValueError('A quantidade calculada é grande demais. Revise os dados.')
-    n_final = max(1, math.ceil(calculado))
+
+    # Se o professor informar quantos indivíduos existem ao todo (N),
+    # corrigimos o tamanho da amostra para a população finita.
+    # n0 é o tamanho sem correção; arredondamos o n já corrigido.
+    N = populacao_conhecida(dados)
+    original = calculado
+    if N is not None:
+        calculado = N * original / (N + original - 1)
+        valores['populacao'] = str(N)
+        valores['amostra_sem_correcao'] = str(max(1, math.ceil(original)))
+    n_final = min(N, math.ceil(calculado)) if N is not None else max(1, math.ceil(calculado))
     passos = [f'1. Objetivo: {tipo}; modo: {entrada}',
               f'2. Confiança: {dados.get("confianca", 95)}%; z = {texto_num(z, 3)}',
               f'3. Margem máxima E = {texto_num(erro_informado)}',
-              f'4. Substituir: {conta} = {texto_num(calculado, 6)}',
-              f'5. Arredondar para cima: n = {n_final}']
+              f'4. Substituir: {conta} = {texto_num(original, 6)}']
+    if N is not None:
+        passos.append(f'5. Corrigir população N={N}: n = N × n0 / (N + n0 − 1) = {texto_num(calculado, 6)}')
+    passos.append(f'6. Arredondar para cima: n = {n_final}')
+    valores['n_final'] = str(n_final)
     return saida('Tamanho mínimo da amostra', f'n = {n_final:,}'.replace(',', '.') + ' observações',
                  formula, passos, 'A quantidade é arredondada para cima.',
                  valores_calculados=valores)
@@ -710,7 +842,7 @@ def indicadores_automaticos(dados):
             info['n'] = str(inteiro(dados['n'], 'Quantidade'))
 
     # ---------- Percentuais complementares e contagens ----------
-    proporcao = formula in ('ic_proporcao', 'proporcao_amostral') or (
+    proporcao = formula in ('ic_proporcao', 'populacao', 'proporcao_amostral') or (
         formula in ('amostra', 'erro_padrao') and tipo == 'proporcao'
     )
     if proporcao:
@@ -760,7 +892,7 @@ def indicadores_automaticos(dados):
                 info.update(_percentuais_complementares(p))
 
     # ---------- Z crítico a partir da confiança ----------
-    if formula in ('ic_media', 'ic_proporcao', 'amostra'):
+    if formula in ('ic_media', 'ic_proporcao', 'populacao', 'amostra'):
         z = z_critico(dados.get('confianca', 95))
         info['z'] = texto_num(z, 3)
         info['alfa'] = texto_num(1-float(dados.get('confianca',95))/100, 2)
@@ -771,11 +903,23 @@ def indicadores_automaticos(dados):
             dp = numero(info['desvio'], 'Desvio')
             n = int(info['n'])
             info['ep'] = texto_num(dp/math.sqrt(n), 6)
-    if formula in ('ic_proporcao', 'erro_padrao') and (formula == 'ic_proporcao' or tipo == 'proporcao'):
+    if formula in ('ic_proporcao', 'populacao', 'erro_padrao') and (formula in ('ic_proporcao', 'populacao') or tipo == 'proporcao'):
         if 'p_decimal' in info and ('n' in info or _preenchido(dados,'n')):
             n = int(info['n']) if 'n' in info else inteiro(dados['n'], 'Tamanho')
             pv = numero(info['p_decimal'], 'Proporção')
             info['ep_pct'] = f'{texto_num(100*math.sqrt(pv*(1-pv)/n), 4)} p.p.'
+
+    # ---------- Estimativa de casos usando N e p já conhecidos ----------
+    if formula in ('ic_proporcao', 'populacao') and 'p_decimal' in info and _preenchido(dados, 'populacao'):
+        N = populacao_conhecida(dados)
+        n = inteiro(dados['n'], 'Amostra') if _preenchido(dados, 'n') and modo == 'direto' else (
+            int(info['n']) if 'n' in info else None)
+        if n is not None and N < n:
+            raise ValueError('A população não pode ser menor que a amostra.')
+        pv = numero(info['p_decimal'], 'Proporção')
+        info.update(projecao_de_casos(N, pv, pv, pv))
+        # O intervalo só fica disponível depois que E é conhecido ou calculado.
+        info.pop('projecao_intervalo', None)
 
     # ---------- Diferença no escore Z ----------
     if formula == 'escore' and _preenchido(dados, 'valor') and 'media' in info:
@@ -845,6 +989,7 @@ FORMULAS = {
     'regressao': regressao,
     'ic_media': ic_media,
     'ic_proporcao': ic_proporcao,
+    'populacao': estimativa_populacao,
     'escore': escore,
     'amostra': tamanho_amostra,
     'media_amostral': media_amostral,
