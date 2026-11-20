@@ -52,3 +52,10 @@
   .celula-entrada > input, .celula-entrada > select, .celula-entrada > textarea { font-size: 14px; padding: 9px 8px; }
   .celula-resultado { font-size: 13px; padding: 9px 8px; }
 }
+
+/* V7: os dados inferidos também seguem o desenho de duas células no celular. */
+@media (max-width: 760px) {
+  .linha-derivada { grid-template-columns: minmax(104px, 42%) minmax(0, 1fr); gap: 7px; }
+  .celula-derivada { font-size: 13px; padding: 9px 8px; }
+  .no-explicacao { font-size: 10px; }
+}

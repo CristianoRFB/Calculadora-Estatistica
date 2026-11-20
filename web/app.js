@@ -260,6 +260,9 @@ let campoAtivo = null;     // referência ao último campo usado com o teclado v
 let respostaPython = null;
 let aguardando = false;
 let versaoDosCampos = 0; // impede que uma resposta antiga mude a nova fórmula
+let timerIndicadores = null; // pequena pausa para não consultar Python a cada tecla
+let rodadaDaAnimacao = 0; // cancela a animação antiga se trocar os dados
+let etapaAnimada = null; // etapa verde que será destacada durante a transição
 
 // Estas quatro variáveis são somente do teclado básico (+, −, ×, ÷).
 // A conta em si também é enviada ao Python.
@@ -272,6 +275,8 @@ let digitandoNovoNumero = false;
 // 03 — SELECIONAR UMA FUNÇÃO OU VOLTAR AO TECLADO BÁSICO
 // ---------------------------------------------------------------------------
 function selecionarFormula(id) {
+  pararAnimacao();
+  clearTimeout(timerIndicadores);
   formulaSelecionada = id;
   campoAtivo = null;
   versaoDosCampos += 1;
@@ -281,6 +286,7 @@ function selecionarFormula(id) {
   el('painel-resultado').hidden = true;
   el('painel-resultado').open = false;
   el('linhas-resultado').hidden = true;
+  el('painel-derivados').hidden = true;
   el('erro').hidden = true;
 
   document.querySelectorAll('.tecla-formula').forEach(botao => {
@@ -377,39 +383,20 @@ function construirCampos() {
   }
   exibirCamposCorretos();
   construirLinhasResultado();
+  construirLinhasDerivadas();
 }
 
 // Cada resultado tem sua última linha, como o Excel da professora.
 // Nos intervalos, a primeira saída é a margem (INT.CONFIANÇA no Excel)
 // e a última é o intervalo completo [média - E; média + E].
 function construirLinhasResultado() {
-  // Escolher "lista" exige exibir os valores obtidos AUTOMATICAMENTE.
-  // São linhas de saída, não campos editáveis: nenhum cálculo ocorre aqui.
+  // Só as respostas finais ficam aqui: margem e limites, ou resultado único.
+  // Os números inferidos da amostra ficam em "linhas-derivadas" logo acima.
   const container = el('linhas-resultado');
   container.replaceChildren();
-  const modo = el('campo-entrada')?.value || 'direto';
-  const lista = modo === 'lista';
-  const linhas = [];
-
-  if (lista && ['ic_media', 'escore'].includes(formulaSelecionada)) {
-    linhas.push(['media','Média calculada'], ['desvio','Desvio calculado'], ['n','Quantidade (n)']);
-  } else if (lista && ['ic_proporcao', 'proporcao_amostral'].includes(formulaSelecionada)) {
-    linhas.push(['sucessos','Casos positivos'], ['n','Quantidade (n)'], ['p','Proporção']);
-  } else if (lista && formulaSelecionada === 'erro_padrao') {
-    const tipo = el('campo-tipo')?.value;
-    if (tipo === 'media') linhas.push(['desvio','Desvio calculado'],['n','Quantidade (n)']);
-    else linhas.push(['p','Proporção'],['n','Quantidade (n)']);
-  } else if (lista && formulaSelecionada === 'amostra') {
-    const tipo = el('campo-tipo')?.value;
-    if (tipo === 'media') linhas.push(['desvio','Desvio piloto'], ['n','Tamanho piloto']);
-    else linhas.push(['p','Proporção piloto'], ['n','Tamanho piloto']);
-  }
-
-  if (['ic_media','ic_proporcao'].includes(formulaSelecionada)) {
-    linhas.push(['margem','Margem de erro'], ['intervalo','Intervalo de confiança']);
-  } else {
-    linhas.push(['resultado','Resultado']);
-  }
+  const linhas = ['ic_media', 'ic_proporcao'].includes(formulaSelecionada)
+    ? [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']]
+    : [['resultado', 'Resultado']];
 
   for (const [chave, titulo] of linhas) {
     const linha = document.createElement('div');
@@ -425,6 +412,141 @@ function construirLinhasResultado() {
     container.append(linha);
   }
   container.hidden = false;
+}
+
+// ---------------------------------------------------------------------------
+// 04.1 — DADOS CALCULADOS AUTOMATICAMENTE (SEM CAIXAS EDITÁVEIS)
+//
+// Tudo que for adicionando aqui é uma LEGENDA, não uma nova conta!
+// A chave precisa coincidir com o nome devolvido por indicadores_automaticos
+// em calculos.py. Caso queira mudar a operação, altere o Python.
+// ---------------------------------------------------------------------------
+function linhasQueFazemSentido() {
+  const lista = el('campo-entrada')?.value === 'lista';
+  const tipo = el('campo-tipo')?.value;
+  const formula = formulaSelecionada;
+  const itens = [];
+  const adicionar = (chave, texto) => itens.push([chave, texto]);
+
+  if (formula === 'ic_proporcao' || formula === 'proporcao_amostral' ||
+      ((formula === 'amostra' || formula === 'erro_padrao') && tipo === 'proporcao')) {
+    adicionar('p_pct', formula === 'amostra' ? 'Proporção prevista (sim)' : 'Sucesso / com característica');
+    adicionar('q_pct', 'Fracasso / sem característica');
+    if (formula !== 'amostra') {
+      // A contagem complementar só aparece se o Python souber o total e
+      // uma quantidade inteira. Não inventamos meia pessoa.
+      adicionar('fracassos', 'Quantidade sem característica');
+      if (lista || el('campo-modo')?.value === 'porcentagem') {
+        adicionar('sucessos', 'Quantidade com característica');
+      }
+    }
+    if (formula === 'ic_proporcao') {
+      adicionar('z', 'Valor crítico z');
+      adicionar('ep_pct', 'Erro-padrão da proporção');
+    }
+    if (formula === 'amostra') adicionar('z', 'Valor crítico z');
+    return itens;
+  }
+
+  if (formula === 'ic_media') {
+    if (lista) {
+      adicionar('media', 'Média obtida da lista');
+      adicionar('desvio', 'Desvio-padrão obtido');
+      adicionar('n', 'Quantidade de valores');
+    }
+    adicionar('z', 'Valor crítico z');
+    adicionar('ep', 'Erro-padrão da média');
+  } else if (formula === 'escore') {
+    if (lista) {
+      adicionar('media', 'Média obtida da lista');
+      adicionar('desvio', 'Desvio-padrão obtido');
+    }
+    adicionar('diferenca', 'Valor menos média');
+  } else if (formula === 'amostra') {
+    if (lista) {
+      adicionar('n', 'Quantidade piloto');
+      adicionar('desvio', 'Desvio-padrão piloto');
+    }
+    adicionar('z', 'Valor crítico z');
+  } else if (formula === 'erro_padrao') {
+    if (lista) {
+      adicionar('n', 'Quantidade de valores');
+      adicionar('desvio', 'Desvio-padrão calculado');
+    }
+  } else if (formula === 'media_amostral') {
+    adicionar('n', 'Quantidade de valores');
+    adicionar('soma', 'Soma dos valores');
+  } else if (formula === 'desvio_padrao' || formula === 'variancia') {
+    adicionar('n', 'Quantidade de valores');
+    adicionar('media', 'Média calculada');
+    if (formula === 'desvio_padrao') adicionar('variancia', 'Variância calculada');
+    else adicionar('desvio', 'Desvio-padrão calculado');
+  } else if (formula === 'correlacao' || formula === 'regressao') {
+    adicionar('n', 'Quantidade de pares');
+    adicionar('media_x', 'Média de X');
+    adicionar('media_y', 'Média de Y');
+    if (formula === 'regressao') adicionar('r2', 'R² · variação explicada');
+  }
+  return itens;
+}
+
+function construirLinhasDerivadas() {
+  const container = el('linhas-derivadas');
+  container.replaceChildren();
+  el('painel-derivados').hidden = true;
+
+  for (const [chave, rotulo] of linhasQueFazemSentido()) {
+    const linha = document.createElement('div');
+    linha.className = 'linha-derivada';
+    linha.dataset.chave = chave;
+    linha.hidden = true; // só mostrar quando o Python tiver esse número
+    const nome = document.createElement('span');
+    nome.className = 'celula-nome';
+    nome.textContent = rotulo;
+    const valor = document.createElement('output');
+    valor.className = 'celula-derivada';
+    valor.textContent = '—';
+    valor.setAttribute('aria-label', rotulo);
+    linha.append(nome, valor);
+    container.append(linha);
+  }
+}
+
+function mostrarIndicadores(dados) {
+  // <output> é texto de resultado: o usuário pode selecionar e copiar,
+  // mas não pode alterar nem mandar um resultado falso para o Python.
+  let temAlgo = false;
+  el('linhas-derivadas').querySelectorAll('.linha-derivada').forEach(linha => {
+    const valor = dados?.[linha.dataset.chave];
+    const disponivel = valor !== undefined && valor !== null && valor !== '';
+    linha.hidden = !disponivel;
+    linha.querySelector('output').textContent = disponivel ? String(valor) : '—';
+    temAlgo ||= disponivel;
+  });
+  el('painel-derivados').hidden = !temAlgo;
+}
+
+function pedirIndicadoresAutomaticos() {
+  clearTimeout(timerIndicadores);
+  if (!formulaSelecionada) return;
+  // Não exibir só z crítico antes do usuário informar qualquer dado.
+  const possuiDado = [...el('campos').querySelectorAll('input, textarea')]
+    .some(campo => !campo.closest('.campo').hidden && campo.value.trim());
+  if (!possuiDado) return;
+  const versaoAoPedir = versaoDosCampos;
+  const dados = lerCampos();
+  timerIndicadores = setTimeout(async () => {
+    try {
+      const resposta = await pedirAoPython({ ...dados, formula:'indicadores', alvo:formulaSelecionada });
+      // Evita que valores de uma questão anterior apareçam na atual.
+      if (versaoAoPedir === versaoDosCampos && !respostaPython) {
+        mostrarIndicadores(resposta.valores_calculados || {});
+      }
+    } catch (_) {
+      // Campo incompleto não é motivo para mostrar erro enquanto digita.
+      // Erros definitivos aparecem somente após clicar em Calcular.
+    }
+  }, 240);
 }
 
 function limparLinhasResultado() {
@@ -486,8 +608,10 @@ function camposObrigatoriosPreenchidos() {
 
 function camposAlterados() {
   // Primeiro atualizamos quais campos aparecem; depois o fluxo.
+  pararAnimacao();
   exibirCamposCorretos();
   construirLinhasResultado();
+  construirLinhasDerivadas();
   versaoDosCampos += 1;
   respostaPython = null;
   ultimoResultado = null;
@@ -500,6 +624,7 @@ function camposAlterados() {
   const algumNumero = campos.some(c => c.value.trim() !== '');
   andamento = camposObrigatoriosPreenchidos() ? 'pronto' : algumNumero ? 'editando' : 'vazio';
   desenharFluxo();
+  pedirIndicadoresAutomaticos();
 }
 
 // ---------------------------------------------------------------------------
@@ -553,9 +678,12 @@ async function calcularFormula(evento) {
     respostaPython = resposta;
     ultimoResultado = resposta.resultado;
     andamento = 'feito';
+    clearTimeout(timerIndicadores);
     atualizarVisor(resposta.titulo, resposta.resultado);
+    mostrarIndicadores(resposta.valores_calculados || {});
     mostrarLinhasResultado(resposta);
     mostrarResultado(resposta);
+    animarEtapasConcluidas();
   } catch (erro) {
     if (versaoDaRequisicao !== versaoDosCampos) return;
     andamento = 'erro';
@@ -593,6 +721,36 @@ function atualizarVisor(expressao, resultado) {
   el('visor').textContent = resultado;
   // Algumas equações são compridas; reduzir a fonte impede que estourem o visor.
   el('visor').style.fontSize = String(resultado).length > 36 ? '22px' : String(resultado).length > 23 ? '28px' : '';
+}
+
+// ---------------------------------------------------------------------------
+// 05.1 — ANIMAÇÃO DO FLUXOGRAMA
+// A matemática JÁ acabou no Python. Esta sequência é apenas uma explicação
+// visual, e nunca atrasa ou modifica o resultado mostrado na planilha.
+// ---------------------------------------------------------------------------
+function pararAnimacao() {
+  rodadaDaAnimacao++;
+  etapaAnimada = null;
+}
+
+function animarEtapasConcluidas() {
+  pararAnimacao();
+  const rodadaAtual = rodadaDaAnimacao;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    etapaAnimada = 4;
+    desenharFluxo();
+    return;
+  }
+  etapaAnimada = 0;
+  desenharFluxo();
+  for (let i = 1; i <= 4; i++) {
+    setTimeout(() => {
+      if (rodadaAtual === rodadaDaAnimacao && andamento === 'feito') {
+        etapaAnimada = i;
+        desenharFluxo();
+      }
+    }, i * 260);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -691,10 +849,26 @@ function resumoNoFluxo(indice) {
 // A função antiga que resumia a amostra foi removida: hoje
 // "resumoNoFluxo" já atende todas as funções e evita código duplicado.
 
+// Cada frase diz o que estamos FAZENDO naquela etapa, além do número.
+// Se a professora pedir uma explicação diferente, altere apenas estas frases.
+const EXPLICACOES_FLUXO = {
+  correlacao: ['Lemos X e Y em pares.', 'Calculamos a média de cada coluna.', 'Comparamos as variações em conjunto.', 'A razão dessas variações dá r.', 'O sinal e o tamanho explicam a relação.'],
+  regressao: ['Pareamos os valores de X e Y.', 'Calculamos as duas médias.', 'Obtemos quanto Y varia com X.', 'Encontramos o início da reta.', 'Montamos a equação para prever Y.'],
+  ic_media: ['Lemos ou calculamos média, desvio e n.', 'A confiança determina o z.', 'Multiplicamos z pelo erro-padrão.', 'Subtraímos e somamos a margem.', 'A faixa encontrada estima a média.'],
+  ic_proporcao: ['Contamos o total de respostas.', 'Dividimos os casos positivos pelo total.', 'A confiança determina o z.', 'Usamos p, q, n e z para achar E.', 'Subtraímos e somamos E à proporção.'],
+  escore: ['Lemos o valor que será comparado.', 'Subtraímos a média do valor.', 'Identificamos o desvio-padrão.', 'Dividimos a diferença pelo desvio.', 'O z mostra quantos desvios separam.'],
+  amostra: ['Escolhemos média ou proporção.', 'A confiança define o valor z.', 'Usamos o erro máximo permitido.', 'Substituímos os dados na fórmula.', 'Arredondamos o tamanho para cima.'],
+  media_amostral: ['Lemos todos os valores.', 'Contamos quantos existem.', 'Somamos os valores.', 'Dividimos a soma pela quantidade.', 'Encontramos a média.'],
+  desvio_padrao: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Dividimos por n−1 ou N.', 'Tiramos a raiz da variância.'],
+  variancia: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Escolhemos n−1 ou N.', 'A divisão resulta na variância.'],
+  proporcao_amostral: ['Contamos o total.', 'Contamos os casos positivos.', 'Dividimos positivos pelo total.', 'Obtemos p entre 0 e 1.', 'Multiplicamos por 100 para obter %.'],
+  erro_padrao: ['Definimos média ou proporção.', 'Reunimos os dados necessários.', 'Aplicamos a expressão adequada.', 'Efetuamos a divisão ou a raiz.', 'Encontramos o erro-padrão.']
+};
+
 function desenharFluxo() {
   const modulo = formulaSelecionada ? MODULOS[formulaSelecionada] : null;
   const nomes = modulo ? modulo.fluxo : ['Selecionar', 'Informar dados', 'Validar', 'Calcular', 'Resultado'];
-  const indiceAtivo = andamento === 'feito' ? 4 : andamento === 'calculando' ? 3
+  const indiceAtivo = andamento === 'feito' ? (etapaAnimada ?? 4) : andamento === 'calculando' ? 3
     : andamento === 'pronto' || andamento === 'erro' ? 2 : andamento === 'editando' ? 1 : 0;
   const fluxo = el('fluxo');
   fluxo.replaceChildren();
@@ -719,6 +893,13 @@ function desenharFluxo() {
     detalhe.textContent = resumoNoFluxo(indice);
     detalhe.title = detalhe.textContent;
     no.append(detalhe);
+    const frases = EXPLICACOES_FLUXO[formulaSelecionada];
+    if (frases && respostaPython && andamento === 'feito' && indice <= indiceAtivo) {
+      const explicacao = document.createElement('span');
+      explicacao.className = 'no-explicacao';
+      explicacao.textContent = frases[indice];
+      no.append(explicacao);
+    }
     fluxo.append(no);
   });
 

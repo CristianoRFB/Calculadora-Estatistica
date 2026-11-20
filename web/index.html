@@ -99,6 +99,13 @@
         <p id="pista" class="pista">Selecione uma função para abrir os campos necessários.</p>
         <form id="formulario" novalidate>
           <div id="campos" class="campos"></div>
+          <!-- RESULTADOS IMPLÍCITOS: são saída, nunca campos de entrada.
+               Ex.: 40 de 100 -> 40% com a característica e 60% sem ela.
+               Os valores são produzidos no Python e podem aparecer ao digitar. -->
+          <section id="painel-derivados" class="painel-derivados" hidden aria-label="Dados obtidos automaticamente">
+            <p class="titulo-derivados">Calculado automaticamente <span>somente leitura</span></p>
+            <div id="linhas-derivadas" class="linhas-resultado" aria-live="polite"></div>
+          </section>
           <div id="linhas-resultado" class="linhas-resultado" hidden aria-live="polite"></div>
           <div class="acoes" id="acoes" hidden>
             <button class="botao-calcular" type="submit">Calcular <span aria-hidden="true">=</span></button>

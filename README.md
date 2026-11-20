@@ -22,6 +22,46 @@ Ao clicar numa função, surgem os campos que ela precisa. O resultado aparece n
 
 ---
 
+## 1.1. Dados descobertos automaticamente (versão 7)
+
+**Nem todo número de uma questão precisa ser digitado.** Por exemplo, se a professora disser que **40 entre 100** pessoas preferem um produto, o aluno informa apenas o total e a quantidade que prefere. O programa apresenta, **sem botão extra e sem permitir edição**, os dados que consegue deduzir:
+
+| Dado automaticamente calculado | Resultado |
+| --- | --- |
+| Sucesso / com a característica | 40% |
+| Fracasso / sem a característica | 60% |
+| Quantidade sem a característica | 60 |
+| Valor crítico z | De acordo com o grau de confiança escolhido |
+| Erro-padrão da proporção | Calculado a partir de p, (1 − p) e n |
+
+Se houver **250 ocorrências em 1.000**, aparecem **25% com a característica e 75% sem ela**, e a contagem complementar é 750.
+
+**Atenção:** quando a entrada for apenas *porcentagem + total* e a multiplicação não der uma contagem inteira, a calculadora **não inventa meia pessoa**. Por exemplo, 25% de 250 equivaleriam a 62,5 pessoas; nesse caso, ela mostra os dois percentuais e deixa de mostrar as contagens não dedutíveis como inteiros.
+
+A mesma lógica oferece outros dados úteis, conforme a fórmula escolhida:
+
+- **Intervalo da média:** valor crítico Z, erro-padrão e, se houver lista, a média, o desvio e n calculados.
+- **Intervalo da proporção:** proporção, complemento, contagem complementar (quando possível), Z e erro-padrão.
+- **Média amostral:** quantidade de valores e soma.
+- **Desvio-padrão e variância:** média e medida complementar já calculadas, sem exigir contas separadas.
+- **Correlação e regressão:** quantidade de pares, médias de X e Y e, na regressão, R².
+- **Escore Z:** diferença entre o valor observado e a média.
+- **Tamanho da amostra:** dados estimados disponíveis e valor crítico Z. Proporção prevista não é a mesma coisa que proporção observada.
+
+Os valores derivados aparecem numa área verde **"Calculado automaticamente — somente leitura"**, abaixo das entradas azuis. São elementos HTML de saída (`<output>`), não campos de digitação. Quando o aluno muda um número, o sistema elimina o resultado anterior e consulta o Python novamente. Se o dado ainda estiver incompleto, não inventa uma resposta.
+
+### Onde corrigir o comportamento
+
+- **O percentual está errado?** Procure `indicadores_automaticos` e `_percentuais_complementares` no arquivo `calculos.py`. É ali que a conta é feita.
+- **O valor está certo, mas a linha não aparece?** Procure `linhasQueFazemSentido` em `web/app.js`. Essa função define quais números derivados cada módulo pode exibir.
+- **O valor está desatualizado enquanto digita?** Confira `pedirIndicadoresAutomaticos` no `web/app.js`. Ela faz uma chamada curta à API Python depois de uma pequena pausa e ignora respostas antigas.
+- **As cores das células estão ruins?** Procure `.painel-derivados`, `.linha-derivada` e `.celula-derivada` em `web/styles.css`. No celular, os tamanhos ficam no `web/mobile.css`.
+- **O fluxograma está sem explicação?** Confira `EXPLICACOES_FLUXO` e `animarEtapasConcluidas` em `web/app.js`. São apenas frases e animações: as fórmulas não ficam no JavaScript.
+
+O fluxo do cálculo explica cada etapa com uma frase curta, iluminando os nós da esquerda para a direita após a resposta. Pessoas que preferem movimento reduzido veem todas as etapas sem animação.
+
+---
+
 ## 2. Duas maneiras de fornecer informações
 
 Várias fórmulas têm uma linha **Forma de entrada** com duas opções:

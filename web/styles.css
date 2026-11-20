@@ -242,3 +242,29 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .tecla-formula[data-formula="ic_proporcao"] small { font-size: 12px; font-weight: 700; color: #c5e1ee; }
 /* Campo de "Lista de valores" pode crescer para receber colunas do Excel. */
 .celula-entrada > textarea { min-height: 96px; }
+
+/* ============================================================
+   VERSÃO 7 — RESULTADOS QUE O PROGRAMA DESCOBRE SOZINHO
+   Estes resultados NÃO são inputs: são <output> (somente leitura).
+   Verde escuro discreto distingue valores derivados dos campos azuis.
+   Não altere a conta nesta folha de estilo; a conta está em calculos.py.
+   ============================================================ */
+.painel-derivados { margin-top: 15px; padding-top: 11px; border-top: 1px solid #414141; }
+.titulo-derivados { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #b6d8ca; font-size: 12px; font-weight: 600; margin: 0 0 10px; }
+.titulo-derivados span { color: #8ba99c; font-size: 11px; font-weight: 400; }
+.painel-derivados .linhas-resultado { margin: 0; padding: 0; border: none; }
+.linha-derivada { display: grid; grid-template-columns: minmax(150px,235px) minmax(0,1fr); gap: 12px; align-items: stretch; }
+.linha-derivada .celula-nome { background: #24453e; border-color: #3b6155; }
+.celula-derivada { display: flex; align-items: center; padding: 10px 14px; min-height: 45px; border: 1px solid #436552; border-radius: 5px; background: #20372c; color: #c9f3dc; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Animação curta de fluxo: destaca a conexão completada e a etapa nova.
+   O cálculo real já terminou no Python; isto não muda nenhum resultado. */
+@keyframes acender-etapa { from { box-shadow: 0 0 0 #55e8a000; } to { box-shadow: 0 0 14px #55e8a055; } }
+@keyframes aparecer-explicacao { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.no-fluxo.ativo { animation: acender-etapa .28s ease-out both; }
+.no-explicacao { display: block; margin-top: 9px; padding-top: 7px; border-top: 1px solid #ffffff21; font-size: 10px; color: #c3ecd8; line-height: 1.4; animation: aparecer-explicacao .22s ease both; }
+.ligacao.concluida { transition: background-color .25s ease, box-shadow .25s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .no-fluxo.ativo, .no-explicacao { animation: none; }
+  .ligacao.concluida { transition: none; }
+}

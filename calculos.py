@@ -617,6 +617,187 @@ def erro_padrao(dados):
                  'Erro-padrão é diferente da margem de erro.', valores_calculados=valores)
 
 # ============================================================
+# VALORES IMPLÍCITOS / AUXILIARES — NÃO SÃO CAMPOS PARA PREENCHER
+# ============================================================
+# A tela pede somente o que o professor informou no enunciado.
+# Quando o usuário tem n=100 e 40 pessoas responderam "sim", por exemplo:
+#   p = 40/100 = 0,4 = 40%   (com a característica)
+#   q = 1 - p = 0,6 = 60%  (sem a característica)
+#   100 - 40 = 60 pessoas responderam "não".
+# Esses números aparecem como <output> (apenas leitura) no navegador.
+#
+# Esta função é chamada de duas maneiras:
+#   1) Ao digitar, sem exigir que todos os dados da fórmula já existam;
+#   2) Ao clicar em Calcular, para completar a resposta definitiva.
+# Não confunda "sem característica" com defeito ou fracasso moral;
+# estatisticamente é só a categoria complementar dos dados binários.
+
+
+def _preenchido(dados, chave):
+    """True quando o usuário realmente digitou um valor nesse campo."""
+    return str(dados.get(chave, '')).strip() != ''
+
+
+def _percentuais_complementares(p, n=None, quantidade=None):
+    """Transforma uma proporção em 2 percentuais e 2 quantidades opcionais.
+
+    A contagem só é exibida quando ela é inteira: por exemplo 40 de 100.
+    Não inventamos 62,5 pessoas se a entrada for 25% de 250.
+    """
+    q = 1 - p
+    resultado = {
+        'p_decimal': texto_num(p, 6),
+        'q_decimal': texto_num(q, 6),
+        'p_pct': f'{texto_num(100*p, 4)}%',
+        'q_pct': f'{texto_num(100*q, 4)}%',
+    }
+    if n is not None:
+        k = quantidade
+        if k is None:
+            calculada = n*p
+            if math.isclose(calculada, round(calculada), abs_tol=1e-9):
+                k = round(calculada)
+        if k is not None:
+            resultado['sucessos'] = str(k)
+            resultado['fracassos'] = str(n-k)
+    return resultado
+
+
+def indicadores_automaticos(dados):
+    """Devolve somente valores que podem ser deduzidos dos dados existentes.
+
+    Não exige preencher todos os campos. Se faltar um dado, aquela parte é
+    simplesmente omitida (a tela mostra apenas o que já é calculável).
+    Não gera resultados por suposição quando a questão não informou nada.
+    """
+    formula = dados.get('formula', '')
+    info = {}
+    modo = dados.get('entrada', 'direto')
+    tipo = dados.get('tipo', 'media')
+
+    # ---------- Quantidade, média e dispersão da lista ----------
+    # Válido para IC da média, escore e auxiliares que usam dados contínuos.
+    usa_lista_numerica = (
+        formula in ('ic_media', 'escore', 'media_amostral', 'desvio_padrao', 'variancia')
+        or (formula in ('amostra', 'erro_padrao') and tipo == 'media')
+    )
+    if usa_lista_numerica and _preenchido(dados, 'valores'):
+        requer_modo_lista = formula in ('ic_media', 'escore', 'amostra', 'erro_padrao')
+        if not requer_modo_lista or modo == 'lista':
+            if formula in ('desvio_padrao', 'variancia'):
+                dispersao = dados.get('tipo', 'amostral')
+            elif formula == 'media_amostral':
+                dispersao = 'populacional'  # permite calcular a média com 1 valor
+            else:
+                dispersao = dados.get('tipo_dispersao', 'amostral')
+            media, dp, n = resumo_de_valores(dados, dispersao=dispersao)
+            valores = lista_numeros(dados['valores'], 'Valores', minimo=1)
+            info.update(n=str(n), media=texto_num(media, 6),
+                        soma=texto_num(math.fsum(valores), 6))
+            if formula != 'media_amostral':
+                info.update(desvio=texto_num(dp, 6),
+                            variancia=texto_num(dp*dp, 6))
+
+    # ---------- Média/desvio já fornecidos pela questão ----------
+    if formula in ('ic_media', 'escore') and modo == 'direto':
+        if _preenchido(dados, 'media'):
+            info['media'] = texto_num(numero(dados['media'], 'Média'), 6)
+        if _preenchido(dados, 'desvio'):
+            dp = positivo(dados['desvio'], 'Desvio', aceita_zero=True)
+            info['desvio'] = texto_num(dp, 6)
+            info['variancia'] = texto_num(dp*dp, 6)
+        if _preenchido(dados, 'n'):
+            info['n'] = str(inteiro(dados['n'], 'Quantidade'))
+
+    # ---------- Percentuais complementares e contagens ----------
+    proporcao = formula in ('ic_proporcao', 'proporcao_amostral') or (
+        formula in ('amostra', 'erro_padrao') and tipo == 'proporcao'
+    )
+    if proporcao:
+        if formula == 'amostra' and modo == 'direto':
+            # A margem de segurança de p=50% só serve para PLANEJAMENTO.
+            # Nunca apresente isso como resultado real da população.
+            if _preenchido(dados, 'percentual'):
+                p = numero(dados['percentual'], 'Proporção prevista') / 100
+                if not 0 <= p <= 1:
+                    raise ValueError('Proporção deve ficar entre 0 e 100%.')
+                info.update(_percentuais_complementares(p))
+                info['estimativa'] = 'Proporção prevista, não observada'
+        elif formula == 'erro_padrao' and modo == 'direto':
+            if _preenchido(dados, 'percentual'):
+                p = numero(dados['percentual'], 'Proporção observada') / 100
+                if not 0 <= p <= 1:
+                    raise ValueError('Proporção deve ficar entre 0 e 100%.')
+                n = inteiro(dados['n'], 'Tamanho') if _preenchido(dados, 'n') else None
+                info.update(_percentuais_complementares(p, n))
+        elif modo == 'lista':
+            if _preenchido(dados, 'valores'):
+                k, n = eventos_binarios(dados)
+                info['n'] = str(n)
+                info.update(_percentuais_complementares(k/n, n, k))
+        else:
+            if _preenchido(dados, 'n'):
+                n = inteiro(dados['n'], 'Tamanho')
+                info['n'] = str(n)
+                if _preenchido(dados, 'sucessos') and dados.get('modo', 'contagem') != 'porcentagem':
+                    valor_k = numero(dados['sucessos'], 'Quantidade com característica')
+                    if not valor_k.is_integer() or not 0 <= valor_k <= n:
+                        raise ValueError('A quantidade deve ser inteira e não superar o total.')
+                    k = int(valor_k)
+                    if not 0 <= k <= n:
+                        raise ValueError('A quantidade não pode superar o total.')
+                    info.update(_percentuais_complementares(k/n, n, k))
+                elif _preenchido(dados, 'percentual'):
+                    p = numero(dados['percentual'], 'Proporção') / 100
+                    if not 0 <= p <= 1:
+                        raise ValueError('Proporção deve ficar entre 0 e 100%.')
+                    info.update(_percentuais_complementares(p, n))
+            elif _preenchido(dados, 'percentual'):
+                # Percentual sem tamanho ainda permite mostrar o complemento.
+                p = numero(dados['percentual'], 'Proporção') / 100
+                if not 0 <= p <= 1:
+                    raise ValueError('Proporção deve ficar entre 0 e 100%.')
+                info.update(_percentuais_complementares(p))
+
+    # ---------- Z crítico a partir da confiança ----------
+    if formula in ('ic_media', 'ic_proporcao', 'amostra'):
+        z = z_critico(dados.get('confianca', 95))
+        info['z'] = texto_num(z, 3)
+        info['alfa'] = texto_num(1-float(dados.get('confianca',95))/100, 2)
+
+    # ---------- Erro-padrão calculável antes do intervalo ----------
+    if formula in ('ic_media', 'erro_padrao') and (formula == 'ic_media' or tipo == 'media'):
+        if 'desvio' in info and 'n' in info:
+            dp = numero(info['desvio'], 'Desvio')
+            n = int(info['n'])
+            info['ep'] = texto_num(dp/math.sqrt(n), 6)
+    if formula in ('ic_proporcao', 'erro_padrao') and (formula == 'ic_proporcao' or tipo == 'proporcao'):
+        if 'p_decimal' in info and ('n' in info or _preenchido(dados,'n')):
+            n = int(info['n']) if 'n' in info else inteiro(dados['n'], 'Tamanho')
+            pv = numero(info['p_decimal'], 'Proporção')
+            info['ep_pct'] = f'{texto_num(100*math.sqrt(pv*(1-pv)/n), 4)} p.p.'
+
+    # ---------- Diferença no escore Z ----------
+    if formula == 'escore' and _preenchido(dados, 'valor') and 'media' in info:
+        x = numero(dados['valor'], 'Valor observado')
+        media = numero(info['media'], 'Média')
+        info['diferenca'] = texto_num(x-media, 6)
+
+    # ---------- Médias de X e Y, coeficiente e R² ----------
+    if formula in ('correlacao', 'regressao') and _preenchido(dados, 'x') and _preenchido(dados, 'y'):
+        xs, ys, mx, my, sxx, sxy, r = somas_pares(
+            dados, permitir_y_constante=(formula == 'regressao'))
+        info.update(n=str(len(xs)), media_x=texto_num(mx, 6), media_y=texto_num(my, 6))
+        if r is not None:
+            info['r'] = texto_num(r, 6)
+            info['r2'] = f'{texto_num(100*r*r, 4)}%'
+        if formula == 'regressao':
+            info.update(inclinacao=texto_num(sxy/sxx, 6),
+                        intercepto=texto_num(my-(sxy/sxx)*mx, 6))
+    return info
+
+
+# ============================================================
 # FUNCIONAMENTO DAS TECLAS COMUNS DA CALCULADORA
 # Aqui ficam +, -, ×, ÷ e %. São separadas das fórmulas da disciplina.
 # O teclado JavaScript só envia os números; até essa conta é feita no Python.
@@ -682,6 +863,31 @@ def calcular(dados):
     # O botão da interface manda o identificador da fórmula.
     # Exemplo de identificador interno: 'ic_media' (não é um exemplo no app).
     escolha = dados.get('formula', '')
+
+    # O navegador pede somente os indicadores disponíveis enquanto a pessoa
+    # digita. Ele manda formula='indicadores' e alvo='ic_proporcao', por exemplo.
+    # NÃO calculamos o intervalo inteiro antes de clicar em Calcular.
+    if escolha == 'indicadores':
+        alvo = dados.get('alvo', '')
+        if alvo not in FORMULAS or alvo == 'basica':
+            raise ValueError('Escolha uma fórmula válida para os indicadores.')
+        dados_alvo = dict(dados, formula=alvo)
+        try:
+            valores = indicadores_automaticos(dados_alvo)
+        except (ValueError, OverflowError, ZeroDivisionError):
+            # Campos incompletos durante a digitação não são erros do usuário.
+            # Simplesmente não mostramos uma conta que ainda não é possível.
+            valores = {}
+        return {'valores_calculados': valores}
+
     if escolha not in FORMULAS:
         raise ValueError('Selecione uma das fórmulas disponíveis.')
-    return FORMULAS[escolha](dados)
+
+    resposta = FORMULAS[escolha](dados)
+    if escolha != 'basica':
+        # O resultado principal tem prioridade caso a apresentação possua
+        # arredondamento próprio, como a margem de erro de 8,06 p.p.
+        auxiliares = indicadores_automaticos(dados)
+        resposta['valores_calculados'] = {
+            **auxiliares, **resposta.get('valores_calculados', {})}
+    return resposta
