@@ -91,11 +91,12 @@ def texto_num(n, casas=4):
     return f'{n:.{casas}f}'.rstrip('0').rstrip('.').replace('.', ',')
 
 
-def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso=''):
+def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso='', valores_calculados=None):
     """Padroniza os dados entregues à tela do PC e do celular."""
     # Todas as fórmulas devolvem as mesmas chaves, facilitando a interface.
     return dict(titulo=titulo, resultado=resultado, formula=formula,
-                passos=passos, explicacao=explicacao, detalhes=detalhes or [], aviso=aviso)
+                passos=passos, explicacao=explicacao, detalhes=detalhes or [], aviso=aviso,
+                valores_calculados=valores_calculados or {})
 
 
 # ============================================================
@@ -210,7 +211,9 @@ def ic_media(dados):
                   f'3. Limite inferior = {texto_num(media)} − {texto_num(erro, 6)} = {texto_num(inferior, 6)}',
                   f'4. Limite superior = {texto_num(media)} + {texto_num(erro, 6)} = {texto_num(superior, 6)}'],
                  'Este intervalo foi estimado para a média populacional.',
-                 [f'Margem de erro: ±{texto_num(erro, 6)}'], aviso)
+                 [f'Margem de erro: ±{texto_num(erro, 6)}'], aviso,
+                 {'margem': f'{erro:.2f}'.replace('.', ','),
+                  'intervalo': f'{inferior:.2f} a {superior:.2f}'.replace('.', ',')})
 
 
 # ============================================================
@@ -254,7 +257,9 @@ def ic_proporcao(dados):
                   f'3. Margem E = {texto_num(z, 3)} × √[{texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {n}] = {texto_num(erro, 6)}',
                   f'4. IC = ({texto_num(inferior, 6)}; {texto_num(superior, 6)})'],
                  'O intervalo estima a proporção populacional.',
-                 [f'p = {texto_num(p*100, 4)}%', f'Margem: ±{texto_num(erro*100, 4)} pontos percentuais'], aviso)
+                 [f'p = {texto_num(p*100, 4)}%', f'Margem: ±{texto_num(erro*100, 4)} pontos percentuais'], aviso,
+                 {'margem': f'{erro*100:.2f}'.replace('.', ',') + ' p.p.',
+                  'intervalo': (f'{inferior*100:.2f}% a {superior*100:.2f}%').replace('.', ',')})
 
 
 # ============================================================

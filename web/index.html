@@ -97,6 +97,7 @@
         <p id="pista" class="pista">Selecione uma função para abrir os campos necessários.</p>
         <form id="formulario" novalidate>
           <div id="campos" class="campos"></div>
+          <div id="linhas-resultado" class="linhas-resultado" hidden aria-live="polite"></div>
           <div class="acoes" id="acoes" hidden>
             <button class="botao-calcular" type="submit">Calcular <span aria-hidden="true">=</span></button>
             <button type="button" class="botao-limpar" id="limpar-campos">Limpar campos</button>
@@ -105,13 +106,13 @@
         <div class="erro" id="erro" role="alert" hidden></div>
       </div>
 
-      <div class="bloco resultado-bloco" id="painel-resultado" hidden aria-live="polite">
-        <div class="bloco-cabecalho"><div><div class="rotulo-sutil">RESPOSTA</div><h2>Resolução passo a passo</h2></div></div>
+      <details class="bloco resultado-bloco" id="painel-resultado" hidden>
+        <summary>Ver resolução passo a passo</summary>
         <div id="resultado-completo" class="resultado-completo"></div>
         <ol id="passos" class="passos"></ol>
         <p id="interpretacao" class="interpretacao"></p>
         <p id="aviso" class="aviso" hidden></p>
-      </div>
+      </details>
     </section>
   </main>
 

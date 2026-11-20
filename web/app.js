@@ -58,10 +58,10 @@ const MODULOS = {
     pista: 'O enunciado pede dois limites para estimar uma média, informando média, desvio e tamanho da amostra.',
     fluxo: ['Dados da média', 'Valor crítico z', 'Margem E', 'Limites', 'Intervalo IC'],
     campos: [
-      {id: 'media', titulo: 'Média amostral (x̄)', dica: 'O valor médio informado no problema.', tipo: 'texto'},
-      {id: 'desvio', titulo: 'Desvio-padrão (σ ou s)', dica: 'Mede a dispersão dos valores.', tipo: 'texto'},
-      {id: 'n', titulo: 'Tamanho da amostra (n)', dica: 'Quantidade observada na pesquisa.', tipo: 'texto'},
-      {id: 'confianca', titulo: 'Grau de confiança', tipo: 'confianca'}
+      {id: 'media', titulo: 'Média', dica: 'O valor médio informado no problema.', tipo: 'texto'},
+      {id: 'desvio', titulo: 'Desvio-padrão', dica: 'Mede a dispersão dos valores.', tipo: 'texto'},
+      {id: 'confianca', titulo: 'Alfa (α)', tipo: 'confianca'},
+      {id: 'n', titulo: 'Tamanho (n)', dica: 'Quantidade observada na pesquisa.', tipo: 'texto'}
     ],
     guia: {
       conceito: 'Um intervalo de confiança da média apresenta uma faixa estimada para a média verdadeira da população.',
@@ -81,7 +81,7 @@ const MODULOS = {
       {id: 'modo', titulo: 'Como a proporção foi informada?', tipo: 'modo_proporcao'},
       {id: 'sucessos', titulo: 'Quantidade com a característica', dica: 'Número dentro do total n.', tipo: 'texto', mostrar: 'contagem'},
       {id: 'percentual', titulo: 'Proporção observada (%)', dica: 'Digite a porcentagem, sem o símbolo %.', tipo: 'texto', mostrar: 'porcentagem'},
-      {id: 'confianca', titulo: 'Grau de confiança', tipo: 'confianca'}
+      {id: 'confianca', titulo: 'Alfa (α)', tipo: 'confianca'}
     ],
     guia: {
       conceito: 'Aqui o interesse não é um valor médio, mas a parte de um total. O intervalo estima a proporção verdadeira da população.',
@@ -250,6 +250,8 @@ function selecionarFormula(id) {
   ultimoResultado = null;
   andamento = 'vazio';
   el('painel-resultado').hidden = true;
+  el('painel-resultado').open = false;
+  el('linhas-resultado').hidden = true;
   el('erro').hidden = true;
 
   document.querySelectorAll('.tecla-formula').forEach(botao => {
@@ -259,6 +261,7 @@ function selecionarFormula(id) {
 
   if (!formulaSelecionada) {
     el('nome-formula').textContent = 'Informe os dados';
+    el('pista').hidden = false;
     el('pista').textContent = 'Selecione uma função para abrir os campos necessários.';
     el('campos').replaceChildren();
     el('acoes').hidden = true;
@@ -269,6 +272,7 @@ function selecionarFormula(id) {
 
   const modulo = MODULOS[formulaSelecionada];
   el('nome-formula').textContent = 'Informe os dados';
+  el('pista').hidden = true;
   el('pista').textContent = modulo.pista;
   el('acoes').hidden = false;
   atualizarVisor(modulo.nome, '0');
@@ -281,67 +285,111 @@ function selecionarFormula(id) {
 // Se precisar adicionar um campo, inclua-o na lista 'campos' do módulo acima.
 // ---------------------------------------------------------------------------
 function construirCampos() {
+  // Cada variável vira UMA LINHA: nome azul à esquerda, valor à direita.
+  // Se quiser mudar a conta matemática, abra calculos.py; aqui é só tela.
   const container = el('campos');
   container.replaceChildren();
   const modulo = MODULOS[formulaSelecionada];
 
-  // Ao escolher uma nova fórmula começamos com campos vazios.
-  // Trocar o modo de proporção NÃO recria os campos; só os esconde.
-
   for (const definicao of modulo.campos) {
     const grupo = document.createElement('div');
     grupo.className = 'campo';
-    if (definicao.tipo === 'lista') grupo.classList.add('inteiro');
     grupo.dataset.mostrar = definicao.mostrar || '';
 
-    const label = document.createElement('label');
-    label.htmlFor = `campo-${definicao.id}`;
-    label.textContent = definicao.titulo;
-    grupo.append(label);
+    const nome = document.createElement('label');
+    nome.className = 'celula-nome';
+    nome.htmlFor = `campo-${definicao.id}`;
+    nome.textContent = definicao.titulo;
+    grupo.append(nome);
 
-    // Select é usado somente para escolhas; os números ficam em inputs/textareas.
+    const celulaValor = document.createElement('div');
+    celulaValor.className = 'celula-entrada';
     let campo;
     if (['confianca', 'modo_proporcao', 'tipo_amostra', 'tipo_dispersao'].includes(definicao.tipo)) {
       campo = document.createElement('select');
+      // No intervalo mostramos o ALFA, mas enviamos a confiança ao Python.
       const opcoes = definicao.tipo === 'confianca'
-        ? [['90', '90%'], ['95', '95%'], ['99', '99%']]
+        ? (formulaSelecionada.startsWith('ic_')
+          ? [['90', '0,10  ·  90%'], ['95', '0,05  ·  95%'], ['99', '0,01  ·  99%']]
+          : [['90', '90%  (α = 0,10)'], ['95', '95%  (α = 0,05)'], ['99', '99%  (α = 0,01)']])
         : definicao.tipo === 'modo_proporcao'
-        ? [['contagem', 'Tenho a quantidade'], ['porcentagem', 'Tenho a porcentagem']]
+        ? [['contagem', 'Quantidade'], ['porcentagem', 'Porcentagem']]
         : definicao.tipo === 'tipo_dispersao'
         ? [['amostral', 'Amostral (n − 1)'], ['populacional', 'Populacional (N)']]
         : [['media', 'Média'], ['proporcao', 'Proporção']];
-      for (const [valor, titulo] of opcoes) {
-        const opcao = new Option(titulo, valor);
-        campo.append(opcao);
-      }
+      for (const [valor, titulo] of opcoes) campo.append(new Option(titulo, valor));
       if (definicao.tipo === 'confianca') campo.value = '95';
     } else if (definicao.tipo === 'lista') {
       campo = document.createElement('textarea');
       campo.rows = 2;
-      campo.placeholder = 'Separe por ; ou quebre uma linha';
+      campo.placeholder = 'Cole os valores aqui (um por linha ou separados por ;)';
     } else {
       campo = document.createElement('input');
       campo.type = 'text';
       campo.inputMode = 'decimal';
       campo.autocomplete = 'off';
       campo.spellcheck = false;
+      campo.placeholder = 'Digite o valor';
     }
     campo.id = `campo-${definicao.id}`;
     campo.name = definicao.id;
+    if (definicao.dica) campo.title = definicao.dica;
     campo.addEventListener('focus', () => { if (campo.tagName !== 'SELECT') campoAtivo = campo; });
     campo.addEventListener('input', camposAlterados);
     campo.addEventListener('change', camposAlterados);
-    grupo.append(campo);
-
-    if (definicao.dica) {
-      const dica = document.createElement('span');
-      dica.className = 'dica';
-      dica.textContent = definicao.dica;
-      grupo.append(dica);
-    }
+    celulaValor.append(campo);
+    grupo.append(celulaValor);
     container.append(grupo);
   }
   exibirCamposCorretos();
+  construirLinhasResultado();
+}
+
+// Cada resultado tem sua última linha, como o Excel da professora.
+// Nos intervalos, a primeira saída é a margem (INT.CONFIANÇA no Excel)
+// e a última é o intervalo completo [média - E; média + E].
+function construirLinhasResultado() {
+  const container = el('linhas-resultado');
+  container.replaceChildren();
+  const linhas = formulaSelecionada === 'ic_media' || formulaSelecionada === 'ic_proporcao'
+    ? [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']]
+    : [['resultado', 'Resultado']];
+
+  for (const [chave, nome] of linhas) {
+    const linha = document.createElement('div');
+    linha.className = 'linha-saida';
+    const titulo = document.createElement('span');
+    titulo.className = 'celula-nome';
+    titulo.textContent = nome;
+    const valor = document.createElement('output');
+    valor.className = 'celula-resultado';
+    valor.id = `saida-${chave}`;
+    valor.textContent = '—';
+    linha.append(titulo, valor);
+    container.append(linha);
+  }
+  container.hidden = false;
+}
+
+function limparLinhasResultado() {
+  el('linhas-resultado').querySelectorAll('output').forEach(item => {
+    item.textContent = '—';
+    item.closest('.linha-saida').classList.remove('calculado');
+  });
+}
+
+function mostrarLinhasResultado(resposta) {
+  // Os valores chegam PRONTOS do Python. Nenhuma fórmula é repetida no JS.
+  const resultados = resposta.valores_calculados || {};
+  const margem = el('saida-margem');
+  const intervalo = el('saida-intervalo');
+  const resultado = el('saida-resultado');
+  if (margem) margem.textContent = resultados.margem || '—';
+  if (intervalo) intervalo.textContent = resultados.intervalo || resposta.resultado;
+  if (resultado) resultado.textContent = resposta.resultado;
+  el('linhas-resultado').querySelectorAll('.linha-saida').forEach(linha => {
+    linha.classList.add('calculado');
+  });
 }
 
 function exibirCamposCorretos() {
@@ -383,6 +431,8 @@ function camposAlterados() {
   ultimoResultado = null;
   atualizarVisor(MODULOS[formulaSelecionada].nome, '0');
   el('painel-resultado').hidden = true;
+  el('painel-resultado').open = false;
+  limparLinhasResultado();
   el('erro').hidden = true;
   const campos = [...el('campos').querySelectorAll('input, textarea')].filter(c => !c.closest('.campo').hidden);
   const algumNumero = campos.some(c => c.value.trim() !== '');
@@ -442,6 +492,7 @@ async function calcularFormula(evento) {
     ultimoResultado = resposta.resultado;
     andamento = 'feito';
     atualizarVisor(resposta.titulo, resposta.resultado);
+    mostrarLinhasResultado(resposta);
     mostrarResultado(resposta);
   } catch (erro) {
     if (versaoDaRequisicao !== versaoDosCampos) return;
@@ -456,6 +507,7 @@ async function calcularFormula(evento) {
 
 function mostrarResultado(resposta) {
   el('painel-resultado').hidden = false;
+  el('painel-resultado').open = false;
   el('resultado-completo').textContent = resposta.resultado;
   const lista = el('passos');
   lista.replaceChildren();

@@ -329,3 +329,37 @@ Todas estão em `calculos.py`, separadas pelos títulos `FÓRMULA DA MÉDIA`, `F
 Em `web/app.js`, procure `media_amostral`, `desvio_padrao`, `variancia`, `proporcao_amostral` e `erro_padrao` dentro da constante `MODULOS`: lá ficam os nomes dos campos, os textos de orientação e as etapas do fluxograma. Em `web/index.html` fica a área recolhível `id="auxiliares"`. Em `web/styles.css` ficam as regras de tamanho e cor.
 
 **Para testar depois de corrigir uma fórmula:** `python -m unittest discover -s tests -v`. Os testes novos verificam também a diferença entre `n` e `n−1`, os valores decimais, as contagens e os limites das entradas.
+
+
+## Interface no estilo da planilha da professora (v5)
+
+Ao clicar em uma função, a região **abaixo do fluxograma** mostra linhas que
+lembram uma tabela do Excel. À esquerda ficam os rótulos azuis com o nome do
+dado; à direita você informa o valor. O resultado aparece na última linha, sem
+abrir outro formulário.
+
+### Intervalo de confiança da média
+
+A sequência segue a planilha: **Média**, **Desvio-padrão**, **Alfa (α)**,
+**Tamanho (n)**, **Margem de erro** e **Intervalo de confiança**.
+
+- O campo **Alfa** oferece: `0,10 · 90%`, `0,05 · 95%` e `0,01 · 99%`.
+- O Python continua recebendo 90, 95 ou 99, pois é assim que a tabela Z da
+  professora é implementada em `calculos.py`.
+- **Margem de erro** corresponde ao valor devolvido pelo `INT.CONFIANÇA` do
+  Excel. O intervalo completo precisa também da média: `média ± margem`.
+- Se digitar média `159`, desvio `12,42`, alfa `0,05` e tamanho `10`, a
+  margem arredondada para duas casas é `7,70` e o intervalo é de `151,30` a
+  `166,70`.
+- O painel de explicação detalhada fica recolhido em **Ver resolução passo a
+  passo**. Ele pode ser aberto durante a apresentação.
+
+### Onde corrigir cada parte
+
+- `web/app.js`, função `construirCampos()`: cria a tabela de entradas.
+- `web/app.js`, funções `construirLinhasResultado()` e `mostrarLinhasResultado()`:
+  montam e atualizam as linhas de resultado.
+- `web/styles.css`: cores azuis, células de PC e resultados.
+- `web/mobile.css`: tamanhos e espaçamento no celular.
+- `calculos.py`, funções `ic_media()` e `ic_proporcao()`: contas e resultados
+  numéricos devolvidos à tabela. Não altere o JavaScript para corrigir contas.

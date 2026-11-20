@@ -187,3 +187,44 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .teclas-auxiliares { margin-top: 6px; }
 .teclas-auxiliares .tecla-formula { min-height: 57px; }
 .teclas-auxiliares .tecla-formula span { font-size: 12px; }
+
+/* ============================================================
+   TABELA DE CÁLCULO COMO NO EXCEL (ÁREA ABAIXO DO FLUXOGRAMA)
+   Esquerda: nome da variável em azul.
+   Direita: valor que a pessoa digita ou escolhe.
+   Última linha: resultado vindo do Python.
+   ============================================================ */
+.campos, .linhas-resultado { display: flex; flex-direction: column; gap: 7px; }
+.campo, .linha-saida {
+  display: grid; grid-template-columns: minmax(150px, 235px) minmax(0, 1fr);
+  gap: 12px; align-items: stretch; min-width: 0;
+}
+.campo.inteiro { grid-column: auto; }
+.celula-nome {
+  display: flex; align-items: center; min-width: 0;
+  background: #153c78; color: #f4f7ff;
+  border: 1px solid #28559b; border-radius: 5px;
+  padding: 10px 14px; line-height: 1.3;
+  font-size: 13px; font-weight: 600;
+}
+.celula-entrada { min-width: 0; }
+.celula-entrada > input, .celula-entrada > textarea, .celula-entrada > select {
+  width: 100%; min-height: 45px; margin: 0; background: #282828;
+  border: 1px solid #454545; border-radius: 5px; padding: 10px 13px;
+  font-size: 15px; color: #f5f7fc;
+}
+.celula-entrada > textarea { min-height: 68px; resize: vertical; }
+.celula-entrada > input:focus, .celula-entrada > textarea:focus, .celula-entrada > select:focus {
+  background: #2c3440; border-color: #80c3e9;
+}
+.linhas-resultado { margin-top: 10px; padding-top: 11px; border-top: 1px solid #414141; }
+.celula-resultado {
+  display: flex; align-items: center; min-height: 45px;
+  padding: 10px 14px; border: 1px solid #47535d; border-radius: 5px;
+  background: #252b30; color: #d0d6dc; font-weight: 650; font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.linha-saida:last-child .celula-nome { background: #185c45; border-color: #287b5c; }
+.linha-saida.calculado .celula-resultado { background: #183c2b; border-color: #367857; color: #b7f6d3; }
+.resultado-bloco > summary { cursor: pointer; font-size: 13px; color: #b6c8d0; }
+.resultado-bloco > summary:hover { color: #ffffff; }

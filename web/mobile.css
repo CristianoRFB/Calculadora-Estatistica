@@ -44,3 +44,11 @@
   .teclas-auxiliares .tecla-formula { min-height: 54px; padding: 6px 3px; }
   .teclas-auxiliares .tecla-formula span { font-size: 11px; }
 }
+
+/* Tabela como planilha no celular: rótulo estreito + entrada à direita. */
+@media (max-width: 760px) {
+  .campo, .linha-saida { grid-template-columns: minmax(104px, 42%) minmax(0, 1fr); gap: 7px; }
+  .celula-nome { padding: 9px 8px; font-size: 11px; }
+  .celula-entrada > input, .celula-entrada > select, .celula-entrada > textarea { font-size: 14px; padding: 9px 8px; }
+  .celula-resultado { font-size: 13px; padding: 9px 8px; }
+}

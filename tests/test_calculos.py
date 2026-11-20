@@ -343,3 +343,26 @@ class CalculosAuxiliares(unittest.TestCase):
         self.assertIn('data-formula="media_amostral"',pagina)
         self.assertIn('data-formula="desvio_padrao"',pagina)
         self.assertIn('data-formula="erro_padrao"',pagina)
+
+# ============================================================
+# PLANILHA: CONFERIR O RESULTADO COMO NO INT.CONFIANÇA DO EXCEL
+# A calculadora deve mostrar a margem E e também o intervalo completo.
+# ============================================================
+class TestesDePlanilha(unittest.TestCase):
+    def test_intervalo_media_referencia_excel(self):
+        resposta = calcular({'formula': 'ic_media', 'media': '159', 'desvio': '12,42',
+                             'confianca': '95', 'n': '10'})
+        self.assertEqual(resposta['valores_calculados']['margem'], '7,70')
+        self.assertEqual(resposta['valores_calculados']['intervalo'], '151,30 a 166,70')
+
+    def test_intervalo_proporcao_resultado_em_percentual(self):
+        resposta = calcular({'formula': 'ic_proporcao', 'n': '200', 'sucessos': '34',
+                             'confianca': '95'})
+        self.assertEqual(resposta['valores_calculados']['intervalo'], '11,79% a 22,21%')
+        self.assertTrue(resposta['valores_calculados']['margem'].endswith(' p.p.'))
+
+    def test_pagina_tem_resultado_junto_aos_campos(self):
+        from pathlib import Path
+        pagina = (Path(__file__).resolve().parents[1] / 'web' / 'index.html').read_text(encoding='utf-8')
+        self.assertLess(pagina.index('id="campos"'), pagina.index('id="linhas-resultado"'))
+        self.assertLess(pagina.index('id="linhas-resultado"'), pagina.index('id="acoes"'))
