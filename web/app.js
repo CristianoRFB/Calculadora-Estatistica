@@ -52,86 +52,107 @@ const MODULOS = {
       cuidado: 'Se os X forem todos iguais, a inclinação não existe. Previsões muito longe dos X observados podem ser pouco confiáveis.'
     }
   },
+  // INTERVALO DA MÉDIA: escolha entre os valores PRONTOS da professora
+  // e a LISTA copiada do Excel. O Python calcula média, desvio e n.
   ic_media: {
     nome: 'Intervalo de confiança da média',
-    formula: 'E = z · σ / √n;  IC = (x̄ − E; x̄ + E)',
-    pista: 'O enunciado pede dois limites para estimar uma média, informando média, desvio e tamanho da amostra.',
-    fluxo: ['Dados da média', 'Valor crítico z', 'Margem E', 'Limites', 'Intervalo IC'],
+    formula: 'E = z × σ / √n; IC = (média − E; média + E)',
+    pista: 'Estima a média de uma população com um limite inferior e outro superior.',
+    fluxo: ['Dados da média', 'Valor crítico z', 'Margem E', 'Limites', 'Intervalo de confiança'],
     campos: [
-      {id: 'media', titulo: 'Média', dica: 'O valor médio informado no problema.', tipo: 'texto'},
-      {id: 'desvio', titulo: 'Desvio-padrão', dica: 'Mede a dispersão dos valores.', tipo: 'texto'},
-      {id: 'confianca', titulo: 'Alfa (α)', tipo: 'confianca'},
-      {id: 'n', titulo: 'Tamanho (n)', dica: 'Quantidade observada na pesquisa.', tipo: 'texto'}
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'media', titulo:'Média', tipo:'texto', entrada:'direto'},
+      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', entrada:'direto'},
+      {id:'n', titulo:'Tamanho (n)', tipo:'texto', entrada:'direto'},
+      {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista',
+       dica:'Cole os números de uma coluna do Excel ou separe por ponto e vírgula.'},
+      {id:'tipo_dispersao', titulo:'Tipo de desvio', tipo:'tipo_dispersao', entrada:'lista'},
+      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'}
     ],
     guia: {
-      conceito: 'Um intervalo de confiança da média apresenta uma faixa estimada para a média verdadeira da população.',
-      reconhecer: '“Tempo médio”, “altura média”, “consumo médio”, “intervalo de confiança para a média” e dados de média/desvio/amostra.',
-      entradas: 'Copie a média, o desvio-padrão, o número de observações n e o grau de confiança. Não confunda o desvio com a margem de erro.',
-      simbolos: 'x̄ é média da amostra. σ é desvio-padrão da população (ou s em certas condições). n é o tamanho da amostra. E é a margem de erro.',
-      cuidado: 'O método usa os valores críticos Z ensinados em aula. Se σ for desconhecido e a amostra for pequena, pode ser necessário usar t de Student.'
+      conceito:'Estima a faixa onde pode estar a média verdadeira. O Excel INT.CONFIANÇA retorna a margem de erro, não os dois limites.',
+      reconhecer:'Quando a questão pedir intervalo da média, média populacional, limites da média ou margem de erro da média.',
+      entradas:'Dados informados: média, desvio, tamanho e alfa. Lista de valores: cole todas as observações; média, desvio e tamanho serão calculados automaticamente.',
+      simbolos:'x̄ é média; σ ou s é desvio-padrão; n é tamanho da amostra; z depende da confiança; E é margem de erro.',
+      cuidado:'A aula utiliza Z. Para n pequeno com desvio amostral, confirme se seria necessário t de Student.'
     }
   },
+  // INTERVALO DA PROPORÇÃO: a lista deve ter respostas binárias
+  // (1/0 ou sim/não). A outra entrada aceita quantidades ou porcentagem.
   ic_proporcao: {
-    nome: 'Intervalo de confiança da proporção',
-    formula: 'p = sucessos / n;  E = z · √[p(1 − p)/n];  IC = (p − E; p + E)',
-    pista: 'A pergunta envolve porcentagem de pessoas, acertos, defeitos ou outra contagem dentro de um total.',
-    fluxo: ['Amostra n', 'Proporção p', 'Valor crítico z', 'Margem E', 'Intervalo IC'],
-    campos: [
-      {id: 'n', titulo: 'Quantidade total (n)', dica: 'Total de pessoas, registros ou itens analisados.', tipo: 'texto'},
-      {id: 'modo', titulo: 'Como a proporção foi informada?', tipo: 'modo_proporcao'},
-      {id: 'sucessos', titulo: 'Quantidade com a característica', dica: 'Número dentro do total n.', tipo: 'texto', mostrar: 'contagem'},
-      {id: 'percentual', titulo: 'Proporção observada (%)', dica: 'Digite a porcentagem, sem o símbolo %.', tipo: 'texto', mostrar: 'porcentagem'},
-      {id: 'confianca', titulo: 'Alfa (α)', tipo: 'confianca'}
+    nome:'Intervalo de confiança da proporção',
+    formula:'p = positivos / n; E = z × √[p(1 − p)/n]; IC = (p − E; p + E)',
+    pista:'Estima a porcentagem de pessoas ou itens que têm uma característica.',
+    fluxo:['Amostra n', 'Proporção p', 'Valor crítico z', 'Margem E', 'Intervalo de confiança'],
+    campos:[
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'n', titulo:'Quantidade total (n)', tipo:'texto', entrada:'direto'},
+      {id:'modo', titulo:'Dado disponível', tipo:'modo_proporcao', entrada:'direto'},
+      {id:'sucessos', titulo:'Quantidade com característica', tipo:'texto', mostrar:'contagem', entrada:'direto'},
+      {id:'percentual', titulo:'Porcentagem (%)', tipo:'texto', mostrar:'porcentagem', entrada:'direto'},
+      {id:'valores', titulo:'Respostas da amostra', tipo:'lista', entrada:'lista',
+       dica:'Uma resposta por linha: 1/0 ou sim/não.'},
+      {id:'confianca', titulo:'Alfa (α)', tipo:'confianca'}
     ],
-    guia: {
-      conceito: 'Aqui o interesse não é um valor médio, mas a parte de um total. O intervalo estima a proporção verdadeira da população.',
-      reconhecer: '“Quantos de um total”, “percentual”, “taxa de defeitos”, “proporção”, “satisfação”, “aprovação” ou “fração”.',
-      entradas: 'Informe o total n e escolha entre informar a quantidade com a característica ou a porcentagem já calculada. Não misture os dois modos.',
-      simbolos: 'p é a proporção observada (de 0 a 1), n é o total e E é a margem de erro. O resultado aparece em porcentagem.',
-      cuidado: 'A quantidade com a característica deve estar entre zero e n. Para amostras pequenas ou proporções extremas, a aproximação normal pode falhar.'
+    guia:{
+      conceito:'Estima um intervalo para uma proporção percentual.',
+      reconhecer:'Quando aparecerem aprovação, satisfação, defeitos, quantidade de casos ou porcentagem de uma amostra.',
+      entradas:'Dados informados: total e quantidade ou porcentagem. Lista: informe 1 ou sim para cada ocorrência e 0 ou não para cada ausência.',
+      simbolos:'p é a proporção decimal, n é o total, E é a margem de erro; resultado em porcentagens.',
+      cuidado:'Em amostras pequenas ou proporções extremas a aproximação normal pode ser imprecisa.'
     }
   },
+  // ESCORE: valor observado é sempre necessário. Os outros dois
+  // números podem vir do enunciado OU da lista de observações.
   escore: {
-    nome: 'Escore Z',
-    formula: 'z = (x − μ) / σ',
-    pista: 'O enunciado pergunta quantos desvios-padrão um valor está acima ou abaixo da média.',
-    fluxo: ['Valor e média', 'Diferença x − μ', 'Desvio σ', 'Divisão', 'Escore z'],
-    campos: [
-      {id: 'valor', titulo: 'Valor observado (x)', dica: 'O número específico que será comparado.', tipo: 'texto'},
-      {id: 'media', titulo: 'Média (μ)', dica: 'Média do grupo.', tipo: 'texto'},
-      {id: 'desvio', titulo: 'Desvio-padrão (σ)', dica: 'Precisa ser maior que zero.', tipo: 'texto'}
+    nome:'Escore Z', formula:'z = (x − média) / desvio-padrão',
+    pista:'Indica quantos desvios-padrão o valor observado está distante da média.',
+    fluxo:['Valor e média', 'Diferença x − μ', 'Desvio σ', 'Divisão', 'Escore z'],
+    campos:[
+      {id:'valor', titulo:'Valor observado (x)', tipo:'texto'},
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'media', titulo:'Média', tipo:'texto', entrada:'direto'},
+      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', entrada:'direto'},
+      {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista'},
+      {id:'tipo_dispersao', titulo:'Tipo de desvio', tipo:'tipo_dispersao', entrada:'lista'}
     ],
-    guia: {
-      conceito: 'O escore Z diz a distância entre um valor e a média, medida em unidades de desvio-padrão.',
-      reconhecer: '“Posição relativa”, “escore”, “padronização”, “distância da média” ou “quantos desvios-padrão”.',
-      entradas: 'x é o valor que você quer analisar, μ é a média do grupo e σ é o desvio-padrão.',
-      simbolos: 'z positivo significa acima da média; z negativo, abaixo. Zero significa exatamente na média.',
-      cuidado: 'O desvio-padrão não pode ser zero. O escore sozinho não diz se o resultado é bom ou ruim.'
+    guia:{
+      conceito:'Compara um valor específico com a média de um grupo usando o desvio-padrão como unidade.',
+      reconhecer:'Enunciados com escore Z, padronização ou distância em desvios-padrão.',
+      entradas:'Digite sempre o valor observado. Escolha informar média e desvio diretamente ou calcular ambos pela lista.',
+      simbolos:'z positivo significa acima da média; negativo significa abaixo; zero coincide com a média.',
+      cuidado:'Desvio-padrão zero impede a divisão.'
     }
   },
+  // TAMANHO DA AMOSTRA: uma LISTA aqui funciona como AMOSTRA PILOTO.
+  // O objetivo é estimar a dispersão antes de decidir quantos coletar.
   amostra: {
-    nome: 'Tamanho da amostra',
-    formula: 'Média: n = (z · σ / E)²   |   Proporção: n = z² · p(1 − p) / E²',
-    pista: 'A questão pergunta quantas observações, pessoas ou medições serão necessárias.',
-    fluxo: ['Objetivo', 'Confiança z', 'Margem de erro', 'Calcular n', 'Arredondar'],
-    campos: [
-      {id: 'tipo', titulo: 'O que você quer estimar?', tipo: 'tipo_amostra'},
-      {id: 'desvio', titulo: 'Desvio-padrão (σ)', dica: 'Para estimar uma média.', tipo: 'texto', mostrar: 'media'},
-      {id: 'percentual', titulo: 'Proporção prevista (%) — opcional', dica: 'Em branco, o cálculo usa p = 50% como opção conservadora.', tipo: 'texto', mostrar: 'proporcao'},
-      {id: 'erro', titulo: 'Margem de erro máxima (E)', dica: 'Na média, use a unidade original. Na proporção, informe pontos percentuais.', tipo: 'texto'},
-      {id: 'confianca', titulo: 'Grau de confiança', tipo: 'confianca'}
+    nome:'Tamanho da amostra',
+    formula:'Média: n = (z × σ / E)²; Proporção: n = z² × p(1 − p) / E²',
+    pista:'Estima quantas observações é necessário coletar para uma margem de erro desejada.',
+    fluxo:['Objetivo', 'Confiança z', 'Margem de erro', 'Calcular n', 'Arredondar'],
+    campos:[
+      {id:'tipo', titulo:'O que deseja estimar?', tipo:'tipo_amostra'},
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', mostrar:'media', entrada:'direto'},
+      {id:'percentual', titulo:'Proporção prevista (%)', tipo:'texto', mostrar:'proporcao', entrada:'direto', opcional:true},
+      {id:'valores', titulo:'Valores piloto', tipo:'lista', entrada:'lista',
+       dica:'Média: números. Proporção: 1/0 ou sim/não.'},
+      {id:'tipo_dispersao', titulo:'Tipo de desvio piloto', tipo:'tipo_dispersao', mostrar:'media', entrada:'lista'},
+      {id:'erro', titulo:'Margem de erro desejada', tipo:'texto'},
+      {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'}
     ],
-    guia: {
-      conceito: 'O tamanho da amostra diz quantos dados precisamos coletar para atingir a margem de erro e a confiança desejadas.',
-      reconhecer: '“Quantos serão necessários”, “amostra mínima”, “número de participantes” ou “quantas medições coletar”.',
-      entradas: 'Primeiro escolha média ou proporção. Na média, informe desvio e erro na mesma unidade. Na proporção, informe porcentagem prevista (se souber) e margem em pontos percentuais.',
-      simbolos: 'n é a quantidade mínima. z é o valor crítico da confiança. σ é o desvio-padrão. E é a margem de erro tolerada.',
-      cuidado: 'O tamanho calculado é sempre arredondado para CIMA, mesmo que a parte decimal seja pequena.'
+    guia:{
+      conceito:'Estima a quantidade necessária para atingir a precisão e confiança desejadas.',
+      reconhecer:'Perguntas como quantas entrevistas, quantas medições ou amostra mínima.',
+      entradas:'Dados informados: desvio (média) ou proporção prevista (proporção). Lista: informe observações de uma pesquisa piloto. Margem e confiança são sempre necessárias.',
+      simbolos:'n é a quantidade final, E a margem máxima, z o valor crítico e σ ou p a dispersão estimada.',
+      cuidado:'A amostra piloto usada para estimar o desvio não é o tamanho final. Sempre arredonde n para cima.'
     }
   },
   // ========================================================
-  // FÓRMULAS AUXILIARES. O PYTHON FAZ AS CONTAS.
-  // Estas teclas ficam dentro de "Cálculos auxiliares".
+  // CÁLCULOS AUXILIARES. O PYTHON FAZ AS CONTAS.
+  // Os botões ficam dentro de "Cálculos auxiliares".
   // ========================================================
   media_amostral: {
     nome: 'Média amostral',
@@ -181,40 +202,48 @@ const MODULOS = {
       cuidado:'Para a variância amostral é preciso ao menos dois números.'
     }
   },
+  // PROPORÇÃO AUXILIAR: aceita contagem pronta ou lista de sim/não.
   proporcao_amostral: {
-    nome: 'Proporção amostral',
-    formula: 'p̂ = quantidade com característica / total',
-    pista: 'Informe quantos casos têm a característica e quantos existem no total.',
-    fluxo: ['Total', 'Casos', 'Divisão', 'Proporção', 'Porcentagem'],
-    campos: [
-      {id:'sucessos', titulo:'Quantidade com a característica', tipo:'texto'},
-      {id:'n', titulo:'Quantidade total', tipo:'texto'}
+    nome:'Proporção amostral', formula:'p = quantidade com característica / total',
+    pista:'Mostra qual parte da amostra apresenta uma característica.',
+    fluxo:['Total', 'Casos', 'Divisão', 'Proporção', 'Porcentagem'],
+    campos:[
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'sucessos', titulo:'Quantidade com característica', tipo:'texto', entrada:'direto'},
+      {id:'n', titulo:'Total', tipo:'texto', entrada:'direto'},
+      {id:'valores', titulo:'Respostas da amostra', tipo:'lista', entrada:'lista',
+       dica:'Uma resposta por linha: 1/0 ou sim/não.'}
     ],
-    guia: {
-      conceito:'Calcula que parte da amostra apresenta uma característica, expressa em número decimal ou porcentagem.',
-      reconhecer:'"Quantos de um total", "taxa de defeitos", "proporção" ou "porcentagem da amostra".',
-      entradas:'Informe uma quantidade inteira com a característica e a quantidade total de itens.',
-      simbolos:'p̂ é a proporção amostral; n é o total; a quantidade favorável nunca pode superar n.',
-      cuidado:'Para obter a porcentagem, multiplique a proporção decimal por 100.'
+    guia:{
+      conceito:'Transforma uma contagem em proporção ou porcentagem.',
+      reconhecer:'Quando pedir a fração, porcentagem ou taxa de casos em uma amostra.',
+      entradas:'Quantidade/total direto ou lista de respostas individuais 1/0.',
+      simbolos:'p é a proporção; n é o total; k é a quantidade de casos positivos.',
+      cuidado:'A contagem positiva não pode ultrapassar o total.'
     }
   },
+  // ERRO-PADRÃO: na lista de números, calcula o desvio e a contagem;
+  // na lista de sim/não, calcula a proporção e a contagem.
   erro_padrao: {
-    nome: 'Erro-padrão',
-    formula: 'Média: EP = s / √n  |  Proporção: EP = √[p̂(1 − p̂) / n]',
-    pista: 'O erro-padrão é usado antes da margem de erro em um intervalo de confiança.',
-    fluxo: ['Tipo', 'Amostra', 'Fórmula', 'Resultado', 'Erro-padrão'],
-    campos: [
-      {id:'tipo', titulo:'Qual o tipo?', tipo:'tipo_amostra'},
-      {id:'n', titulo:'Quantidade de observações (n)', tipo:'texto'},
-      {id:'desvio', titulo:'Desvio-padrão (σ ou s)', tipo:'texto', mostrar:'media'},
-      {id:'percentual', titulo:'Proporção observada (%)', tipo:'texto', mostrar:'proporcao'}
+    nome:'Erro-padrão', formula:'Média: EP = s / √n; Proporção: EP = √[p(1 − p) / n]',
+    pista:'Mostra quanto a estimativa amostral pode variar entre diferentes amostras.',
+    fluxo:['Tipo', 'Dados', 'Fórmula', 'Resultado', 'Erro-padrão'],
+    campos:[
+      {id:'tipo', titulo:'Qual tipo?', tipo:'tipo_amostra'},
+      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
+      {id:'n', titulo:'Tamanho da amostra', tipo:'texto', entrada:'direto'},
+      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', mostrar:'media', entrada:'direto'},
+      {id:'percentual', titulo:'Proporção observada (%)', tipo:'texto', mostrar:'proporcao', entrada:'direto'},
+      {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista',
+       dica:'Média: números. Proporção: 1/0 ou sim/não.'},
+      {id:'tipo_dispersao', titulo:'Tipo de desvio', tipo:'tipo_dispersao', mostrar:'media', entrada:'lista'}
     ],
-    guia: {
-      conceito:'O erro-padrão mede a variação esperada de uma média ou proporção amostral entre amostras.',
-      reconhecer:'"Erro-padrão", "erro da média" ou a etapa anterior à margem de erro no intervalo de confiança.',
-      entradas:'Para média: desvio-padrão e n. Para proporção: porcentagem observada e n.',
-      simbolos:'EP é erro-padrão, n é tamanho da amostra, s ou σ é desvio-padrão, p̂ é proporção.',
-      cuidado:'O erro-padrão não é igual à margem de erro; para obter a margem, multiplica-se pelo valor crítico z.'
+    guia:{
+      conceito:'Mede a variação esperada da média ou proporção estimada entre amostras.',
+      reconhecer:'Quando pedir erro-padrão da média ou erro-padrão de proporção.',
+      entradas:'Dados já informados ou lista de observações. No modo lista, n e desvio/proporção são calculados.',
+      simbolos:'EP é erro-padrão, n é número de observações, s é desvio e p é proporção.',
+      cuidado:'Erro-padrão não é a margem de erro do intervalo.'
     }
   }
 };
@@ -295,6 +324,9 @@ function construirCampos() {
     const grupo = document.createElement('div');
     grupo.className = 'campo';
     grupo.dataset.mostrar = definicao.mostrar || '';
+    // Define em qual modo este campo deve aparecer. Campos sem a
+    // propriedade 'entrada' aparecem nos dois modos.
+    grupo.dataset.entrada = definicao.entrada || '';
 
     const nome = document.createElement('label');
     nome.className = 'celula-nome';
@@ -305,13 +337,15 @@ function construirCampos() {
     const celulaValor = document.createElement('div');
     celulaValor.className = 'celula-entrada';
     let campo;
-    if (['confianca', 'modo_proporcao', 'tipo_amostra', 'tipo_dispersao'].includes(definicao.tipo)) {
+    if (['confianca', 'modo_proporcao', 'modo_entrada', 'tipo_amostra', 'tipo_dispersao'].includes(definicao.tipo)) {
       campo = document.createElement('select');
       // No intervalo mostramos o ALFA, mas enviamos a confiança ao Python.
       const opcoes = definicao.tipo === 'confianca'
         ? (formulaSelecionada.startsWith('ic_')
           ? [['90', '0,10  ·  90%'], ['95', '0,05  ·  95%'], ['99', '0,01  ·  99%']]
           : [['90', '90%  (α = 0,10)'], ['95', '95%  (α = 0,05)'], ['99', '99%  (α = 0,01)']])
+        : definicao.tipo === 'modo_entrada'
+        ? [['direto', 'Dados informados'], ['lista', 'Lista de valores']]
         : definicao.tipo === 'modo_proporcao'
         ? [['contagem', 'Quantidade'], ['porcentagem', 'Porcentagem']]
         : definicao.tipo === 'tipo_dispersao'
@@ -349,23 +383,45 @@ function construirCampos() {
 // Nos intervalos, a primeira saída é a margem (INT.CONFIANÇA no Excel)
 // e a última é o intervalo completo [média - E; média + E].
 function construirLinhasResultado() {
+  // Escolher "lista" exige exibir os valores obtidos AUTOMATICAMENTE.
+  // São linhas de saída, não campos editáveis: nenhum cálculo ocorre aqui.
   const container = el('linhas-resultado');
   container.replaceChildren();
-  const linhas = formulaSelecionada === 'ic_media' || formulaSelecionada === 'ic_proporcao'
-    ? [['margem', 'Margem de erro'], ['intervalo', 'Intervalo de confiança']]
-    : [['resultado', 'Resultado']];
+  const modo = el('campo-entrada')?.value || 'direto';
+  const lista = modo === 'lista';
+  const linhas = [];
 
-  for (const [chave, nome] of linhas) {
+  if (lista && ['ic_media', 'escore'].includes(formulaSelecionada)) {
+    linhas.push(['media','Média calculada'], ['desvio','Desvio calculado'], ['n','Quantidade (n)']);
+  } else if (lista && ['ic_proporcao', 'proporcao_amostral'].includes(formulaSelecionada)) {
+    linhas.push(['sucessos','Casos positivos'], ['n','Quantidade (n)'], ['p','Proporção']);
+  } else if (lista && formulaSelecionada === 'erro_padrao') {
+    const tipo = el('campo-tipo')?.value;
+    if (tipo === 'media') linhas.push(['desvio','Desvio calculado'],['n','Quantidade (n)']);
+    else linhas.push(['p','Proporção'],['n','Quantidade (n)']);
+  } else if (lista && formulaSelecionada === 'amostra') {
+    const tipo = el('campo-tipo')?.value;
+    if (tipo === 'media') linhas.push(['desvio','Desvio piloto'], ['n','Tamanho piloto']);
+    else linhas.push(['p','Proporção piloto'], ['n','Tamanho piloto']);
+  }
+
+  if (['ic_media','ic_proporcao'].includes(formulaSelecionada)) {
+    linhas.push(['margem','Margem de erro'], ['intervalo','Intervalo de confiança']);
+  } else {
+    linhas.push(['resultado','Resultado']);
+  }
+
+  for (const [chave, titulo] of linhas) {
     const linha = document.createElement('div');
     linha.className = 'linha-saida';
-    const titulo = document.createElement('span');
-    titulo.className = 'celula-nome';
-    titulo.textContent = nome;
+    const nome = document.createElement('span');
+    nome.className = 'celula-nome';
+    nome.textContent = titulo;
     const valor = document.createElement('output');
     valor.className = 'celula-resultado';
     valor.id = `saida-${chave}`;
     valor.textContent = '—';
-    linha.append(titulo, valor);
+    linha.append(nome, valor);
     container.append(linha);
   }
   container.hidden = false;
@@ -379,27 +435,33 @@ function limparLinhasResultado() {
 }
 
 function mostrarLinhasResultado(resposta) {
-  // Os valores chegam PRONTOS do Python. Nenhuma fórmula é repetida no JS.
-  const resultados = resposta.valores_calculados || {};
-  const margem = el('saida-margem');
-  const intervalo = el('saida-intervalo');
-  const resultado = el('saida-resultado');
-  if (margem) margem.textContent = resultados.margem || '—';
-  if (intervalo) intervalo.textContent = resultados.intervalo || resposta.resultado;
-  if (resultado) resultado.textContent = resposta.resultado;
+  // O Python devolve os valores em "valores_calculados". Aqui apenas
+  // os copiamos para a célula que tem o mesmo nome.
+  const calculados = resposta.valores_calculados || {};
   el('linhas-resultado').querySelectorAll('.linha-saida').forEach(linha => {
+    const campo = linha.querySelector('output');
+    const chave = campo.id.replace('saida-', '');
+    const pronto = calculados[chave];
+    campo.textContent = pronto !== undefined ? pronto :
+      chave === 'resultado' || chave === 'intervalo' ? resposta.resultado : '—';
     linha.classList.add('calculado');
   });
 }
 
 function exibirCamposCorretos() {
-  const valores = lerCampos();
-  // IC proporção: escolha entre contagem e porcentagem.
-  // Amostra: escolha entre média e proporção.
-  el('campos').querySelectorAll('[data-mostrar]').forEach(grupo => {
-    const mostrar = grupo.dataset.mostrar;
-    const visivel = !mostrar || mostrar === valores.modo || mostrar === valores.tipo;
-    grupo.hidden = !visivel;
+  // Um campo pode depender de DUAS escolhas diferentes:
+  // 1) entrada = direto / lista;
+  // 2) tipo = média / proporção, ou modo = contagem / porcentagem.
+  // Portanto usamos duas condições separadas e não enviamos campos
+  // escondidos ao servidor.
+  const entrada = el('campo-entrada')?.value || 'direto';
+  const tipo = el('campo-tipo')?.value || '';
+  const modo = el('campo-modo')?.value || '';
+  el('campos').querySelectorAll('.campo').forEach(grupo => {
+    const entradaCorreta = !grupo.dataset.entrada || grupo.dataset.entrada === entrada;
+    const opcao = grupo.dataset.mostrar;
+    const condicaoCorreta = !opcao || opcao === tipo || opcao === modo;
+    grupo.hidden = !(entradaCorreta && condicaoCorreta);
   });
 }
 
@@ -417,8 +479,7 @@ function camposObrigatoriosPreenchidos() {
   const dados = lerCampos();
   return MODULOS[formulaSelecionada].campos.every(campo => {
     const grupo = el(`campo-${campo.id}`).closest('.campo');
-    if (grupo.hidden || campo.id === 'prever' ||
-        (formulaSelecionada === 'amostra' && campo.id === 'percentual')) return true;
+    if (grupo.hidden || campo.opcional || campo.id === 'prever') return true;
     return String(dados[campo.id] || '').trim() !== '';
   });
 }
@@ -426,6 +487,7 @@ function camposObrigatoriosPreenchidos() {
 function camposAlterados() {
   // Primeiro atualizamos quais campos aparecem; depois o fluxo.
   exibirCamposCorretos();
+  construirLinhasResultado();
   versaoDosCampos += 1;
   respostaPython = null;
   ultimoResultado = null;
@@ -573,24 +635,30 @@ function resumoNoFluxo(indice) {
       respostaPython ? (respostaPython.passos[2] || '').replace(/^\d+\.\s*/, '') : 'Intercepto b',
       respostaPython ? respostaPython.resultado : 'Equação / previsão'
     ],
+    // O Python já separa os números em "valores_calculados".
+    // Não repetimos as operações estatísticas em JavaScript.
     ic_media: [
-      [rotuloCurto('media', dados.media), rotuloCurto('desvio', dados.desvio), rotuloCurto('n', dados.n)].filter(Boolean).join(' · ') || 'Informe média, desvio e n',
-      dados.confianca ? `Confiança=${dados.confianca}%` : 'Escolha a confiança',
-      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Margem E',
-      respostaPython ? (respostaPython.passos[2] || '').replace(/^\d+\.\s*/, '') : 'Limites do intervalo',
-      respostaPython ? respostaPython.resultado : 'Intervalo final'
+      respostaPython
+        ? `Média ${respostaPython.valores_calculados.media} · desvio ${respostaPython.valores_calculados.desvio} · n ${respostaPython.valores_calculados.n}`
+        : dados.entrada === 'lista'
+        ? `${(dados.valores || '').split(/[;\n]/).filter(x => x.trim()).length} observações`
+        : [rotuloCurto('media', dados.media),rotuloCurto('desvio', dados.desvio),rotuloCurto('n', dados.n)].filter(Boolean).join(' · ') || 'Informe os dados',
+      respostaPython ? `z = ${respostaPython.valores_calculados.z}` : `Confiança = ${dados.confianca || 95}%`,
+      respostaPython ? `E = ${respostaPython.valores_calculados.margem}` : 'Margem a calcular',
+      respostaPython ? `Inf.: ${respostaPython.valores_calculados.inferior} · Sup.: ${respostaPython.valores_calculados.superior}` : 'Limites a calcular',
+      respostaPython ? respostaPython.valores_calculados.intervalo : 'Intervalo final'
     ],
     ic_proporcao: [
-      rotuloCurto('n', dados.n) || 'Informe o total n',
-      dados.modo === 'porcentagem'
-        ? (dados.percentual ? `p=${dados.percentual}%` : 'Informe a porcentagem')
-        : (dados.sucessos ? `sucessos=${dados.sucessos}` : 'Informe a quantidade'),
-      dados.confianca ? `Confiança=${dados.confianca}%` : 'Escolha a confiança',
-      respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Margem E',
-      respostaPython ? respostaPython.resultado : 'Intervalo final'
+      respostaPython ? `n = ${respostaPython.valores_calculados.n}` :
+        rotuloCurto('n', dados.n) || (dados.entrada === 'lista' ? `${(dados.valores || '').split(/[;\n]/).filter(x => x.trim()).length} respostas` : 'Informe o total n'),
+      respostaPython ? `p = ${respostaPython.valores_calculados.p}` :
+        dados.modo === 'porcentagem' ? `p = ${dados.percentual || '—'}%` : `Casos = ${dados.sucessos || '—'}`,
+      respostaPython ? `z = ${respostaPython.valores_calculados.z}` : `Confiança = ${dados.confianca || 95}%`,
+      respostaPython ? `E = ${respostaPython.valores_calculados.margem}` : 'Margem a calcular',
+      respostaPython ? respostaPython.valores_calculados.intervalo : 'Intervalo final'
     ],
     escore: [
-      [rotuloCurto('valor', dados.valor), rotuloCurto('media', dados.media)].filter(Boolean).join(' · ') || 'Informe x e μ',
+      [rotuloCurto('valor', dados.valor), rotuloCurto('media', dados.media)].filter(Boolean).join(' · ') || (dados.entrada === 'lista' ? 'Valor e dados da lista' : 'Informe x e μ'),
       dados.valor && dados.media ? 'x − μ' : 'Diferença x − μ',
       rotuloCurto('desvio', dados.desvio) || 'Informe σ',
       respostaPython ? (respostaPython.passos[1] || '').replace(/^\d+\.\s*/, '') : 'Divisão final',
@@ -620,19 +688,8 @@ function resumoNoFluxo(indice) {
   return lista[indice] || '—';
 }
 
-function resumirEntrada() {
-
-  const dados = lerCampos();
-  if (!formulaSelecionada) return 'Escolha no teclado';
-  if (formulaSelecionada === 'correlacao' || formulaSelecionada === 'regressao') {
-    const x = (dados.x || '').split(/[;\n]/).filter(parte => parte.trim()).length;
-    const y = (dados.y || '').split(/[;\n]/).filter(parte => parte.trim()).length;
-    return `X: ${x} valor(es) · Y: ${y} valor(es)`;
-  }
-  const itens = Object.entries(dados).filter(([chave, valor]) =>
-    !['formula', 'modo', 'tipo', 'confianca'].includes(chave) && valor);
-  return itens.length ? itens.map(([chave, valor]) => `${chave}=${valor}`).join(' · ') : 'Aguardando dados';
-}
+// A função antiga que resumia a amostra foi removida: hoje
+// "resumoNoFluxo" já atende todas as funções e evita código duplicado.
 
 function desenharFluxo() {
   const modulo = formulaSelecionada ? MODULOS[formulaSelecionada] : null;

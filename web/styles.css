@@ -228,3 +228,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .linha-saida.calculado .celula-resultado { background: #183c2b; border-color: #367857; color: #b7f6d3; }
 .resultado-bloco > summary { cursor: pointer; font-size: 13px; color: #b6c8d0; }
 .resultado-bloco > summary:hover { color: #ffffff; }
+
+/* ================================================================
+   VERSÃO 6: BOTÕES DE INTERVALO DE CONFIANÇA
+   A primeira linha traz o nome completo; a segunda indica a modalidade.
+   A tela mantém o tema discreto da calculadora do Windows.
+   ================================================================ */
+.tecla-formula[data-formula="ic_media"],
+.tecla-formula[data-formula="ic_proporcao"] { display: flex; flex-direction: column; gap: 3px; }
+.tecla-formula[data-formula="ic_media"] span,
+.tecla-formula[data-formula="ic_proporcao"] span { font-size: 12px; line-height: 1.22; }
+.tecla-formula[data-formula="ic_media"] small,
+.tecla-formula[data-formula="ic_proporcao"] small { font-size: 12px; font-weight: 700; color: #c5e1ee; }
+/* Campo de "Lista de valores" pode crescer para receber colunas do Excel. */
+.celula-entrada > textarea { min-height: 96px; }

@@ -185,36 +185,159 @@ def regressao(dados):
 
 
 # ============================================================
+# DOIS MODOS DE ENTRADA — DADOS PRONTOS OU VALORES DA AMOSTRA
+# ============================================================
+# "direto": o exercício já informa média, desvio ou total.
+# "lista": o exercício fornece as observações individuais.
+# Os dois modos terminam nas mesmas fórmulas para não criar
+# resultados diferentes conforme a forma de digitar os dados.
+
+
+def modo_entrada(dados):
+    """Confere o botão escolhido no navegador e bloqueia modos inválidos."""
+    modo = dados.get('entrada', 'direto')
+    if modo not in ('direto', 'lista'):
+        raise ValueError('Escolha dados informados ou lista de valores.')
+    return modo
+
+
+def resumo_de_valores(dados, nome='Valores da amostra', dispersao='amostral'):
+    """Da lista de números, extrai n, média e desvio sem pedir contas extras.
+
+    Se for AMOSTRAL, o divisor da variância é (n - 1): DESVPAD.A.
+    Se for POPULACIONAL, o divisor é n: DESVPAD.P.
+    A média e a contagem são iguais nos dois casos.
+    """
+    if dispersao not in ('amostral', 'populacional'):
+        raise ValueError('Tipo de desvio: escolha amostral ou populacional.')
+    minimo = 2 if dispersao == 'amostral' else 1
+    valores = lista_numeros(dados.get('valores', ''), nome, minimo)
+    n = len(valores)
+    media = math.fsum(valores) / n
+    soma_quadrados = math.fsum((x - media) ** 2 for x in valores)
+    desvio = math.sqrt(soma_quadrados / (n - 1 if dispersao == 'amostral' else n))
+    if not all(math.isfinite(v) for v in (media, soma_quadrados, desvio)):
+        raise ValueError('Valores muito grandes. Revise os números informados.')
+    return media, desvio, n
+
+
+def media_desvio_da_questao(dados, pede_tamanho=True):
+    """Obtém média/desvio/n da lista OU lê os três valores informados.
+
+    Esta função é usada no intervalo da média, escore Z e erro-padrão.
+    Assim, não precisamos reescrever a conta da média em cada função.
+    """
+    if modo_entrada(dados) == 'lista':
+        tipo = dados.get('tipo_dispersao', 'amostral')
+        return (*resumo_de_valores(dados, dispersao=tipo), tipo)
+    media = numero(dados.get('media', ''), 'Média')
+    desvio = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
+    n = inteiro(dados.get('n', ''), 'Tamanho da amostra') if pede_tamanho else None
+    return media, desvio, n, 'informado'
+
+
+def eventos_binarios(dados):
+    """Conta respostas 1/0, sim/não ou verdadeiro/falso copiadas do Excel.
+
+    Essa lista serve para PROPORÇÕES, pois cada item precisa indicar
+    presença (1/sim) ou ausência (0/não) da característica.
+    NÃO confunda esta lista com uma amostra de valores contínuos.
+    """
+    valor = dados.get('valores', '')
+    if not isinstance(valor, str) or not valor.strip():
+        raise ValueError('Informe as observações como 1/0 ou sim/não.')
+    partes = [p.strip().lower() for p in valor.replace('\r', '\n').replace('\t', ';').replace('\n', ';').split(';') if p.strip()]
+    positivos = {'1', 'sim', 's', 'verdadeiro', 'true'}
+    negativos = {'0', 'não', 'nao', 'n', 'falso', 'false'}
+    for i, item in enumerate(partes, 1):
+        if item not in positivos | negativos:
+            raise ValueError(f'Item {i}: use somente 1/0 ou sim/não na lista de proporção.')
+    if not partes:
+        raise ValueError('Informe pelo menos uma observação.')
+    sucessos = sum(item in positivos for item in partes)
+    return sucessos, len(partes)
+
+
+def proporcao_da_questao(dados):
+    """Devolve (proporção decimal, n, contagem, origem) de qualquer modo."""
+    if modo_entrada(dados) == 'lista':
+        k, n = eventos_binarios(dados)
+        return k / n, n, k, f'{k} de {n} valores'
+    n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
+    # No modo direto aceitamos a quantidade OU a porcentagem.
+    if str(dados.get('sucessos', '')).strip():
+        k = numero(dados['sucessos'], 'Quantidade com característica')
+        if not k.is_integer() or not 0 <= k <= n:
+            raise ValueError('Quantidade com característica: use um inteiro entre 0 e n.')
+        return k / n, n, int(k), f'{int(k)} / {n}'
+    pct = numero(dados.get('percentual', ''), 'Proporção em %')
+    if not 0 <= pct <= 100:
+        raise ValueError('Proporção: informe de 0% a 100%.')
+    return pct / 100, n, None, f'{texto_num(pct)}%'
+
+
+def resumo_mostrado(media=None, desvio=None, n=None, p=None, sucessos=None):
+    """Números já formatados para preencher as células coloridas da tela."""
+    linhas = {}
+    if media is not None:
+        linhas['media'] = texto_num(media, 6)
+    if desvio is not None:
+        linhas['desvio'] = texto_num(desvio, 6)
+    if n is not None:
+        linhas['n'] = str(n)
+    if p is not None:
+        linhas['p'] = f'{texto_num(100 * p, 4)}%'
+    if sucessos is not None:
+        linhas['sucessos'] = str(sucessos)
+    return linhas
+
+
+# ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DE IC PARA A MÉDIA
 # Margem E = z * desvio_padrao / raiz(n)
 # IC = (média - E, média + E)
 # ============================================================
 
 def ic_media(dados):
-    """Calcula o intervalo Z para a média, conforme os exercícios da aula."""
-    media = numero(dados.get('media', ''), 'Média')
-    dp = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
-    n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
+    """Intervalo Z da média: aceita resumo pronto ou lista de observações."""
+    entrada = modo_entrada(dados)
+    media, dp, n, tipo_dp = media_desvio_da_questao(dados)
     z = z_critico(dados.get('confianca', 95))
-    # 1) Escolher z (confiança) e calcular a margem de erro.
-    # Aumentar o n diminui a margem porque n fica dentro da raiz.
+
+    # A fórmula do Excel INT.CONFIANÇA usa o desvio e o tamanho já prontos.
+    # Quando há lista, primeiro calculamos esses dados automaticamente.
     erro = z * dp / math.sqrt(n)
-    # 2) Subtrair e somar essa margem à média para achar os limites.
     inferior, superior = media - erro, media + erro
-    aviso = ('A aula utiliza o valor Z. Se o desvio for AMOSTRAL e n ≤ 30, '
-             'pode ser necessário usar a distribuição t de Student.' if n <= 30 else '')
+
+    aviso = ''
+    if tipo_dp == 'amostral' and n <= 30:
+        aviso = ('A aula usa intervalo Z; para amostras pequenas com desvio ' 
+                 'AMOSTRAL, confira se a professora exige t de Student.')
+    elif tipo_dp == 'informado' and n <= 30:
+        aviso = ('Para n pequeno, confirme se o desvio informado é ' 
+                 'populacional (σ). Se for amostral (s), pode ser necessário t de Student.')
+    passos = []
+    if entrada == 'lista':
+        passos += [f'1. Da lista: n = {n}; média = {texto_num(media, 6)}; '
+                   f'desvio {tipo_dp} = {texto_num(dp, 6)}']
+    else:
+        passos += [f'1. Dados informados: média = {texto_num(media)}; '
+                   f'desvio = {texto_num(dp)}; n = {n}']
+    passos += [f'2. Grau de confiança: {dados.get("confianca", 95)}% → z = {texto_num(z, 3)}',
+              f'3. Margem E = {texto_num(z, 3)} × {texto_num(dp, 6)} ÷ √{n} = {texto_num(erro, 6)}',
+              f'4. Limite inferior: {texto_num(media, 6)} − {texto_num(erro, 6)} = {texto_num(inferior, 6)}',
+              f'5. Limite superior: {texto_num(media, 6)} + {texto_num(erro, 6)} = {texto_num(superior, 6)}']
+    valores = resumo_mostrado(media=media, desvio=dp, n=n)
+    # O fluxograma usa estes valores; a tela apenas exibe o que o Python manda.
+    valores.update(z=texto_num(z, 3),
+                   inferior=texto_num(inferior, 6), superior=texto_num(superior, 6),
+                   margem=f'{erro:.2f}'.replace('.', ','),
+                   intervalo=f'{inferior:.2f} a {superior:.2f}'.replace('.', ','))
     return saida('Intervalo de confiança da média',
                  f'IC = ({texto_num(inferior, 6)}; {texto_num(superior, 6)})',
-                 'E = z × σ / √n; IC = (x̄ − E; x̄ + E)',
-                 [f'1. Valor crítico z = {texto_num(z, 3)}',
-                  f'2. Margem de erro E = {texto_num(z, 3)} × {texto_num(dp)} / √{n} = {texto_num(erro, 6)}',
-                  f'3. Limite inferior = {texto_num(media)} − {texto_num(erro, 6)} = {texto_num(inferior, 6)}',
-                  f'4. Limite superior = {texto_num(media)} + {texto_num(erro, 6)} = {texto_num(superior, 6)}'],
-                 'Este intervalo foi estimado para a média populacional.',
-                 [f'Margem de erro: ±{texto_num(erro, 6)}'], aviso,
-                 {'margem': f'{erro:.2f}'.replace('.', ','),
-                  'intervalo': f'{inferior:.2f} a {superior:.2f}'.replace('.', ',')})
-
+                 'E = z × σ / √n; IC = (x̄ − E; x̄ + E)', passos,
+                 'O intervalo estima a média verdadeira da população.',
+                 [f'Margem de erro: ±{texto_num(erro, 6)}'], aviso, valores)
 
 # ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DE IC PARA A PROPORÇÃO
@@ -224,43 +347,35 @@ def ic_media(dados):
 # ============================================================
 
 def ic_proporcao(dados):
-    """Aceita a quantidade de sucessos OU a proporção informada em %."""
-    n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
-    sucessos = str(dados.get('sucessos', '')).strip()
-    # A pessoa pode informar uma CONTAGEM ou uma PORCENTAGEM.
-    # A interface deixa só um desses modos visível por vez.
-    if sucessos:
-        k = numero(sucessos, 'Quantidade de sucessos')
-        if not k.is_integer() or not 0 <= k <= n:
-            raise ValueError('Sucessos: informe uma contagem inteira entre 0 e n.')
-        p = k / n
-        origem = f'{int(k)} / {n}'
-    else:
-        percentual = numero(dados.get('percentual', ''), 'Proporção em %')
-        if not 0 <= percentual <= 100:
-            raise ValueError('Proporção em %: informe um valor entre 0 e 100.')
-        p = percentual / 100
-        origem = f'{texto_num(percentual)}% / 100'
+    """Intervalo da proporção: aceita contagem, percentual ou lista 1/0."""
+    entrada = modo_entrada(dados)
+    p, n, k, origem = proporcao_da_questao(dados)
     z = z_critico(dados.get('confianca', 95))
-    # Aqui p está entre 0 e 1, não entre 0 e 100.
-    # A margem de erro também sai em proporção; no visor viramos %.
     erro = z * math.sqrt(p * (1 - p) / n)
     inferior, superior = p - erro, p + erro
-    aviso = ('A aproximação normal pode ser inadequada se n×p ou n×(1−p) for pequeno; '
-             'nesses casos, considere um intervalo binomial alternativo.'
-             if min(n*p, n*(1-p)) < 5 else '')
+    aviso = ('Com poucas ocorrências, o intervalo normal pode ser inadequado; '
+             'confira se a questão pede outro método.'
+             if min(n * p, n * (1 - p)) < 5 else '')
+    passos = [f'1. {"Da lista" if entrada == "lista" else "Dados informados"}: '
+              f'p = {origem} = {texto_num(p, 6)}; n = {n}',
+              f'2. Confiança = {dados.get("confianca", 95)}%; z = {texto_num(z, 3)}',
+              f'3. Margem E = {texto_num(z, 3)} × √[{texto_num(p, 6)} × '
+              f'(1 − {texto_num(p, 6)}) / {n}] = {texto_num(erro, 6)}',
+              f'4. Limite inferior = {texto_num(inferior * 100, 4)}%',
+              f'5. Limite superior = {texto_num(superior * 100, 4)}%']
+    valores = resumo_mostrado(n=n, p=p, sucessos=k)
+    # Para o Node-RED, p, z, margem e limites ficam separados.
+    valores.update(z=texto_num(z, 3),
+                   inferior=f'{texto_num(inferior * 100, 4)}%',
+                   superior=f'{texto_num(superior * 100, 4)}%',
+                   margem=f'{erro * 100:.2f}'.replace('.', ',') + ' p.p.',
+                   intervalo=f'{inferior * 100:.2f}% a {superior * 100:.2f}%'.replace('.', ','))
     return saida('Intervalo de confiança da proporção',
-                 f'IC = ({texto_num(inferior*100, 4)}%; {texto_num(superior*100, 4)}%)',
+                 f'IC = ({texto_num(inferior * 100, 4)}%; {texto_num(superior * 100, 4)}%)',
                  'p = sucessos / n; E = z × √[p(1 − p) / n]; IC = (p − E; p + E)',
-                 [f'1. Proporção p = {origem} = {texto_num(p, 6)} ({texto_num(p*100, 4)}%)',
-                  f'2. Valor crítico z = {texto_num(z, 3)}',
-                  f'3. Margem E = {texto_num(z, 3)} × √[{texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {n}] = {texto_num(erro, 6)}',
-                  f'4. IC = ({texto_num(inferior, 6)}; {texto_num(superior, 6)})'],
-                 'O intervalo estima a proporção populacional.',
-                 [f'p = {texto_num(p*100, 4)}%', f'Margem: ±{texto_num(erro*100, 4)} pontos percentuais'], aviso,
-                 {'margem': f'{erro*100:.2f}'.replace('.', ',') + ' p.p.',
-                  'intervalo': (f'{inferior*100:.2f}% a {superior*100:.2f}%').replace('.', ',')})
-
+                 passos, 'Este intervalo estima a proporção na população.',
+                 [f'p = {texto_num(p * 100, 4)}%',
+                  f'Margem: ±{texto_num(erro * 100, 4)} pontos percentuais'], aviso, valores)
 
 # ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DO ESCORE Z
@@ -268,26 +383,32 @@ def ic_proporcao(dados):
 # ============================================================
 
 def escore(dados):
-    """Mede quantos desvios-padrão um valor se afasta da média."""
+    """Escore Z: permite usar média/desvio prontos ou calculá-los da lista."""
     x = numero(dados.get('valor', ''), 'Valor observado')
-    media = numero(dados.get('media', ''), 'Média')
-    dp = positivo(dados.get('desvio', ''), 'Desvio-padrão')
-    # 1) Subtraímos a média para descobrir a distância.
-    # 2) Dividimos pelo desvio para medir essa distância em desvios-padrão.
+    entrada = modo_entrada(dados)
+    media, dp, n, tipo = media_desvio_da_questao(dados, pede_tamanho=False)
+    if dp == 0:
+        raise ValueError('O desvio-padrão deve ser maior que zero para calcular o escore Z.')
     z = (x - media) / dp
     classificacao = ('Incomum (|z| > 2)' if abs(z) > 2
                      else 'No limite (|z| = 2)' if math.isclose(abs(z), 2, abs_tol=1e-10)
                      else 'Dentro do padrão (|z| < 2)')
     direcao = 'acima' if z > 0 else 'abaixo' if z < 0 else 'exatamente na média'
-    explicacao = (f'O valor está {texto_num(abs(z), 4)} desvios-padrão '
-                  + (f'{direcao} da média.' if z != 0 else '(z = 0).')
-                  + ' Estar acima ou abaixo não significa ser bom ou ruim por si só.')
-    return saida('Escore Z', f'z = {texto_num(z, 6)}',
-                 'z = (x − μ) / σ',
-                 [f'1. Diferença x − μ = {texto_num(x)} − {texto_num(media)} = {texto_num(x-media)}',
-                  f'2. Dividir pelo desvio-padrão: z = {texto_num(x-media)} / {texto_num(dp)} = {texto_num(z, 6)}',
-                  f'3. Classificação: {classificacao}'], explicacao, [classificacao])
-
+    passos = [f'1. Valor observado x = {texto_num(x)}']
+    if entrada == 'lista':
+        passos += [f'2. Dos {n} valores: média = {texto_num(media, 6)}; '
+                   f'desvio {tipo} = {texto_num(dp, 6)}']
+    else:
+        passos += [f'2. Média informada = {texto_num(media)}; desvio = {texto_num(dp)}']
+    passos += [f'3. Diferença: x − média = {texto_num(x - media, 6)}',
+              f'4. Dividir pelo desvio: {texto_num(x - media, 6)} / '
+              f'{texto_num(dp, 6)} = {texto_num(z, 6)}',
+              f'5. Classificação: {classificacao}']
+    return saida('Escore Z', f'z = {texto_num(z, 6)}', 'z = (x − μ) / σ',
+                 passos,
+                 f'O valor está {texto_num(abs(z), 4)} desvios-padrão '
+                 f'{direcao}. Isso não determina se o resultado é bom ou ruim.',
+                 [classificacao], valores_calculados=resumo_mostrado(media=media, desvio=dp, n=n))
 
 # ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DO TAMANHO DA AMOSTRA
@@ -297,44 +418,53 @@ def escore(dados):
 # ============================================================
 
 def tamanho_amostra(dados):
-    """Define quantas observações são necessárias com o erro informado."""
-    z = z_critico(dados.get('confianca', 95))
+    """Tamanho mínimo: usa desvio/proporção prontos ou uma amostra piloto."""
+    entrada = modo_entrada(dados)
     tipo = dados.get('tipo', 'media')
+    z = z_critico(dados.get('confianca', 95))
+    erro_informado = positivo(dados.get('erro', ''), 'Margem de erro')
+    valores = {}
+
     if tipo == 'media':
-        dp = positivo(dados.get('desvio', ''), 'Desvio-padrão')
-        erro = positivo(dados.get('erro', ''), 'Margem de erro')
-        # Média: primeiro calculamos z vezes o desvio, dividido pelo erro.
-        # Depois elevamos ao quadrado para obter a quantidade necessária.
-        valor = (z * dp / erro) ** 2
+        if entrada == 'lista':
+            # Uma amostra PILOTO estima o desvio; ela NÃO é a amostra final.
+            _, dp, n_piloto = resumo_de_valores(dados, dispersao=dados.get('tipo_dispersao', 'amostral'))
+            valores.update(resumo_mostrado(desvio=dp, n=n_piloto))
+        else:
+            dp = positivo(dados.get('desvio', ''), 'Desvio-padrão')
+        calculado = (z * dp / erro_informado) ** 2
         formula = 'n = (z × σ / E)²'
-        conta = f'({texto_num(z, 3)} × {texto_num(dp)} / {texto_num(erro)})²'
+        conta = f'({texto_num(z, 3)} × {texto_num(dp, 6)} / {texto_num(erro_informado)})²'
     elif tipo == 'proporcao':
-        erro_pct = positivo(dados.get('erro', ''), 'Margem de erro em %')
-        if erro_pct > 100:
-            raise ValueError('Margem de erro em %: informe até 100%.')
-        p_texto = str(dados.get('percentual', '')).strip()
-        pct = numero(p_texto, 'Proporção estimada em %') if p_texto else 50.0
-        if not 0 < pct < 100:
-            raise ValueError('Proporção estimada: use um valor entre 0% e 100%.')
-        # Porcentagens como 3% precisam ser divididas por 100.
-        # Se p não foi informado, usamos 50%, que exige a maior amostra.
-        p, erro = pct / 100, erro_pct / 100
-        valor = (z*z*p*(1-p)) / (erro*erro)
+        if not erro_informado <= 100:
+            raise ValueError('Margem de erro percentual: use de 0 a 100.')
+        if entrada == 'lista':
+            k, n_piloto = eventos_binarios(dados)
+            p = k / n_piloto
+            valores.update(resumo_mostrado(n=n_piloto, p=p, sucessos=k))
+        else:
+            pct_texto = str(dados.get('percentual', '')).strip()
+            p = numero(pct_texto, 'Proporção em %') / 100 if pct_texto else 0.5
+        if not 0 < p < 1:
+            raise ValueError('Proporção prevista: use valor maior que 0% e menor que 100%.')
+        e = erro_informado / 100
+        calculado = z*z*p*(1-p) / (e*e)
         formula = 'n = z² × p × (1 − p) / E²'
-        conta = f'{texto_num(z, 3)}² × {texto_num(p)} × {texto_num(1-p)} / {texto_num(erro, 6)}²'
+        conta = f'{texto_num(z, 3)}² × {texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {texto_num(e, 6)}²'
     else:
         raise ValueError('Escolha média ou proporção para o tamanho da amostra.')
-    if not math.isfinite(valor) or valor > 10**12:
-        raise ValueError('A amostra calculada é grande demais. Revise os dados.')
-    # Nunca arredonde para baixo! Uma parte decimal já exige mais um item.
-    n = max(1, math.ceil(valor))
-    return saida('Tamanho mínimo da amostra', f'n = {n:,}'.replace(',', '.') + ' observações',
-                 formula,
-                 [f'1. Valor crítico z = {texto_num(z, 3)}',
-                  f'2. Aplicar a fórmula: {conta} = {texto_num(valor, 6)}',
-                  f'3. Arredondar sempre para cima: n = {n}'],
-                 'O tamanho da amostra é arredondado para cima para cumprir a margem de erro.')
 
+    if not math.isfinite(calculado) or calculado > 10**12:
+        raise ValueError('A quantidade calculada é grande demais. Revise os dados.')
+    n_final = max(1, math.ceil(calculado))
+    passos = [f'1. Objetivo: {tipo}; modo: {entrada}',
+              f'2. Confiança: {dados.get("confianca", 95)}%; z = {texto_num(z, 3)}',
+              f'3. Margem máxima E = {texto_num(erro_informado)}',
+              f'4. Substituir: {conta} = {texto_num(calculado, 6)}',
+              f'5. Arredondar para cima: n = {n_final}']
+    return saida('Tamanho mínimo da amostra', f'n = {n_final:,}'.replace(',', '.') + ' observações',
+                 formula, passos, 'A quantidade é arredondada para cima.',
+                 valores_calculados=valores)
 
 # ============================================================
 # CÁLCULOS AUXILIARES — QUANDO A QUESTÃO DÁ OS VALORES BRUTOS
@@ -432,23 +562,15 @@ def desvio_padrao(dados):
 # ============================================================
 
 def proporcao_amostral(dados):
-    """Converte uma contagem dentro de um total em proporção e porcentagem."""
-    n = inteiro(dados.get('n', ''), 'Quantidade total')
-    k = numero(dados.get('sucessos', ''), 'Quantidade com a característica')
-    if not k.is_integer() or k < 0 or k > n:
-        raise ValueError('A quantidade com a característica deve ser inteira e estar entre 0 e n.')
-    k = int(k)
-    p = k / n
-    pct = p * 100
-    return saida('Proporção amostral', f'p̂ = {texto_num(pct, 4)}%', 'p̂ = k / n',
-                 [f'1. Quantidade total n = {n}',
-                  f'2. Quantidade com a característica k = {k}',
-                  '3. Separar a parte do total: k / n',
-                  f'4. Proporção p̂ = {k} ÷ {n} = {texto_num(p, 6)}',
-                  f'5. Porcentagem = {texto_num(pct, 4)}%'],
-                 'A proporção indica qual parte do total tem a característica.',
-                 [f'Proporção decimal = {texto_num(p, 6)}'])
-
+    """Proporção simples: permite quantidade/total ou lista 1/0."""
+    p, n, k, origem = proporcao_da_questao(dados)
+    return saida('Proporção amostral', f'p̂ = {texto_num(p * 100, 4)}%', 'p̂ = k / n',
+                 [f'1. Origem: {origem}', f'2. Total n = {n}',
+                  f'3. Casos positivos k = {k if k is not None else "não informado"}',
+                  f'4. Proporção p = {texto_num(p, 6)}',
+                  f'5. Porcentagem = {texto_num(p * 100, 4)}%'],
+                 'A proporção mostra a parte do total com uma característica.',
+                 valores_calculados=resumo_mostrado(n=n, p=p, sucessos=k))
 
 # ============================================================
 # FÓRMULA DO ERRO-PADRÃO
@@ -457,36 +579,42 @@ def proporcao_amostral(dados):
 # ============================================================
 
 def erro_padrao(dados):
-    """Mostra a dispersão estimada da média ou da proporção amostral."""
+    """Erro-padrão: usa dados prontos ou os obtém de observações brutas."""
     tipo = dados.get('tipo', 'media')
-    n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
+    entrada = modo_entrada(dados)
     if tipo == 'media':
-        dp = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
+        if entrada == 'lista':
+            _, dp, n = resumo_de_valores(dados, dispersao=dados.get('tipo_dispersao', 'amostral'))
+        else:
+            dp = positivo(dados.get('desvio', ''), 'Desvio-padrão', aceita_zero=True)
+            n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
         ep = dp / math.sqrt(n)
+        valores = resumo_mostrado(desvio=dp, n=n)
         formula = 'EP = s / √n (ou σ / √n)'
-        passo = f'3. Dividir o desvio pela raiz de n: {texto_num(dp)} / √{n}'
-        detalhe = f'Desvio-padrão informado = {texto_num(dp)}'
-        resultado = f'EP = {texto_num(ep, 6)}'
+        conta = f'{texto_num(dp, 6)} / √{n}'
+        resposta = f'EP = {texto_num(ep, 6)}'
     elif tipo == 'proporcao':
-        porcentagem = numero(dados.get('percentual', ''), 'Proporção em %')
-        if not 0 <= porcentagem <= 100:
-            raise ValueError('Proporção: use um valor de 0% a 100%.')
-        p = porcentagem / 100
+        if entrada == 'lista':
+            k, n = eventos_binarios(dados)
+            p = k / n
+        else:
+            n = inteiro(dados.get('n', ''), 'Tamanho da amostra')
+            pct = numero(dados.get('percentual', ''), 'Proporção em %')
+            if not 0 <= pct <= 100:
+                raise ValueError('Proporção: informe de 0% a 100%.')
+            p = pct / 100
         ep = math.sqrt(p * (1 - p) / n)
-        formula = 'EP = √[p̂(1 − p̂) / n]'
-        passo = f'3. Substituir: √[{texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {n}]'
-        detalhe = f'Proporção p̂ = {texto_num(porcentagem)}%'
-        resultado = f'EP = {texto_num(ep, 6)} ({texto_num(ep*100, 4)} p.p.)'
+        valores = resumo_mostrado(n=n, p=p)
+        formula = 'EP = √[p × (1 − p) / n]'
+        conta = f'√[{texto_num(p, 6)} × (1 − {texto_num(p, 6)}) / {n}]'
+        resposta = f'EP = {texto_num(ep, 6)} ({texto_num(ep*100, 4)} p.p.)'
     else:
         raise ValueError('Escolha média ou proporção para o erro-padrão.')
-    return saida('Erro-padrão da ' + ('média' if tipo == 'media' else 'proporção'), resultado,
-                 formula, [f'1. Tipo: {"média" if tipo == "media" else "proporção"}',
-                           f'2. Tamanho da amostra n = {n}', passo,
-                           f'4. Erro-padrão em decimal = {texto_num(ep, 6)}',
-                           f'5. Resultado: {resultado}'],
-                 'O erro-padrão é usado para calcular a margem de erro do intervalo de confiança.',
-                 [detalhe])
-
+    return saida('Erro-padrão da ' + ('média' if tipo == 'media' else 'proporção'),
+                 resposta, formula,
+                 [f'1. Tipo: {tipo}', f'2. Modo: {entrada}; n = {n}',
+                  f'3. Fórmula: {conta}', f'4. Resultado: {resposta}'],
+                 'Erro-padrão é diferente da margem de erro.', valores_calculados=valores)
 
 # ============================================================
 # FUNCIONAMENTO DAS TECLAS COMUNS DA CALCULADORA

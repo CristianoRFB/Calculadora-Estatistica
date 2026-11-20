@@ -1,365 +1,279 @@
 # Calculadora de Estatística Aplicada
 
-Calculadora feita para apresentar os conteúdos de Estatística Aplicada da professora Andrea P. Silva. O objetivo é conseguir ouvir um enunciado, descobrir qual conta a questão pede, informar os dados, calcular e explicar a sequência de operações.
+**Manual de uso e de manutenção para quem está começando a programar.**
 
-Este projeto foi escrito para que **uma pessoa iniciante em programação consiga abrir o código durante a apresentação e encontrar rapidamente o trecho que precisa corrigir**. Não usamos frameworks de interface, banco de dados, login nem bibliotecas matemáticas externas.
+Esta calculadora foi preparada para a apresentação de Estatística Aplicada na Fatec. Seu objetivo é permitir que o aluno ouça o enunciado da professora, escolha uma operação, digite somente os dados disponíveis e explique o resultado.
 
-> **Regra principal:** os cálculos estatísticos ficam em `calculos.py`. O JavaScript apenas controla as teclas, os campos e a exibição. A versão para celular usa o mesmo Python da versão do computador.
+O projeto prioriza **Python simples**, interface próxima da Calculadora do Windows, organização em linhas coloridas como no Excel e um fluxograma inspirado no Node-RED. Não exige Flask, bibliotecas matemáticas externas, banco de dados nem serviços pagos para funcionar no computador.
 
-## 1. O que existe no programa
+> **Onde corrigir erros durante a apresentação?** Abra primeiro `calculos.py` se a conta estiver errada; `web/app.js` se os campos ou botões falharem; `web/styles.css` se a disposição visual estiver errada; `app.py` se o navegador não conseguir falar com o Python.
 
-A calculadora segue a organização visual da calculadora científica do Windows: visor, teclas numéricas, operações básicas e uma faixa de teclas estatísticas. A calculadora fica imóvel na coluna esquerda; a coluna direita mostra os campos e o fluxograma do procedimento.
+---
 
-Há **seis botões principais de estatística**, com mais cinco fórmulas auxiliares recolhidas logo abaixo:
+## 1. O que aparece na tela
 
-| Botão | Conta | Pergunta que ajuda a responder |
+A **calculadora fixa à esquerda** possui visor, teclas numéricas e seis funções estatísticas. As duas primeiras são **Intervalo de confiança — Média** e **Intervalo de confiança — Proporção**. Na parte direita ficam o **Fluxo do cálculo** e a área **Dados e enunciado**.
+
+Os cálculos preparatórios (média, desvio, variância, proporção e erro-padrão) ficam recolhidos no grupo **Cálculos auxiliares** para não sobrecarregar a tela.
+
+Ao clicar numa função, surgem os campos que ela precisa. O resultado aparece no visor e na última linha da tabela. A opção **Ver resolução passo a passo** mostra a conta detalhada quando necessário.
+
+**Explicações escondidas:** clique com o botão **direito** sobre uma função. No celular, mantenha o dedo pressionado. O painel da esquerda explica o conceito, a fórmula e os símbolos sem mudar a posição da calculadora.
+
+---
+
+## 2. Duas maneiras de fornecer informações
+
+Várias fórmulas têm uma linha **Forma de entrada** com duas opções:
+
+| Opção | Quando escolher | O que o programa faz |
 | --- | --- | --- |
-| `Correlação` | Correlação de Pearson | Existe uma relação linear? Qual a direção e a força? |
-| `Regressão` | Regressão linear simples | Qual é a equação da reta? Qual Y seria previsto? |
-| `Intervalo da média` | Intervalo de confiança para a média | Entre quais limites deve ficar a média populacional? |
-| `Intervalo da proporção` | Intervalo de confiança para a proporção | Entre quais porcentagens deve ficar uma taxa populacional? |
-| `Escore` | Escore Z | Quantos desvios-padrão um valor está da média? |
-| `Tamanho da amostra` | Tamanho de amostra | Quantas observações serão necessárias? |
+| **Dados informados** | A professora já disse os resultados estatísticos necessários | Você digita esses números; o Python os utiliza diretamente. |
+| **Lista de valores** | A professora informou a sequência de observações ou você copiou células do Excel | Você cola a lista; o Python descobre automaticamente o tamanho, a média, o desvio ou a proporção, conforme a fórmula. |
 
-Também há as operações básicas `+`, `−`, `×`, `÷` e `%`.
+**Não é necessário calcular a média e o desvio antes de abrir o intervalo de confiança.** Na entrada por lista, o próprio intervalo faz essas contas, mostra os valores obtidos nas linhas azuis/verdes e continua com a margem de erro e os dois limites.
 
-### Cálculos auxiliares (novos)
+Isso se aplica ao intervalo da média, intervalo da proporção, escore Z, tamanho da amostra e erro-padrão. A proporção auxiliar também aceita duas maneiras de entrada.
 
-Quando o exercício informa **os valores brutos da amostra** em vez da média ou do desvio-padrão já prontos, abra **Cálculos auxiliares** na calculadora. Esse grupo fica recolhido para a tela principal continuar limpa.
+### Como colar uma coluna do Excel
 
-| Botão auxiliar | Para que serve | Fórmula |
-| --- | --- | --- |
-| Média amostral | Encontrar a média dos valores | `x̄ = Σx / n` |
-| Desvio-padrão | Verificar quanto os dados variam em torno da média | `s = √[Σ(x−x̄)²/(n−1)]` (amostral) ou `σ = √[Σ(x−μ)²/N]` (populacional) |
-| Variância | Calcular a dispersão antes de tirar a raiz | `s² = Σ(x−x̄)²/(n−1)` ou `σ² = Σ(x−μ)²/N` |
-| Proporção | Transformar uma contagem em taxa (%) | `p̂ = quantidade com a característica / total` |
-| Erro-padrão | Obter uma etapa da margem de erro | Média: `EP = s / √n`; proporção: `EP = √[p̂(1−p̂)/n]` |
+Para números contínuos, digite `2; 4; 6; 8`, ou cole um valor por linha. Você também pode colar células copiadas do Excel (separadas por tabulação). Use **vírgula para casas decimais** e **ponto e vírgula para separar números**.
 
-**Amostra e população não são a mesma coisa:** a variância amostral divide por `n − 1`. A populacional divide por `N`. A tela pergunta qual dos dois é o caso antes de calcular. Para usar desvio-padrão *amostral*, informe pelo menos duas observações.
+Para uma **proporção**, a lista representa a presença ou ausência de uma característica. Informe **`1` / `0`** ou **`sim` / `não`** para cada observação. Por exemplo, `sim; não; sim; não` representa duas respostas positivas em quatro observações. **Não use uma lista de alturas, notas ou tempos como lista de proporções.**
 
-**Como digitar:** valores como `2; 4; 6; 8` usam o ponto e vírgula para separar; valores decimais como `1,5` usam vírgula decimal. Também é possível colar um valor por linha. Essas regras são as mesmas para PC e celular.
+### Amostral ou populacional?
 
-**Como chegar ao intervalo de confiança da média:** primeiro calcule a média amostral e o desvio-padrão quando o enunciado entregar somente uma lista de observações. Anote `x̄`, `s` e `n`; depois entre em **Intervalo da média** e informe esses números, junto do grau de confiança. Os slides da professora usam a fórmula Z e permitem usar `s` no lugar de `σ` com `n > 30`; para amostras pequenas e desvio populacional desconhecido pode ser necessário aplicar a distribuição t, que não foi acrescentada à calculadora.
+Quando o programa calcula o desvio a partir de uma lista, você pode escolher:
 
-**O que é da aula e o que é complemento:** o material da aula apresenta média amostral, desvio-padrão e proporção como informações para estimativas e intervalos. Os cinco botões auxiliares acrescentam a etapa de calcular essas informações quando apenas os valores brutos estão disponíveis. As contas seguem as definições estatísticas usuais, mantendo o fluxo ensinado para os intervalos.
+- **Amostral (`n − 1`)**: equivalente ao `DESVPAD.A` do Excel. Para esse caso são necessários pelo menos **dois números**.
+- **Populacional (`n`)**: equivalente ao `DESVPAD.P` do Excel, quando a lista representa a população inteira.
 
+O programa calcula a **média** e a **quantidade n** automaticamente em ambos os casos.
 
-**Não há exercícios pré-preenchidos, cartões de exemplos nem dados de demonstração na tela.** É preciso informar os números do enunciado que for apresentado.
+Se o enunciado já trouxer o desvio pronto, **não é necessário selecionar esse tipo**: escolha *Dados informados* e digite diretamente o número.
 
-## 2. Como abrir no computador
+---
 
-É necessário ter **Python 3.10 ou mais recente** instalado. Não é necessário instalar pacotes do `pip`.
+## 3. Onde está o intervalo de confiança?
 
-1. Baixe o repositório ou seu ZIP do GitHub e extraia os arquivos.
-2. Abra a pasta `Calculadora-Estatistica`.
-3. No Windows, dê dois cliques em `iniciar_windows.bat`, ou abra um terminal na pasta.
-4. No terminal, execute:
+Na **primeira linha dos botões principais**, à esquerda, existem duas teclas com o nome completo **Intervalo de confiança** e a indicação **Média** ou **Proporção**.
 
-   ```bash
-   python app.py
-   ```
+### Intervalo de confiança da média
 
-5. A calculadora será aberta no navegador padrão. Se ela não abrir automaticamente, acesse `http://127.0.0.1:8765`.
-6. Mantenha o terminal aberto. Pressione `Ctrl+C` quando terminar.
+Você pode preencher de duas formas:
 
-Se o Windows reconhecer apenas o comando `py`, utilize `py app.py`.
+**Dados informados:** Média → Desvio-padrão → Tamanho (n) → Alfa (α).
 
-### Se a internet da sala falhar
+**Lista de valores:** Valores da amostra → Tipo de desvio → Alfa (α). Após calcular, surgirão as linhas **Média calculada**, **Desvio calculado**, **Quantidade**, **Margem de erro** e **Intervalo de confiança**.
 
-A versão local **não precisa de internet**. Mantenha o Python instalado e a pasta do projeto no computador para executar o programa mesmo sem Wi-Fi.
+A fórmula usada nos slides é:
 
-### Se a porta já estiver ocupada
-
-Use:
-
-```bash
-python app.py --porta 8790
+```text
+Margem de erro = z × desvio-padrão / raiz(n)
+Limite inferior = média − margem
+Limite superior = média + margem
 ```
 
-Depois abra `http://127.0.0.1:8790`.
+O **`INT.CONFIANÇA` do Excel fornece a margem**, e não sozinho os dois limites. A tela mostra os dois resultados para ficar igual à resolução em aula.
 
-### Para ver apenas as mensagens do terminal
+Na foto da aula, com média `159`, desvio `12,42`, confiança `95%` (α = `0,05`) e n = `10`, o resultado é **margem 7,70** e **intervalo aproximadamente 151,30 a 166,70**.
 
-```bash
-python app.py --sem-abrir
+**Limitação de método:** os slides de intervalo da média usam o valor crítico Z e explicam que o desvio amostral pode substituir o populacional quando `n > 30`. Se `n` for pequeno e só houver desvio amostral, pode ser necessário usar **t de Student**. O programa não afirma que Z serve para qualquer amostra: mostra um aviso quando isso exige atenção.
+
+### Intervalo de confiança da proporção
+
+**Dados informados:** informe o tamanho total `n`, escolha **Quantidade** ou **Porcentagem**, digite o dado disponível e selecione Alfa.
+
+**Lista de valores:** cole as respostas individuais em `1/0` ou `sim/não` e selecione Alfa. O programa conta automaticamente positivos e total, obtém a proporção e calcula a margem e o intervalo.
+
+A fórmula Z usada nos slides é:
+
+```text
+p = quantidade com característica / total
+Margem = z × raiz[p × (1 − p) / n]
+Intervalo = (p − margem ; p + margem)
 ```
 
-## 3. Como usar durante a apresentação
+A apresentação exibe o resultado em porcentagens e também identifica casos nos quais a aproximação normal pode ser inadequada.
 
-1. **Ouça o objetivo** da pergunta: força de relação, prever valor, estimar intervalo, padronizar valor ou definir quantidade de observações.
-2. **Clique na tecla da fórmula** correspondente, à esquerda. O botão selecionado fica destacado.
-3. **Leia os campos**, à direita. Só aparecem as informações necessárias à fórmula selecionada.
-4. **Informe os valores** do enunciado. Aceitamos vírgula decimal, como `1,75`.
-5. **Clique em Calcular** (ou na tecla `=` do teclado da calculadora).
-6. **Leia o visor e o fluxo**, na direita superior. Os nós verdes indicam o procedimento realizado.
-7. **Consulte a resolução completa** abaixo do formulário, com os passos que vieram do Python.
+---
 
-Clique novamente na mesma tecla de fórmula para retornar às operações básicas.
+## 4. O que cada função pede
 
-### Botão direito = explicação
+| Função | Dados informados | Lista de observações |
+| --- | --- | --- |
+| **Correlação de Pearson** | — | Duas listas pareadas: X e Y. |
+| **Regressão linear simples** | — | Listas X/Y; novo X para previsão é opcional. |
+| **Intervalo da média** | Média, desvio, tamanho e alfa. | Números individuais, tipo de desvio e alfa. |
+| **Intervalo da proporção** | Total, contagem ou porcentagem, alfa. | Respostas 1/0 ou sim/não; alfa. |
+| **Escore Z** | Valor observado, média e desvio. | Valor observado e lista de números; tipo de desvio. |
+| **Tamanho da amostra** | Tipo (média/proporção), desvio ou proporção prevista, margem e confiança. | Lista de uma **amostra piloto**, margem e confiança. |
+| **Média amostral** | — | Apenas a lista de números. |
+| **Desvio-padrão** | — | Lista de números e tipo amostral/populacional. |
+| **Variância** | — | Lista de números e tipo amostral/populacional. |
+| **Proporção amostral** | Quantidade com característica e total. | Respostas 1/0 ou sim/não. |
+| **Erro-padrão** | Tipo, desvio/porcentagem e tamanho. | Lista numérica (média) ou binária (proporção). |
 
-Clique **com o botão direito do mouse** em qualquer tecla estatística. Uma gaveta será aberta à esquerda com:
+A função **Tamanho da amostra** sempre **arredonda para cima**. Quando a questão de proporção não traz uma estimativa prévia e você está no modo informado, pode deixar a proporção em branco; o programa usa 50%, valor conservador. Uma **amostra piloto** serve para estimar a variabilidade, não representa o tamanho final calculado.
 
-- O que é a conta e para que ela serve.
-- Como reconhecer a solicitação nas palavras do enunciado.
-- Quais dados precisam ser digitados.
-- A fórmula escrita e a explicação dos símbolos.
-- Um cuidado importante para não aplicar a fórmula incorretamente.
+### Alfa e grau de confiança
 
-O botão **`? Entenda`** também abre a gaveta da fórmula selecionada. Para fechar, clique no `×`, fora da gaveta ou pressione `Esc`.
+A professora usa `α` (alfa) e o grau de confiança. No seletor:
 
-**A calculadora não é desmontada nem deslocada quando a explicação é aberta.** O painel simplesmente aparece por cima, e pode ser fechado a qualquer momento.
+| Confiança | Alfa | Valor crítico Z (conforme a tabela da aula) |
+| --- | --- | --- |
+| 90% | 0,10 | 1,645 |
+| 95% | 0,05 | 1,960 |
+| 99% | 0,01 | 2,575 |
 
-### Teclado físico e teclado desenhado na tela
+A tela mostra alfa e confiança juntos. O Python recebe a confiança e encontra o valor crítico correspondente no `calculos.py`.
 
-- Os números e as operações podem ser digitados pelo teclado físico ou pelas teclas visuais.
-- Para usar as teclas visuais dentro de um campo estatístico, **clique primeiro no campo** à direita.
-- `C` limpa o número ou o campo selecionado; `⌫` apaga um dígito; `±` troca o sinal.
-- A tecla `=` calcula a fórmula selecionada. Sem uma fórmula selecionada, ela conclui a operação básica.
-- Para listas de X e Y, use `;` entre valores ou escreva um número por linha. A vírgula é reservada para a parte decimal.
-- A regressão também aceita um **novo X opcional**. Se o campo ficar vazio, a calculadora apresenta só a equação.
+---
 
-## 4. Como funciona o fluxograma
+## 5. Como abrir no computador (funciona sem internet)
 
-O gráfico na parte superior direita foi inspirado no sistema de blocos do Node-RED. Cada fórmula tem **cinco etapas nomeadas**.
+1. Instale o **Python 3.10 ou mais recente** no Windows.
+2. Extraia o ZIP completo da calculadora ou baixe o repositório.
+3. Abra a pasta que contém `app.py`.
+4. Execute `iniciar_windows.bat` com dois cliques ou abra o terminal e digite:
 
-- **Cinza:** etapa ainda não concluída.
-- **Verde aceso e com brilho:** etapa atual.
-- **Verde discreto:** etapa já concluída.
-- **Vermelho:** algum dado precisa ser corrigido.
+```bash
+python app.py
+```
 
-Antes do cálculo, o fluxo acompanha o preenchimento. Depois do cálculo, apresenta valores intermediários enviados pelo Python. O resultado completo também fica em um painel separado abaixo dos dados.
+5. Se o navegador não abrir, acesse `http://127.0.0.1:8765`.
+6. **Deixe o terminal aberto durante a apresentação.** Para encerrar, pressione `Ctrl+C`.
 
-**Caso o fluxograma mostre uma etapa no lugar errado:** abra `web/app.js` e procure `desenharFluxo`. O dicionário `indicesPassos` determina quais linhas da resolução ficam em cada nó.
+No Windows, quando só o comando `py` funciona, use `py app.py`.
 
-## 5. Entenda os arquivos sem precisar decorar o projeto
+Se a porta 8765 já estiver em uso, execute `python app.py --porta 8790` e abra `http://127.0.0.1:8790`.
+
+Para permitir que um celular na **mesma rede Wi-Fi** do PC acesse a versão local, use `python app.py --rede`. Esse modo deixa o servidor acessível na rede local: use somente em rede confiável.
+
+**A versão offline roda o mesmo `calculos.py` usado pela publicação na Cloudflare.** Não precisa se conectar à internet para calcular.
+
+---
+
+## 6. Estrutura do código: qual arquivo abrir para cada problema?
 
 ```text
 Calculadora-Estatistica/
-│
-├── app.py                 # Liga o servidor no PC. Não contém fórmulas.
-├── calculos.py            # TODAS as contas, regras e mensagens de erro.
-├── iniciar_windows.bat    # Abre o programa no Windows com dois cliques.
-├── README.md              # Este guia.
-│
-├── web/
-│   ├── index.html         # Estrutura fixa: visor, teclas, painel e gaveta.
-│   ├── app.js             # Liga botões, cria campos, chama Python e desenha fluxo.
-│   ├── styles.css         # Cores e medidas da aparência para computador.
-│   └── mobile.css         # Ajustes EXCLUSIVOS para telas pequenas.
-│
+├── README.md                 ← Você está aqui: manual de manutenção.
+├── app.py                    ← Inicia o servidor Python no seu PC.
+├── calculos.py               ← TODAS as contas estatísticas e validações.
+├── iniciar_windows.bat       ← Atalho para abrir no Windows.
 ├── tests/
-│   └── test_calculos.py   # Confere se as fórmulas continuam corretas.
-│
+│   ├── test_calculos.py      ← Exercícios originais, erros e servidor local.
+│   └── test_duas_entradas.py ← Confere os modos direto/lista.
+├── web/
+│   ├── index.html            ← Posição da calculadora e dos botões.
+│   ├── app.js                ← Seleção, campos, fluxo, comunicação com Python.
+│   ├── styles.css            ← Cores e tamanhos para o PC.
+│   └── mobile.css            ← Ajustes de layout do celular.
 └── cloudflare/
-    ├── worker.py          # Substitui o servidor local quando está na nuvem.
-    ├── gerar_assets.py    # Junta os arquivos necessários para publicar.
-    └── LEIA-ME.md         # Instruções para a versão Cloudflare.
+    ├── worker.py             ← Servidor Python da versão na nuvem.
+    ├── gerar_assets.py       ← Gera cópias para a Cloudflare.
+    └── LEIA-ME.md            ← Instruções próprias de publicação.
 ```
 
-### `calculos.py` — a parte que resolve as questões
+Os arquivos `cloudflare/calculos.py` e `cloudflare/web_assets.py` são **gerados automaticamente**. Não tente corrigir fórmulas neles: corrija em `calculos.py` e gere novamente.
 
-Esse é o primeiro arquivo a abrir se um resultado matemático estiver errado. Ele começa verificando os dados: transforma `1,75` em número, confere se `n` é inteiro, confere se o desvio-padrão é permitido etc.
+### 6.1. `calculos.py`: local mais importante
 
-Depois vêm seções grandes identificadas pelo nome da fórmula. Cada função pega um dicionário com valores e devolve um dicionário de resposta:
+Contém as funções com o mesmo nome do conteúdo da aula. Na ordem geral:
 
-- `titulo`: nome da operação.
-- `resultado`: texto que vai para o visor.
-- `formula`: fórmula escrita para conferência.
-- `passos`: lista das contas intermediárias, na sequência correta.
-- `explicacao`: interpretação em português.
-- `detalhes` e `aviso`: informações adicionais, quando necessárias.
+1. **Ler valores:** `numero` transforma `1,5` em número; `lista_numeros` separa itens; `inteiro` e `positivo` impedem valores inválidos.
+2. **Escolher confiança:** `z_critico` consulta a tabela 90/95/99.
+3. **Padronizar resultados:** `texto_num` coloca vírgula decimal; `saida` cria um conjunto de dados para a interface.
+4. **Cálculos com pares:** `somas_pares`, `correlacao` e `regressao` calculam as relações entre X e Y.
+5. **Modos direto/lista:** `modo_entrada`, `resumo_de_valores`, `media_desvio_da_questao`, `eventos_binarios`, `proporcao_da_questao` e `resumo_mostrado` preparam os números sem duplicar fórmulas.
+6. **Intervalos e estatística:** `ic_media`, `ic_proporcao`, `escore`, `tamanho_amostra`, funções auxiliares e `erro_padrao`.
+7. **Teclado básico:** `basica` resolve adição, subtração, multiplicação, divisão e porcentagem.
+8. **Seleção final:** `FORMULAS` liga cada nome interno à função matemática. `calcular` recebe a escolha e executa essa função.
 
-**Para corrigir uma fórmula:** procure a seção `FUNCIONAMENTO REFERENTE À FÓRMULA DE...` e leia os comentários que antecedem os cálculos. Faça a menor alteração necessária e rode os testes antes de apresentar.
+**Se der resultado errado**, identifique a fórmula, procure `def ic_media(` ou a outra função correspondente, leia os comentários da seção e compare os dados e o divisor. Corrija em **um só lugar**.
 
-### `app.py` — a ponte com o navegador
+**Exemplo de ordem de execução:** clicar Intervalo da média → JavaScript envia `{formula: 'ic_media', entrada: 'lista', valores: '...', confianca: '95'}` → Python calcula média/desvio/n → Python calcula margem e limites → Python devolve `valores_calculados` com os números de cada linha → tela apresenta o resultado.
 
-Ao executar `python app.py`, esse arquivo cria um servidor HTTP na porta 8765. Quando o navegador pede `/`, ele entrega `web/index.html`. Quando pede `/api/calcular`, ele recebe os números e chama `calcular()` em `calculos.py`.
+### 6.2. `web/app.js`: os botões e a planilha visual
 
-Ele não possui nenhuma cópia das fórmulas. Se o navegador abrir mas não calcular, verifique se esse servidor continua rodando.
+O JavaScript **não contém cálculos estatísticos**. Procure os seguintes blocos comentados:
 
-### `web/index.html` — a posição de cada parte da tela
+- `MODULOS`: nome completo, explicação, lista de campos e sequência do fluxo de cada fórmula.
+- `selecionarFormula`: muda a fórmula selecionada, limpa os resultados anteriores.
+- `construirCampos`: transforma os campos definidos em `MODULOS` em linhas azuis de formulário.
+- `construirLinhasResultado`: cria as células de saída, inclusive médias e desvios calculados automaticamente.
+- `exibirCamposCorretos`: mostra só os campos que combinam com **entrada direto/lista** e **tipo média/proporção**.
+- `lerCampos`: recolhe os valores visíveis para enviar ao Python.
+- `camposObrigatoriosPreenchidos`: não deixa calcular sem as informações essenciais.
+- `pedirAoPython`: usa HTTP para enviar o formulário à rota `/api/calcular`.
+- `calcularFormula`: recebe a resposta; evita que respostas antigas sobrescrevam dados já alterados.
+- `mostrarLinhasResultado`: preenche as células usando `valores_calculados` vindos do Python.
+- `resumoNoFluxo` e `desenharFluxo`: colocam os dados nos nós e destacam o andamento em verde.
+- `abrirAjuda` e `fecharAjuda`: controlam a explicação do botão direito.
+- `tecladoBasico` e `inserirNoCampo`: controlam as teclas visuais e o campo selecionado.
+- `iniciarBotoes`: conecta os eventos de clique e teclado físico às funções.
 
-Contém a barra superior, o visor, os seis botões estatísticos, o teclado numérico, a área do fluxograma e o painel de ajuda. **Para mover um botão, altere o HTML ou o CSS, não o Python.**
+**Quer mudar o nome de um campo?** Altere o `titulo` dentro de `MODULOS`, sem renomear seu `id` sem atualizar também o Python.
 
-### `web/app.js` — o funcionamento dos botões
+**Quer que um campo só apareça em "lista"?** Use a propriedade `entrada: 'lista'` em sua definição; para média ou proporção, use também `mostrar: 'media'` ou `mostrar: 'proporcao'`.
 
-As seções do arquivo seguem a ordem das ações do usuário:
+**Quer mudar a cor do título?** Abra `styles.css`, não `calculos.py`.
 
-1. `MODULOS`: nomes, dicas, símbolos e campos de cada fórmula.
-2. Variáveis de estado: qual fórmula está aberta e qual campo foi selecionado.
-3. `selecionarFormula`: destaca o botão e atualiza a área da direita.
-4. `construirCampos`: cria os campos da fórmula selecionada.
-5. `pedirAoPython` e `calcularFormula`: fazem a requisição HTTP.
-6. `desenharFluxo`: pinta os nós da sequência de cálculo.
-7. `abrirAjuda` e `fecharAjuda`: controlam a gaveta da esquerda.
-8. `tecladoBasico` e `inserirNoCampo`: controlam as teclas.
-9. `iniciarBotoes`: conecta os cliques e os atalhos.
+### 6.3. `web/index.html`: a posição das teclas
 
-**Esse arquivo NÃO implementa as fórmulas de estatística.** Modificar uma explicação ali não muda a conta.
+É o desenho estático da página. Os dois botões de intervalo de confiança foram colocados **na primeira linha** para serem encontrados rapidamente. Os botões usam `data-formula="ic_media"`, `data-formula="ic_proporcao"` etc.; esse nome deve corresponder ao identificador de `MODULOS` e de `FORMULAS`.
 
-### `web/styles.css` e `web/mobile.css`
+### 6.4. `app.py`: o servidor local
 
-Os dois arquivos tratam apenas de aparência. A versão para celular não possui cálculos próprios, justamente para impedir que existam resultados diferentes entre PC e telefone.
+A classe `Atendente` entrega a página e recebe as requisições de cálculo. As rotas principais são:
 
-## 6. O que cada fórmula recebe
+- `/` → carrega a página.
+- `/api/saude` → informa se o Python está ativo.
+- `/api/calcular` → recebe dados, chama `calcular` e devolve a resposta.
 
-### Correlação de Pearson (`r`)
+Se a página abrir mas não calcular, veja no terminal se `app.py` ainda está ligado e se o navegador está no endereço correto.
 
-Precisa de duas listas de valores: `x` e `y`, com o mesmo número de elementos. Calcula médias, somas de desvios e o coeficiente `r`. Não é possível calcular o coeficiente se alguma variável não variar.
+### 6.5. `cloudflare/worker.py`: a mesma conta publicada na internet
 
-### Regressão simples (`ŷ`)
+Na nuvem, o Worker substitui o pequeno servidor HTTP local. Importa o mesmo `calculos.py`. O gerador copia os arquivos visuais para que a Cloudflare possa servi-los. Não há duas versões das fórmulas.
 
-Precisa das listas `x` e `y`. Também pode receber `prever`, que é um novo X facultativo. A calculadora mostra a inclinação `a`, o intercepto `b`, a equação e, quando solicitada, uma previsão.
+---
 
-### Intervalo de confiança para a média (`IC μ`)
+## 7. O que fazer se alguma coisa falhar durante a apresentação
 
-Recebe `media`, `desvio`, `n` e `confianca`. Calcula a margem de erro `E = z × desvio / √n` e os limites `média − E` e `média + E`.
-
-### Intervalo de confiança para a proporção (`IC p`)
-
-Recebe `n` e **uma** das duas formas de informar a proporção: `sucessos` (quantidade) ou `percentual` (porcentagem). O resultado aparece como intervalo de porcentagens.
-
-### Escore Z (`z`)
-
-Recebe `valor`, `media` e `desvio`. Calcula `z = (valor − media) / desvio`. Um desvio-padrão igual a zero não é permitido.
-
-### Tamanho da amostra (`n`)
-
-Recebe `tipo` (`media` ou `proporcao`), `confianca`, `erro` e o valor adicional exigido pelo tipo escolhido. O resultado é sempre arredondado para cima.
-
-### Valores críticos usados na disciplina
-
-| Confiança | Valor Z |
-| --- | --- |
-| 90% | 1,645 |
-| 95% | 1,96 |
-| 99% | 2,575 |
-
-A tabela fica em um único lugar: função `z_critico()` dentro de `calculos.py`. Os slides usam valores arredondados, então pequenas diferenças podem ocorrer se outras calculadoras adotarem mais casas decimais.
-
-**Atenção aos arredondamentos:** esta calculadora faz a conta com precisão interna e só arredonda na apresentação. Algumas soluções dos slides arredondam a margem de erro antes de calcular os limites, de modo que o último decimal pode ser diferente.
-
-## 7. Como corrigir um defeito durante a apresentação
-
-| O que aconteceu | Onde procurar | O que verificar |
+| Problema | Onde procurar | Solução inicial |
 | --- | --- | --- |
-| O site não abre | `app.py` | Python instalado, porta 8765 e terminal aberto |
-| O site abre, mas o cálculo não responde | `app.py` | Se `/api/calcular` está recebendo requisições |
-| Resultado matemático incorreto | `calculos.py` | Função da fórmula correspondente |
-| Um campo não aparece | `web/app.js` | Lista `campos` do módulo e `exibirCamposCorretos` |
-| O botão seleciona a fórmula errada | `web/index.html` | Atributo `data-formula` do botão |
-| O botão direito não abre a explicação | `web/app.js` | Funções `abrirAjuda` e `iniciarBotoes` |
-| O fluxo brilha na etapa errada | `web/app.js` | Função `desenharFluxo` e `indicesPassos` |
-| Um texto está errado | `web/app.js` | Campo `guia` ou `pista` do módulo |
-| Uma cor ou tamanho está ruim no PC | `web/styles.css` | Variáveis no início do arquivo e classe correspondente |
-| Algo não cabe na tela do celular | `web/mobile.css` | Regras dentro do `@media` |
-| Cloudflare mostra página antiga | `cloudflare/gerar_assets.py` | Gere os arquivos novamente e publique o Worker |
+| O botão não muda os campos | `web/app.js` | Procure `selecionarFormula`, a propriedade `data-formula` e a definição em `MODULOS`. |
+| O modo lista mostra campos do modo direto | `web/app.js` | Procure `exibirCamposCorretos` e a propriedade `entrada` do campo. |
+| O desvio não bate com o Excel | `calculos.py` | Confira se usou **amostral (n−1)** ou **populacional (n)** e se os dados da lista estão corretos. |
+| O intervalo está estranho | `calculos.py` | Confira `ic_media` ou `ic_proporcao`, a confiança, a unidade do erro e o tamanho. |
+| O fluxograma mostra etapa errada | `web/app.js` | Procure `resumoNoFluxo`, que organiza os números recebidos do Python. |
+| O navegador mostra erro de conexão | `app.py` | Reinicie com `python app.py`; confirme a porta no terminal. |
+| A página parece antiga depois de atualizar online | Navegador | Atualize a página sem cache (`Ctrl + F5`). |
+| A versão do celular corta botões | `web/mobile.css` | Ajuste só tamanhos e espaços do layout responsivo. |
+| Digitou um número e aparece erro de validação | `calculos.py` | Veja `numero`, `inteiro`, `lista_numeros`, `eventos_binarios`. |
 
-### Como verificar se o servidor está respondendo
+Para reduzir riscos, **nunca altere duas fórmulas ao mesmo tempo sem testar**. Se houver dúvida, restaure o arquivo da versão anterior do GitHub.
 
-Com o Python rodando, abra `http://127.0.0.1:8765/api/saude`. Deve aparecer uma mensagem informando que o Python está funcionando.
+---
 
-### Como verificar as fórmulas depois de alterar o arquivo
+## 8. Executar a bateria de testes
 
-Execute na pasta principal:
+Abra o terminal na raiz do projeto e rode:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Os testes usam apenas a biblioteca padrão do Python. Se aparecer `OK` no final, os casos testados passaram. Isso não é garantia absoluta para todas as entradas possíveis, mas reduz o risco de um erro passar despercebido.
+Os testes cobrem exercícios dos slides, entradas inválidas, respostas do servidor e equivalência entre modo direto e modo lista. Também são conferidos, no navegador, os campos condicionais, o visor, o fluxograma, o painel de explicações e a disposição no celular.
 
-## 8. Como usar no celular
+Na revisão da versão 6, **85 testes automáticos Python** e testes de interface em resoluções de computador e celular passaram. Isso reduz os riscos, mas não é garantia matemática de que toda possível entrada será válida.
 
-**Opção A: pela internet.** Acesse o endereço do Worker publicado na Cloudflare. Ele executa as mesmas fórmulas Python que o PC.
+---
 
-**Opção B: na mesma rede do computador.** Abra o servidor local de modo que aceite outros aparelhos:
+## 9. Notas sobre os materiais da aula
 
-```bash
-python app.py --rede
-```
+A organização dos dois intervalos, a escolha de alfa e os valores críticos Z foram conferidos com as apresentações **Intervalo de confiança — Média**, **Intervalo de confiança — Proporção** e **Tamanho da amostra**. Correlação, regressão e escore seguem os conteúdos correspondentes. O programa oferece recursos auxiliares e dois modos de entrada para facilitar a digitação durante a apresentação, mas **não substitui a escolha do método estatístico exigido no enunciado**.
 
-Descubra o IP local do PC e, no telefone conectado ao mesmo Wi-Fi, acesse `http://IP-DO-PC:8765`. O Firewall do Windows pode solicitar permissão. Use essa opção somente em uma rede confiável.
-
-No celular, o grupo "Cálculos auxiliares" também começa recolhido e pode ser expandido ao tocar no título. Os blocos ficam empilhados, os campos ocupam toda a largura e a sequência do fluxo pode ser deslizada horizontalmente sem deslocar o restante da página. **Para abrir a explicação de uma tecla, mantenha-a pressionada**; as explicações podem ser consultadas pelo toque longo.
-
-## 9. Versão Cloudflare: como os arquivos se relacionam
-
-Na nuvem não executamos `app.py`, pois Cloudflare Workers fornece o próprio servidor. Usamos o adaptador Python `cloudflare/worker.py`.
-
-A ferramenta `cloudflare/gerar_assets.py` prepara dois arquivos auxiliares:
-
-- `cloudflare/calculos.py`: cópia automática do Python original (não edite essa cópia).
-- `cloudflare/web_assets.py`: arquivos visuais convertidos em textos para o Worker servir as páginas.
-
-Essa cópia serve apenas para a publicação. **A fonte original das fórmulas continua sendo o `calculos.py` na raiz.**
-
-Leia `cloudflare/LEIA-ME.md` para instruções sobre como publicar e atualizar o Worker. Após mudar CSS, HTML, JS ou Python, gere novamente os arquivos auxiliares antes de publicar.
-
-## 10. Regras de manutenção para evitar quebrar o programa
-
-1. Não replique uma fórmula estatística em JavaScript. Use sempre o arquivo central de cálculos.
-2. Não altere todos os arquivos de uma vez quando houver um defeito pequeno.
-3. Não mude os identificadores como `ic_media` sem atualizar também a tecla no HTML.
-4. Não confunda vírgula decimal com ponto e vírgula que separa números da lista.
-5. Não arredonde os números antes de concluir os cálculos; deixe a formatação para o final.
-6. Não remova a validação de divisão por zero, n inteiro ou listas de tamanhos diferentes.
-7. Execute os testes e abra a tela no navegador depois de alterar código.
-8. Guarde uma cópia local funcional para apresentar se o Wi-Fi cair.
-
-## 11. Créditos e referências de ensino
-
-Calculadora desenvolvida para prática dos tópicos ministrados em **Estatística Aplicada, Fatec**. Fórmulas e organização pedagógica baseadas nos materiais de aula: Correlação e Regressão Linear; Intervalo de Confiança da Média; Intervalo de Confiança da Proporção; Medida de Posição Relativa (Escore); e Tamanho da Amostra.
-
-Projeto educacional, sem coleta de dados pessoais e sem dependências externas para o modo local.
-
-
-## 12. Onde alterar as cinco fórmulas auxiliares
-
-Todas estão em `calculos.py`, separadas pelos títulos `FÓRMULA DA MÉDIA`, `FÓRMULA DA VARIÂNCIA`, `FÓRMULA DA PROPORÇÃO AMOSTRAL` e `FÓRMULA DO ERRO-PADRÃO`.
-
-- `dados_de_uma_amostra`: lê a lista e calcula média e soma dos desvios ao quadrado.
-- `media_amostral`: soma os valores e divide por `n`.
-- `medidas_de_dispersao`: concentra a lógica comum de variância e desvio-padrão, distinguindo amostral e populacional.
-- `variancia` / `desvio_padrao`: selecionam qual das medidas mostrar.
-- `proporcao_amostral`: divide a quantidade com a característica pelo total.
-- `erro_padrao`: aplica a fórmula apropriada para média ou proporção.
-
-Em `web/app.js`, procure `media_amostral`, `desvio_padrao`, `variancia`, `proporcao_amostral` e `erro_padrao` dentro da constante `MODULOS`: lá ficam os nomes dos campos, os textos de orientação e as etapas do fluxograma. Em `web/index.html` fica a área recolhível `id="auxiliares"`. Em `web/styles.css` ficam as regras de tamanho e cor.
-
-**Para testar depois de corrigir uma fórmula:** `python -m unittest discover -s tests -v`. Os testes novos verificam também a diferença entre `n` e `n−1`, os valores decimais, as contagens e os limites das entradas.
-
-
-## Interface no estilo da planilha da professora (v5)
-
-Ao clicar em uma função, a região **abaixo do fluxograma** mostra linhas que
-lembram uma tabela do Excel. À esquerda ficam os rótulos azuis com o nome do
-dado; à direita você informa o valor. O resultado aparece na última linha, sem
-abrir outro formulário.
-
-### Intervalo de confiança da média
-
-A sequência segue a planilha: **Média**, **Desvio-padrão**, **Alfa (α)**,
-**Tamanho (n)**, **Margem de erro** e **Intervalo de confiança**.
-
-- O campo **Alfa** oferece: `0,10 · 90%`, `0,05 · 95%` e `0,01 · 99%`.
-- O Python continua recebendo 90, 95 ou 99, pois é assim que a tabela Z da
-  professora é implementada em `calculos.py`.
-- **Margem de erro** corresponde ao valor devolvido pelo `INT.CONFIANÇA` do
-  Excel. O intervalo completo precisa também da média: `média ± margem`.
-- Se digitar média `159`, desvio `12,42`, alfa `0,05` e tamanho `10`, a
-  margem arredondada para duas casas é `7,70` e o intervalo é de `151,30` a
-  `166,70`.
-- O painel de explicação detalhada fica recolhido em **Ver resolução passo a
-  passo**. Ele pode ser aberto durante a apresentação.
-
-### Onde corrigir cada parte
-
-- `web/app.js`, função `construirCampos()`: cria a tabela de entradas.
-- `web/app.js`, funções `construirLinhasResultado()` e `mostrarLinhasResultado()`:
-  montam e atualizam as linhas de resultado.
-- `web/styles.css`: cores azuis, células de PC e resultados.
-- `web/mobile.css`: tamanhos e espaçamento no celular.
-- `calculos.py`, funções `ic_media()` e `ic_proporcao()`: contas e resultados
-  numéricos devolvidos à tabela. Não altere o JavaScript para corrigir contas.
+A apresentação oral é mais simples se a sequência for: **identificar o objetivo → escolher a função → escolher como o enunciado forneceu os dados → calcular → explicar o resultado**.
