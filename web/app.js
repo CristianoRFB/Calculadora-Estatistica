@@ -42,7 +42,8 @@ const MODULOS = {
     campos: [
       {id: 'x', titulo: 'Valores de X', dica: 'Variável usada para explicar ou prever Y.', tipo: 'lista'},
       {id: 'y', titulo: 'Valores de Y', dica: 'Valores correspondentes a cada X.', tipo: 'lista'},
-      {id: 'prever', titulo: 'Novo X para prever Y (opcional)', dica: 'Deixe vazio se a professora pedir só a equação.', tipo: 'texto'}
+      {id: 'prever', titulo: 'Novo X para prever Y (opcional)', dica: 'Deixe vazio se a professora pedir só a equação.', tipo: 'texto', opcional: true},
+      {id: 'prever_y', titulo: 'Valor de Y para estimar X (opcional)', dica: 'Inverte a reta, não é nova regressão.', tipo: 'texto', opcional: true}
     ],
     guia: {
       conceito: 'Regressão constrói a reta que melhor representa os pares X e Y. Diferentemente da correlação, também serve para fazer uma previsão.',
@@ -71,7 +72,12 @@ const MODULOS = {
       {id:'margem_informada', titulo:'Margem de erro informada (opcional)', tipo:'texto', opcional:true,
        dica:'Em branco = calcular automaticamente. Se informada, use a mesma unidade da média.'},
       {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
-       dica:'Só se a professora informar o total de indivíduos; não é a amostra n.'}
+       dica:'Só se a professora informar o total de indivíduos; não é a amostra n.'},
+      {id:'referencia', titulo:'Valor de referência (opcional)', tipo:'texto', opcional:true,
+       dica:'Se o problema pede comparar o IC com um valor, informe-o aqui.'},
+      {id:'tipo_referencia', titulo:'Como comparar?', tipo:'tipo_referencia', mostrar:'com_referencia', opcional:true},
+      {id:'comparar_n', titulo:'Comparar com outra amostra n (opcional)', tipo:'texto', opcional:true,
+       dica:'Para comparar o efeito do tamanho da amostra mantendo a média e o desvio.'}
     ],
     guia: {
       conceito:'Estima a faixa onde pode estar a média verdadeira. O Excel INT.CONFIANÇA retorna a margem de erro, não os dois limites.',
@@ -100,7 +106,10 @@ const MODULOS = {
       {id:'margem_informada', titulo:'Margem de erro informada em p.p. (opcional)', tipo:'texto', opcional:true,
        dica:'Exemplo: 8 significa 8 pontos percentuais. Em branco, a calculadora determina E.'},
       {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
-       dica:'Informe o total conhecido para projetar pessoas e corrigir população finita.'}
+       dica:'Informe o total conhecido para projetar pessoas e corrigir população finita.'},
+      {id:'referencia', titulo:'Porcentagem de referência (opcional)', tipo:'texto', opcional:true,
+       dica:'Ex.: limite de 20% de bugs ou pelo menos 25% de interessados.'},
+      {id:'tipo_referencia', titulo:'Como comparar?', tipo:'tipo_referencia', mostrar:'com_referencia', opcional:true}
     ],
     guia:{
       conceito:'Estima um intervalo para uma proporção percentual.',
@@ -178,6 +187,7 @@ const MODULOS = {
       {id:'tipo_dispersao', titulo:'Tipo de desvio piloto', tipo:'tipo_dispersao', mostrar:'media', entrada:'lista'},
       {id:'erro', titulo:'Margem de erro desejada', tipo:'texto'},
       {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'},
+      {id:'comparar_confiancas', titulo:'Comparar 90%, 95% e 99%', tipo:'comparar_confiancas'},
       {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
        dica:'Se N é conhecido, aplicamos correção de população finita ao tamanho da amostra.'}
     ],
@@ -285,6 +295,67 @@ const MODULOS = {
       cuidado:'Erro-padrão não é a margem de erro do intervalo.'
     }
   }
+  ,
+  // ========================================================
+  // NOVO BLOCO: exercícios com dados de uma coluna do Excel.
+  // As contas continuam em calculos.py; aqui só definimos os campos.
+  // ========================================================
+  descritiva: {
+    nome:'Medidas descritivas',
+    formula:'Média, mediana, moda, variância e desvio-padrão amostral',
+    pista:'Cole a coluna numérica e obtenha todas as medidas de uma vez.',
+    fluxo:['Valores','Ordenar','Média','Dispersão','Medidas finais'],
+    campos:[{id:'valores', titulo:'Coluna de valores', tipo:'lista',
+      dica:'Cole uma coluna de números do Excel; separadores: linha, tabulação ou ponto e vírgula.'}],
+    guia:{conceito:'Descreve uma coluna numérica por média, moda, mediana, variância, desvio e amplitude.',
+      reconhecer:'Questões com média, mediana, moda, resumo estatístico ou medidas descritivas.',
+      entradas:'Cole a coluna dos tempos de acesso ou qualquer coluna de números.',
+      simbolos:'s² é variância amostral; s é o desvio-padrão; n é quantidade.',
+      cuidado:'Para desvio e variância amostrais precisamos de ao menos dois números.'}
+  },
+  frequencia: {
+    nome:'Tabela de frequências',
+    formula:'fi = frequência simples; fr = fi/n × 100; Fi = acumulada',
+    pista:'Cole uma coluna para contar valores, percentuais e frequências acumuladas.',
+    fluxo:['Ler coluna','Agrupar valores','Contar fi','Percentual fr','Tabela e gráfico'],
+    campos:[
+      {id:'formato', titulo:'Como agrupar?', tipo:'formato_frequencia'},
+      {id:'valores', titulo:'Coluna do Excel', tipo:'lista', dica:'M/F ou números, um valor por linha.'},
+      {id:'classes', titulo:'Número de classes (padrão 5)', tipo:'texto', mostrar:'classes', opcional:true,
+       dica:'Use classes só para histograma de valores numéricos.'}
+    ],
+    guia:{conceito:'Conta quantas vezes um valor ou classe aparece. Também constrói tabela percentual e acumulada.',
+      reconhecer:'Questões com fi, fr, frequência acumulada, tabela de frequência, gráfico de barras ou histograma.',
+      entradas:'Sexo: categoria. Tempo semanal: valor exato ou classes (histograma).',
+      simbolos:'fi é quantidade; fr é porcentagem; Fi é frequência acumulada.',
+      cuidado:'Para variável nominal, a acumulada depende da ordem escolhida; não tem interpretação ordinal.'}
+  },
+  boxplot: {
+    nome:'Quartis e boxplot',
+    formula:'AIQ = Q3 − Q1; outliers fora de Q1−1,5AIQ e Q3+1,5AIQ',
+    pista:'Calcula quartis, outliers e escore Z de cada valor da lista.',
+    fluxo:['Ordenar valores','Calcular quartis','Amplitude AIQ','Identificar outliers','Boxplot e Z'],
+    campos:[{id:'valores', titulo:'Coluna de valores', tipo:'lista',
+      dica:'Cole os tempos de acesso da planilha, um valor por linha.'}],
+    guia:{conceito:'Mostra a distribuição em quartis e destaca valores muito afastados pelo critério interquartil.',
+      reconhecer:'Perguntas sobre Q1, mediana, Q3, boxplot, outlier, AIQ ou escore Z de uma lista.',
+      entradas:'Cole os números da coluna do Excel. Os escores individuais aparecem na tabela após Calcular.',
+      simbolos:'Q1=25%; Q2=mediana; Q3=75%; AIQ=Q3−Q1.',
+      cuidado:'Usa QUARTIL.INC do Excel. Outlier por AIQ não é automaticamente um z maior que 3.'}
+  },
+  classificacao: {
+    nome:'Classificação de variáveis',
+    formula:'Qualitativa (nominal/ordinal) ou quantitativa (discreta/contínua)',
+    pista:'Classifique as variáveis dos exercícios das planilhas.',
+    fluxo:['Escolher variável','Identificar dados','Ver ordem','Ver contagem','Classificação'],
+    campos:[{id:'variavel', titulo:'Variável da planilha', tipo:'variavel_classificacao'}],
+    guia:{conceito:'Classifica uma variável segundo seu significado, não apenas pela aparência dos números.',
+      reconhecer:'Questões com variável qualitativa nominal, ordinal, quantitativa discreta ou contínua.',
+      entradas:'Selecione a coluna da planilha Correlação e Regressão ou Tabela Slide.',
+      simbolos:'Discreta: contagem; contínua: medida; ordinal: categorias com ordem.',
+      cuidado:'Idade em anos completos é discreta; idade exata, contínua.'}
+  }
+
 };
 
 // ---------------------------------------------------------------------------
@@ -327,6 +398,7 @@ function selecionarFormula(id) {
   el('linhas-resultado').hidden = true;
   el('painel-derivados').hidden = true;
   el('erro').hidden = true;
+  limparAnaliseVisual();
 
   document.querySelectorAll('.tecla-formula').forEach(botao => {
     botao.classList.toggle('selecionada', botao.dataset.formula === formulaSelecionada);
@@ -382,7 +454,7 @@ function construirCampos() {
     const celulaValor = document.createElement('div');
     celulaValor.className = 'celula-entrada';
     let campo;
-    if (['confianca', 'modo_proporcao', 'modo_entrada', 'tipo_amostra', 'tipo_dispersao'].includes(definicao.tipo)) {
+    if (['confianca', 'modo_proporcao', 'modo_entrada', 'tipo_amostra', 'tipo_dispersao', 'tipo_referencia', 'comparar_confiancas', 'formato_frequencia', 'variavel_classificacao'].includes(definicao.tipo)) {
       campo = document.createElement('select');
       // No intervalo mostramos o ALFA, mas enviamos a confiança ao Python.
       const opcoes = definicao.tipo === 'confianca'
@@ -395,6 +467,19 @@ function construirCampos() {
         ? [['contagem', 'Quantidade'], ['porcentagem', 'Porcentagem']]
         : definicao.tipo === 'tipo_dispersao'
         ? [['amostral', 'Amostral (n − 1)'], ['populacional', 'Populacional (N)']]
+        : definicao.tipo === 'tipo_referencia'
+        ? [['pertence', 'Está dentro do intervalo?'], ['minimo', 'Pelo menos este valor'],
+           ['maximo', 'No máximo este valor'], ['diferente', 'É diferente deste valor?']]
+        : definicao.tipo === 'comparar_confiancas'
+        ? [['nao', 'Não'], ['sim', 'Sim — mostrar comparação']]
+        : definicao.tipo === 'formato_frequencia'
+        ? [['categorica', 'Categorias (sexo, escolaridade...)'], ['exata', 'Valores numéricos exatos'],
+           ['classes', 'Intervalos de classe / histograma']]
+        : definicao.tipo === 'variavel_classificacao'
+        ? [['sexo', 'Sexo'], ['idade', 'Idade (anos completos)'], ['tempo_acesso', 'Tempo de acesso semanal'],
+           ['tempo_servico', 'Tempo de serviço'], ['escolaridade', 'Escolaridade'],
+           ['salario', 'Salário'], ['dependentes', 'Número de dependentes'],
+           ['automovel', 'Automóvel próprio']]
         : [['media', 'Média'], ['proporcao', 'Proporção']];
       for (const [valor, titulo] of opcoes) campo.append(new Option(titulo, valor));
       if (definicao.tipo === 'confianca') campo.value = '95';
@@ -631,10 +716,12 @@ function exibirCamposCorretos() {
   const entrada = el('campo-entrada')?.value || 'direto';
   const tipo = el('campo-tipo')?.value || '';
   const modo = el('campo-modo')?.value || '';
+  const formato = el('campo-formato')?.value || '';
   el('campos').querySelectorAll('.campo').forEach(grupo => {
     const entradaCorreta = !grupo.dataset.entrada || grupo.dataset.entrada === entrada;
     const opcao = grupo.dataset.mostrar;
-    const condicaoCorreta = !opcao || opcao === tipo || opcao === modo;
+    const condicaoCorreta = !opcao || opcao === tipo || opcao === modo || opcao === formato ||
+      (opcao === 'com_referencia' && Boolean(el('campo-referencia')?.value.trim()));
     grupo.hidden = !(entradaCorreta && condicaoCorreta);
   });
 }
@@ -672,6 +759,7 @@ function camposAlterados() {
   el('painel-resultado').open = false;
   limparLinhasResultado();
   el('erro').hidden = true;
+  limparAnaliseVisual();
   const campos = [...el('campos').querySelectorAll('input, textarea')].filter(c => !c.closest('.campo').hidden);
   const algumNumero = campos.some(c => c.value.trim() !== '');
   andamento = camposObrigatoriosPreenchidos() ? 'pronto' : algumNumero ? 'editando' : 'vazio';
@@ -761,6 +849,7 @@ function mostrarResultado(resposta) {
   el('interpretacao').textContent = resposta.explicacao;
   el('aviso').hidden = !resposta.aviso;
   el('aviso').textContent = resposta.aviso || '';
+  mostrarAnaliseVisual(resposta);
 }
 
 function exibirErro(mensagem) {
@@ -773,6 +862,112 @@ function atualizarVisor(expressao, resultado) {
   el('visor').textContent = resultado;
   // Algumas equações são compridas; reduzir a fonte impede que estourem o visor.
   el('visor').style.fontSize = String(resultado).length > 36 ? '22px' : String(resultado).length > 23 ? '28px' : '';
+}
+
+// ---------------------------------------------------------------------------
+// 05.0 — TABELAS E GRÁFICOS SIMPLES. OS DADOS VÊM DO PYTHON.
+// Não há contas estatísticas aqui: só desenhamos números já devolvidos.
+// Usamos SVG nativo para funcionar offline, sem Chart.js ou internet.
+// ---------------------------------------------------------------------------
+function limparAnaliseVisual() {
+  const area = el('painel-visualizacao');
+  if (!area) return;
+  area.hidden = true;
+  el('grafico-resultado').replaceChildren();
+  el('tabela-resultado').replaceChildren();
+}
+
+function svgel(nome, atributos = {}) {
+  const no = document.createElementNS('http://www.w3.org/2000/svg', nome);
+  for (const [chave, valor] of Object.entries(atributos)) no.setAttribute(chave, String(valor));
+  return no;
+}
+function graficoTexto(svg, x, y, texto, ancora = 'middle') {
+  const t = svgel('text', {x, y, fill:'#e4eaf0', 'font-size':'11', 'text-anchor':ancora});
+  t.textContent = String(texto);
+  svg.append(t);
+}
+function criarGrafico(dados) {
+  const largura = 700, altura = 280, esquerda = 45, direita = 18, topo = 18, base = 46;
+  const svg = svgel('svg', {viewBox:`0 0 ${largura} ${altura}`, role:'img',
+    'aria-label': dados.tipo === 'boxplot' ? 'Boxplot de quartis e outliers' :
+                  dados.tipo === 'dispersao' ? 'Gráfico de dispersão' : 'Gráfico de frequências'});
+  svg.style.width = '100%';
+  svg.style.height = 'auto';
+  const desenharLinha = (x1,y1,x2,y2,cor='#7f8a96',larg=1) =>
+    svg.append(svgel('line',{x1,y1,x2,y2,stroke:cor,'stroke-width':larg}));
+  // Desenho de barras — fi em y; os nomes dos grupos ficam no eixo x.
+  if (dados.tipo === 'barras' || dados.tipo === 'histograma') {
+    const valores=dados.valores || [], rotulos=dados.rotulos || [];
+    const max=Math.max(1,...valores), disp=(largura-esquerda-direita)/valores.length;
+    desenharLinha(esquerda,altura-base,largura-direita,altura-base);
+    valores.forEach((v,i) => {
+      const bar=Math.max(0,v/max*(altura-topo-base));
+      const eHistograma = dados.tipo === 'histograma';
+      svg.append(svgel('rect',{x:esquerda+i*disp+(eHistograma?0:disp*.12),y:altura-base-bar,
+        width:eHistograma?disp:disp*.76,height:bar,fill:'#68c99d',rx:eHistograma?0:3}));
+      graficoTexto(svg,esquerda+(i+.5)*disp,altura-base-bar-5,v);
+      const intervalo = Math.max(1, Math.ceil(valores.length / 9));
+      if (i % intervalo === 0) {
+        const curto=rotulos[i]?.length>12?rotulos[i].slice(0,11)+'…':rotulos[i];
+        graficoTexto(svg,esquerda+(i+.5)*disp,altura-base+18,curto);
+      }
+    });
+  } else if (dados.tipo === 'dispersao') {
+    const xs=dados.x, ys=dados.y;
+    const minimoX=Math.min(...xs), maximoX=Math.max(...xs);
+    const minimoY=Math.min(...ys), maximoY=Math.max(...ys);
+    const spanX=maximoX-minimoX || 1, spanY=maximoY-minimoY || 1;
+    const xval=v=>esquerda+((v-minimoX)/spanX)*(largura-esquerda-direita);
+    const yval=v=>altura-base-((v-minimoY)/spanY)*(altura-topo-base);
+    desenharLinha(esquerda,topo,esquerda,altura-base);
+    desenharLinha(esquerda,altura-base,largura-direita,altura-base);
+    graficoTexto(svg,esquerda,altura-base+18,minimoX);
+    graficoTexto(svg,largura-direita,altura-base+18,maximoX);
+    graficoTexto(svg,esquerda-6,topo+5,maximoY,'end');
+    graficoTexto(svg,esquerda-6,altura-base,minimoY,'end');
+    for(let i=0;i<xs.length;i++)
+      svg.append(svgel('circle',{cx:xval(xs[i]),cy:yval(ys[i]),r:4,fill:'#81d8ff'}));
+    if(Number.isFinite(dados.inclinacao)) {
+      desenharLinha(xval(minimoX),yval(dados.inclinacao*minimoX+dados.intercepto),
+                   xval(maximoX),yval(dados.inclinacao*maximoX+dados.intercepto),'#68c99d',2);
+    }
+  } else if (dados.tipo === 'boxplot') {
+    const valores=[dados.min,dados.q1,dados.mediana,dados.q3,dados.max,...dados.outliers];
+    const min=Math.min(...valores),max=Math.max(...valores),range=max-min||1;
+    const x=v=>esquerda+(v-min)/range*(largura-esquerda-direita);
+    const y=110;
+    desenharLinha(x(dados.min),y,x(dados.max),y,'#8edac6',2);
+    svg.append(svgel('rect',{x:x(dados.q1),y:y-36,width:Math.max(2,x(dados.q3)-x(dados.q1)),
+      height:72,fill:'#245445',stroke:'#68d9aa','stroke-width':2}));
+    desenharLinha(x(dados.mediana),y-36,x(dados.mediana),y+36,'#d8f7e7',3);
+    desenharLinha(x(dados.min),y-16,x(dados.min),y+16,'#92e6c8',2);
+    desenharLinha(x(dados.max),y-16,x(dados.max),y+16,'#92e6c8',2);
+    dados.outliers.forEach(v=>svg.append(svgel('circle',{cx:x(v),cy:y,r:6,fill:'#ffd081'})));
+    [['Mín.',dados.min],['Q1',dados.q1],['Med.',dados.mediana],['Q3',dados.q3],['Máx.',dados.max]]
+      .forEach(([rotulo,v],i)=>graficoTexto(svg,x(v),i%2?164:188,`${rotulo}: ${v}`));
+  }
+  return svg;
+}
+
+function mostrarAnaliseVisual(resposta) {
+  limparAnaliseVisual();
+  if (!resposta.tabela?.length && !resposta.grafico?.tipo) return;
+  el('painel-visualizacao').hidden = false;
+  if (resposta.grafico?.tipo) el('grafico-resultado').append(criarGrafico(resposta.grafico));
+  if (resposta.tabela?.length) {
+    const table = document.createElement('table');
+    table.className='tabela-analise';
+    const cab=table.createTHead().insertRow();
+    const colunas=Object.keys(resposta.tabela[0]);
+    for(const coluna of colunas) {const cel=document.createElement('th');cel.textContent=coluna;cab.append(cel);}
+    const corpo=table.createTBody();
+    for (const linha of resposta.tabela) {
+      const tr=corpo.insertRow();
+      for (const col of colunas) {const td=tr.insertCell();td.textContent=String(linha[col] ?? '');}
+    }
+    el('tabela-resultado').append(table);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -891,7 +1086,8 @@ function resumoNoFluxo(indice) {
   };
   // Essas cinco fórmulas auxiliares mostram as mesmas cinco etapas
   // devolvidas pelo Python, sem refazer nenhuma conta no navegador.
-  const auxiliares = ['media_amostral', 'desvio_padrao', 'variancia', 'proporcao_amostral', 'erro_padrao'];
+  const auxiliares = ['media_amostral', 'desvio_padrao', 'variancia', 'proporcao_amostral', 'erro_padrao',
+                     'descritiva', 'frequencia', 'boxplot', 'classificacao'];
   if (auxiliares.includes(formulaSelecionada)) {
     if (respostaPython) return (respostaPython.passos[indice] || '').replace(/^\d+\.\s*/, '');
     if (indice === 0) {
@@ -922,7 +1118,11 @@ const EXPLICACOES_FLUXO = {
   desvio_padrao: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Dividimos por n−1 ou N.', 'Tiramos a raiz da variância.'],
   variancia: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Escolhemos n−1 ou N.', 'A divisão resulta na variância.'],
   proporcao_amostral: ['Contamos o total.', 'Contamos os casos positivos.', 'Dividimos positivos pelo total.', 'Obtemos p entre 0 e 1.', 'Multiplicamos por 100 para obter %.'],
-  erro_padrao: ['Definimos média ou proporção.', 'Reunimos os dados necessários.', 'Aplicamos a expressão adequada.', 'Efetuamos a divisão ou a raiz.', 'Encontramos o erro-padrão.']
+  erro_padrao: ['Definimos média ou proporção.', 'Reunimos os dados necessários.', 'Aplicamos a expressão adequada.', 'Efetuamos a divisão ou a raiz.', 'Encontramos o erro-padrão.'],
+  descritiva: ['Lemos a coluna do Excel.', 'Ordenamos os números.', 'Calculamos a média.', 'Calculamos o desvio e a variância.', 'Mostramos também a mediana e moda.'],
+  frequencia: ['Lemos cada resposta.', 'Agrupamos por valor ou intervalo.', 'Contamos as ocorrências fi.', 'Convertimos fi para porcentagem.', 'Geramos a tabela e o gráfico.'],
+  boxplot: ['Ordenamos os números.', 'Localizamos Q1, Q2 e Q3.', 'Calculamos o intervalo interquartil.', 'Verificamos quem está fora dos limites.', 'Desenhamos o boxplot e calculamos z.'],
+  classificacao: ['Identificamos a coluna.', 'Analisamos o significado dos dados.', 'Verificamos a ordem das categorias.', 'Identificamos contagem ou medida.', 'Informamos a classificação.']
 };
 
 function desenharFluxo() {

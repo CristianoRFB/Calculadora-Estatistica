@@ -58,6 +58,18 @@
         </div>
       </details>
 
+      <!-- Exercícios de planilhas: a seção fica fechada para não ocupar a tela.
+           Estes cálculos incluem dados descritivos e gráficos. -->
+      <details class="auxiliares" id="analises">
+        <summary>Análise de dados e gráficos</summary>
+        <div class="teclas-formulas teclas-auxiliares">
+          <button class="tecla tecla-formula" data-formula="descritiva"><span>Medidas descritivas</span></button>
+          <button class="tecla tecla-formula" data-formula="frequencia"><span>Frequências e gráfico</span></button>
+          <button class="tecla tecla-formula" data-formula="boxplot"><span>Quartis e boxplot</span></button>
+          <button class="tecla tecla-formula" data-formula="classificacao"><span>Classificar variável</span></button>
+        </div>
+      </details>
+
       <div class="teclado-titulo"><span>TECLADO</span></div>
       <div class="teclado" id="teclado">
         <button class="tecla tecla-controle" data-key="C" title="Limpar o número ou o campo">C</button>
@@ -115,6 +127,14 @@
         </form>
         <div class="erro" id="erro" role="alert" hidden></div>
       </div>
+
+      <!-- Tabelas e gráficos não abrem até que exista um resultado.
+           Para corrigir as contas, não mexa aqui: procure calculos.py. -->
+      <section class="bloco" id="painel-visualizacao" hidden>
+        <h2>Dados e gráfico</h2>
+        <div id="grafico-resultado" class="area-grafico"></div>
+        <div id="tabela-resultado" class="area-tabela"></div>
+      </section>
 
       <details class="bloco resultado-bloco" id="painel-resultado" hidden>
         <summary>Ver resolução passo a passo</summary>

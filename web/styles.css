@@ -268,3 +268,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .no-fluxo.ativo, .no-explicacao { animation: none; }
   .ligacao.concluida { transition: none; }
 }
+
+/* ================================================================
+   TABELA E GRÁFICOS DOS EXERCÍCIOS — NUNCA MODIFIQUE AS FÓRMULAS AQUI.
+   Estilos discretos para não competir com a calculadora e o fluxograma.
+   ================================================================ */
+#painel-visualizacao h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.area-grafico { width: 100%; overflow-x: auto; }
+.area-grafico svg { display: block; max-width: 100%; }
+.area-tabela { width: 100%; overflow-x: auto; margin-top: 10px; }
+.tabela-analise { border-collapse: collapse; width: 100%; font-size: 12px; }
+.tabela-analise th { text-align: left; background: #17416f; color: #fff; padding: 9px; white-space: nowrap; }
+.tabela-analise td { border-bottom: 1px solid var(--borda); padding: 9px; white-space: nowrap; }
+.tabela-analise tr:nth-child(even) { background: #272727; }

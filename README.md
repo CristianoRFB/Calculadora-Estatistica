@@ -10,6 +10,77 @@ O projeto prioriza **Python simples**, interface próxima da Calculadora do Wind
 
 ---
 
+## Guia dos 44 enunciados recebidos (revisão de novembro de 2026)
+
+**Primeiro abra [`GUIA_44_QUESTOES.md`](GUIA_44_QUESTOES.md).**
+O guia lista cada exercício A1–G6, indica o botão e os valores que devem
+ser informados. Ele também explica quais questões exigem interpretação, não
+somente uma resposta numérica. A base `Tabela Slide.xlsx` não tinha enunciados,
+mas seus 31 registros estão disponíveis em `dados/trabalhadores.csv`.
+
+### Os novos cálculos
+
+Para não aumentar demais a calculadora, abra **Análise de dados e gráficos**
+na coluna esquerda. Os quatro botões novos são:
+
+| Botão | Para que serve | Dados necessários |
+|---|---|---|
+| Medidas descritivas | Média, mediana, moda, variância, desvio e amplitude | Uma coluna numérica |
+| Frequências e gráfico | fi, fr, Fi, percentual acumulado e barras/histograma | Uma coluna com categorias ou números |
+| Quartis e boxplot | Q1, Q2, Q3, AIQ, outliers e escore Z por valor | Uma coluna numérica |
+| Classificar variável | Qualitativa/quantitativa; nominal/ordinal; discreta/contínua | Escolher a variável das planilhas |
+
+A tabela e o gráfico aparecem apenas **depois de Calcular**. Os gráficos são
+SVG nativos e podem ser abertos offline; o JavaScript só os desenha com os
+valores já calculados pelo Python.
+
+### Comparar situações presentes nos exercícios
+
+- **A2:** em *Tamanho da amostra*, selecione **Comparar 90%, 95% e 99%**.
+  O Python calcula três n para a mesma margem.
+- **B4:** em *IC da média*, use o campo opcional **Comparar com outra amostra n**.
+- **C5, E5–E9, F4–F6:** digite o **Valor de referência**. Só então aparecerá
+  o campo **Como comparar?**, com mínimo, máximo, diferença ou pertence ao intervalo.
+- **D1–D3 e G6:** a regressão mostra o gráfico de dispersão com a reta.
+  Aceita novo X para prever Y e, opcionalmente, Y para inferir X.
+  O programa avisa quando a operação implica extrapolação.
+- **G1–G6:** use `dados/usuarios_internet.csv` (30 observações originais).
+  Para copiar corretamente, selecione uma coluna por vez, sem o cabeçalho.
+- **Tabela Slide.xlsx:** use `dados/trabalhadores.csv` (31 observações).
+
+**Atenção:** “Escore Z de uma lista” mostra a distância da média em desvios
+amostrais. Outlier pelo AIQ é outro critério; o programa mostra os dois,
+mas não confunde suas definições. Os quartis seguem a fórmula `QUARTIL.INC`
+do Excel (outros métodos podem arredondar/diferir).
+
+### Digitação no padrão brasileiro
+
+- `1.250` significa **mil duzentos e cinquenta**.
+- `1,25` significa **um inteiro e vinte e cinco centésimos**.
+- `1.250,50` significa **mil duzentos e cinquenta e cinquenta centavos**.
+- Ao colar uma coluna, use **um valor por linha** ou o separador `;`.
+  O ponto e vírgula evita confundir separação com a vírgula decimal.
+
+### Se der defeito na apresentação
+
+1. **Número errado:** procure a seção com o nome da fórmula em `calculos.py`.
+2. **Campo errado:** procure o identificador no início de `web/app.js` (`MODULOS`).
+3. **Tabela/gráfico não aparecem:** procure `mostrarAnaliseVisual` no JS e
+   `estatistica_descritiva`, `frequencia` ou `boxplot` no Python.
+4. **API parou:** execute `python app.py` e tente `/api/saude`.
+5. **Depois de alterar:** execute `python -m pytest -q` antes de publicar.
+6. **Cloudflare:** rode `python cloudflare/gerar_assets.py` para copiar o
+   Python atualizado e o visual. Um commit no GitHub sozinho não atualiza
+   automaticamente a Cloudflare.
+
+**Limites metodológicos:** este projeto reproduz as fórmulas das aulas e
+oferece estimativas, não uma conclusão causal nem um teste formal de hipótese.
+Para intervalos com σ desconhecido e n pequeno, pode ser necessário t de Student.
+Respostas sobre representatividade temporal, aceitação comercial ou decisão
+de engenharia exigem interpretação humana além do intervalo numérico.
+
+---
+
 ## 1. O que aparece na tela
 
 A **calculadora fixa à esquerda** possui visor, teclas numéricas e seis funções estatísticas. As duas primeiras são **Intervalo de confiança — Média** e **Intervalo de confiança — Proporção**. Na parte direita ficam o **Fluxo do cálculo** e a área **Dados e enunciado**.

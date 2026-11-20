@@ -12,6 +12,7 @@ O navegador lê esse dicionário e desenha o visor e o fluxograma.
 """
 
 import math
+import re
 
 
 # ============================================================
@@ -26,6 +27,11 @@ def numero(valor, nome):
         texto = str(valor).strip().replace(' ', '')
         # Se alguém colar 1.250,50, removemos o ponto de milhar.
         if ',' in texto and '.' in texto:
+            texto = texto.replace('.', '')
+        # No português brasileiro, 1.250 costuma representar 1250.
+        # Só tratamos como separador de milhar quando a pontuação forma
+        # grupos inteiros de três casas. O decimal recomendado é vírgula.
+        elif re.fullmatch(r'[1-9]\d{0,2}(?:\.\d{3})+', texto):
             texto = texto.replace('.', '')
         resultado = float(texto.replace(',', '.'))
     except (ValueError, TypeError):
@@ -91,12 +97,12 @@ def texto_num(n, casas=4):
     return f'{n:.{casas}f}'.rstrip('0').rstrip('.').replace('.', ',')
 
 
-def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso='', valores_calculados=None):
+def saida(titulo, resultado, formula, passos, explicacao, detalhes=None, aviso='', valores_calculados=None, tabela=None, grafico=None):
     """Padroniza os dados entregues à tela do PC e do celular."""
     # Todas as fórmulas devolvem as mesmas chaves, facilitando a interface.
     return dict(titulo=titulo, resultado=resultado, formula=formula,
                 passos=passos, explicacao=explicacao, detalhes=detalhes or [], aviso=aviso,
-                valores_calculados=valores_calculados or {})
+                valores_calculados=valores_calculados or {}, tabela=tabela or [], grafico=grafico or {})
 
 
 # ============================================================
@@ -147,7 +153,8 @@ def correlacao(dados):
                  [f'1. Pares observados: {len(xs)}',
                   f'2. Média de X = {texto_num(mx)}; média de Y = {texto_num(my)}',
                   f'3. Soma dos produtos dos desvios = {texto_num(sxy)}',
-                  f'4. Coeficiente r = {texto_num(r, 6)}'], interpretacao)
+                  f'4. Coeficiente r = {texto_num(r, 6)}'], interpretacao,
+                 grafico={'tipo':'dispersao','x':xs,'y':ys})
 
 
 # ============================================================
@@ -179,9 +186,29 @@ def regressao(dados):
         previsto = a * x_novo + b
         passos.append(f'5. Previsão para x = {texto_num(x_novo)}: ŷ = {texto_num(previsto, 6)}')
         detalhes.insert(0, f'Previsão de Y = {texto_num(previsto, 6)}')
+    # Se a questão perguntar qual X corresponderia a um Y, podemos inverter
+    # a própria reta. Isso NÃO equivale a ajustar uma segunda regressão X~Y.
+    avisos = []
+    if novo and not min(xs) <= x_novo <= max(xs):
+        avisos.append('Previsão fora dos valores observados de X: é extrapolação e pode ser pouco confiável.')
+    novo_y = str(dados.get('prever_y', '')).strip()
+    if novo_y:
+        y_alvo = numero(novo_y, 'Valor Y para estimar X')
+        if math.isclose(a, 0, abs_tol=1e-14):
+            avisos.append('A reta é horizontal: não é possível recuperar X a partir de Y.')
+        else:
+            estimado_x = (y_alvo-b)/a
+            passos.append(f'{len(passos)+1}. Inverter a reta para Y={texto_num(y_alvo)}: X=(Y−b)/a = {texto_num(estimado_x, 6)}')
+            detalhes.append(f'X estimado para Y={texto_num(y_alvo)}: {texto_num(estimado_x, 6)}')
+            if not min(xs) <= estimado_x <= max(xs):
+                avisos.append('O X inferido está fora do intervalo observado; extrapolação.')
+            avisos.append('Inversão algébrica da reta Y sobre X; não equivale a ajustar X sobre Y.')
+    # O gráfico é calculado com os pontos originais, sem inventar medições.
+    grafico = {'tipo':'dispersao','x':xs,'y':ys,'inclinacao':a,'intercepto':b}
     return saida('Regressão linear simples', equacao,
                  'a = Σ[(xi − x̄)(yi − ȳ)] / Σ(xi − x̄)²; b = ȳ − ax̄; ŷ = ax + b',
-                 passos, 'A reta prevê Y a partir de X. Evite prever muito fora dos X observados.', detalhes)
+                 passos, 'A reta prevê Y a partir de X. Evite prever muito fora dos X observados.',
+                 detalhes, ' '.join(avisos), grafico=grafico)
 
 
 # ============================================================
@@ -360,6 +387,38 @@ def projecao_de_casos(N, p, inferior, superior):
 
 
 # ============================================================
+# INTERPRETAÇÃO DE LIMITES — CASOS COMO “NO MÁXIMO 20%”
+# Isso NÃO faz teste de hipóteses: usa apenas o intervalo calculado.
+# ============================================================
+
+def interpretar_referencia(dados, inferior, superior, percentual=False):
+    texto = str(dados.get('referencia', '')).strip()
+    if not texto:
+        return '', {}
+    limite = numero(texto, 'Valor de referência')
+    if percentual:
+        if not 0 <= limite <= 100:
+            raise ValueError('Referência percentual deve ficar de 0% a 100%.')
+        limite /= 100
+    comparacao = dados.get('tipo_referencia', 'pertence')
+    if comparacao == 'pertence':
+        resposta = ('está dentro' if inferior <= limite <= superior else 'está fora')
+        frase = f'O valor de referência {texto} {"%" if percentual else ""} {resposta} do intervalo.'
+    elif comparacao == 'minimo':
+        frase = ('O limite inferior alcança o mínimo exigido.' if inferior >= limite else
+                 'O intervalo não garante que toda a proporção/média alcance o mínimo exigido.')
+    elif comparacao == 'maximo':
+        frase = ('O limite superior respeita o máximo exigido.' if superior <= limite else
+                 'O intervalo não garante que a proporção/média fique abaixo do máximo exigido.')
+    elif comparacao == 'diferente':
+        frase = ('A referência fica fora do intervalo.' if not inferior <= limite <= superior else
+                 'A referência fica dentro do intervalo: não há evidência suficiente por este critério.')
+    else:
+        raise ValueError('Tipo de comparação inválido.')
+    return frase, {'referencia': texto + ('%' if percentual else ''), 'avaliacao': frase}
+
+
+# ============================================================
 # FUNCIONAMENTO REFERENTE À FÓRMULA DE IC PARA A MÉDIA
 # Margem E = z * desvio_padrao / raiz(n)
 # IC = (média - E, média + E)
@@ -416,11 +475,29 @@ def ic_media(dados):
     if N is not None:
         valores['populacao'] = str(N)
         valores['correcao'] = texto_num(fator, 6)
+    comparacao, valores_ref = interpretar_referencia(dados, inferior, superior)
+    valores.update(valores_ref)
+    if comparacao:
+        passos.append('6. Verificar referência: ' + comparacao)
+    tabela = []
+    segundo_n = str(dados.get('comparar_n', '')).strip()
+    if segundo_n:
+        n2 = inteiro(segundo_n, 'Outro tamanho de amostra')
+        if n2 < 2:
+            raise ValueError('Comparação: informe n ≥ 2.')
+        N2 = populacao_conhecida(dados, n2)
+        E2 = (margem_manual if margem_manual is not None else
+              z * dp / math.sqrt(n2) * fator_populacao_finita(N2, n2))
+        tabela = [
+            {'Amostra n':str(n),'Margem E':texto_num(erro,6),'Limite inferior':texto_num(inferior,6),'Limite superior':texto_num(superior,6)},
+            {'Amostra n':str(n2),'Margem E':texto_num(E2,6),'Limite inferior':texto_num(media-E2,6),'Limite superior':texto_num(media+E2,6)}
+        ]
+        passos.append(f'7. Para n={n2}, a margem é {texto_num(E2,6)}; n maior reduz a margem calculada, se E não for fornecida.')
     return saida('Intervalo de confiança da média',
                  f'IC = ({texto_num(inferior, 6)}; {texto_num(superior, 6)})',
                  'IC = (média − E; média + E)', passos,
-                 'O intervalo estima a média verdadeira da população.',
-                 ['Margem de erro: ±' + texto_num(erro, 6)], aviso, valores)
+                 'O intervalo estima a média verdadeira da população.' + (' ' + comparacao if comparacao else ''),
+                 ['Margem de erro: ±' + texto_num(erro, 6)], aviso, valores, tabela=tabela)
 
 
 # ============================================================
@@ -469,10 +546,14 @@ def ic_proporcao(dados):
         valores.update(projecao_de_casos(N, p, inferior, superior))
         valores['correcao'] = texto_num(fator, 6)
         passos.append(f'Projeção: {valores["projecao"]}; faixa: {valores["projecao_intervalo"]} (estimativas, não contagem real)')
+    comparacao, valores_ref = interpretar_referencia(dados, inferior, superior, percentual=True)
+    valores.update(valores_ref)
+    if comparacao:
+        passos.append('6. Conferir o critério: ' + comparacao)
     return saida('Intervalo de confiança da proporção',
                  f'IC = ({texto_num(inferior*100, 4)}%; {texto_num(superior*100, 4)}%)',
                  'IC = (p − E; p + E)', passos,
-                 'A faixa estima a proporção da população. Se N foi informado, também mostramos uma projeção de pessoas.',
+                 'A faixa estima a proporção da população. Se N foi informado, também mostramos uma projeção de pessoas.' + (' ' + comparacao if comparacao else ''),
                  ['p='+texto_num(p*100,4)+'%', 'Margem ±'+texto_num(erro*100,4)+' p.p.'], aviso, valores)
 
 
@@ -594,9 +675,21 @@ def tamanho_amostra(dados):
         passos.append(f'5. Corrigir população N={N}: n = N × n0 / (N + n0 − 1) = {texto_num(calculado, 6)}')
     passos.append(f'6. Arredondar para cima: n = {n_final}')
     valores['n_final'] = str(n_final)
+    tabela = []
+    if dados.get('comparar_confiancas') == 'sim':
+        for conf in (90,95,99):
+            zcomp = z_critico(conf)
+            if tipo == 'media':
+                n0 = (zcomp*dp/erro_informado)**2
+            else:
+                n0 = zcomp*zcomp*p*(1-p)/(e*e)
+            nc = N*n0/(N+n0-1) if N else n0
+            tabela.append({'Confiança':str(conf)+'%', 'z':texto_num(zcomp,3),
+                           'Amostra mínima':str(min(N, math.ceil(nc)) if N else max(1, math.ceil(nc)))})
+        passos.append('Comparação: confiança maior exige amostra igual ou maior para a mesma margem de erro.')
     return saida('Tamanho mínimo da amostra', f'n = {n_final:,}'.replace(',', '.') + ' observações',
                  formula, passos, 'A quantidade é arredondada para cima.',
-                 valores_calculados=valores)
+                 valores_calculados=valores, tabela=tabela)
 
 # ============================================================
 # CÁLCULOS AUXILIARES — QUANDO A QUESTÃO DÁ OS VALORES BRUTOS
@@ -984,7 +1077,214 @@ def basica(dados):
 # ============================================================
 # SELEÇÃO DA FÓRMULA: ESTE É O ÚNICO PONTO DE ENTRADA DA TELA
 # ============================================================
+# ============================================================
+# ESTATÍSTICA DESCRITIVA — MÉDIA, MODA E MEDIANA
+# A mesma coluna colada do Excel serve para todos os indicadores.
+# ============================================================
+
+def quantil_excel_inclusivo(ordenados, porcentagem):
+    """Mesmo método de interpolação de PERCENTIL.INC do Excel.
+
+    Por exemplo, 25% cai entre dois valores? Interpolamos entre eles.
+    Não misturar com QUARTIL.EXC: esse usa outra convenção.
+    """
+    n = len(ordenados)
+    posicao = (n - 1) * porcentagem
+    inicio = int(math.floor(posicao))
+    fim = min(n-1, inicio+1)
+    parte = posicao - inicio
+    return ordenados[inicio]*(1-parte) + ordenados[fim]*parte
+
+
+def resumo_descritivo(valores):
+    import statistics
+    valores = sorted(valores)
+    n = len(valores)
+    media = math.fsum(valores)/n
+    mediana = statistics.median(valores)
+    from collections import Counter
+    frequencias = Counter(valores)
+    maximo = max(frequencias.values())
+    modas = sorted(v for v,k in frequencias.items() if k == maximo) if maximo > 1 else []
+    variancia = sum((x-media)**2 for x in valores)/(n-1) if n>1 else None
+    dp = math.sqrt(variancia) if variancia is not None else None
+    q1 = quantil_excel_inclusivo(valores,.25)
+    q2 = mediana
+    q3 = quantil_excel_inclusivo(valores,.75)
+    iqr = q3-q1
+    limite_inf = q1 - 1.5*iqr
+    limite_sup = q3 + 1.5*iqr
+    outliers = [v for v in valores if v < limite_inf or v > limite_sup]
+    normais = [v for v in valores if limite_inf <= v <= limite_sup]
+    return {'n':n,'media':media,'mediana':mediana,'modas':modas,'variancia':variancia,'desvio':dp,
+            'minimo':valores[0],'maximo':valores[-1], 'q1':q1,'q2':q2,'q3':q3,'iqr':iqr,
+            'limite_inf':limite_inf,'limite_sup':limite_sup,
+            'outliers':outliers, 'bigode_inf':min(normais),'bigode_sup':max(normais)}
+
+
+def estatistica_descritiva(dados):
+    valores = lista_numeros(dados.get('valores',''), 'Valores da coluna', minimo=1)
+    r = resumo_descritivo(valores)
+    moda = '; '.join(texto_num(x) for x in r['modas']) if r['modas'] else 'sem moda'
+    variancia = texto_num(r['variancia'],6) if r['variancia'] is not None else 'não definida com n=1'
+    desvio = texto_num(r['desvio'],6) if r['desvio'] is not None else 'não definido com n=1'
+    linhas = [
+        ('Quantidade',str(r['n'])), ('Média',texto_num(r['media'],6)),
+        ('Mediana',texto_num(r['mediana'],6)), ('Moda',moda),
+        ('Variância amostral',variancia), ('Desvio amostral',desvio),
+        ('Mínimo',texto_num(r['minimo'])),('Máximo',texto_num(r['maximo'])),
+        ('Amplitude',texto_num(r['maximo']-r['minimo'])),
+    ]
+    passos = [f'1. Lemos {r["n"]} observações.',
+              f'2. Soma / n → média = {texto_num(r["media"],6)}',
+              f'3. O meio da lista ordenada é a mediana = {texto_num(r["mediana"],6)}',
+              f'4. Valores repetidos com maior frequência: {moda}.',
+              f'5. Variância: somatório dos quadrados dos desvios dividido por (n−1) = {variancia}.',
+              f'6. Raiz quadrada da variância: desvio-padrão = {desvio}.']
+    return saida('Medidas descritivas',f'Média = {texto_num(r["media"],6)}',
+                 'Média = Σx/n; mediana = valor central; variância amostral = Σ(x−média)²/(n−1)',
+                 passos,'Todas as medidas foram calculadas a partir da mesma lista, como no Excel.',
+                 valores_calculados={k:v for k,v in linhas},
+                 tabela=[{'Medida':k,'Resultado':v} for k,v in linhas])
+
+
+# ============================================================
+# QUARTIS, BOXPLOT, OUTLIERS E ESCORES Z DE TODA A LISTA
+# Quartis: QUARTIL.INC. Outlier: além de Q1−1,5AIQ ou Q3+1,5AIQ.
+# ============================================================
+
+def boxplot(dados):
+    valores = lista_numeros(dados.get('valores',''), 'Valores', minimo=2)
+    r = resumo_descritivo(valores)
+    pares = []
+    for x in sorted(valores):
+        z = (x-r['media'])/r['desvio'] if r['desvio'] else 0.0
+        pares.append({'Valor':texto_num(x,6), 'Escore Z':texto_num(z,6),
+                      'Outlier pelo AIQ?':'Sim' if x in r['outliers'] else 'Não'})
+    passos = [f'1. Ordenamos {r["n"]} números.',
+              f'2. Q1={texto_num(r["q1"])}; Q2={texto_num(r["q2"])}; Q3={texto_num(r["q3"])}.',
+              f'3. AIQ = Q3−Q1 = {texto_num(r["iqr"])}.',
+              f'4. Limites de outlier: {texto_num(r["limite_inf"])} e {texto_num(r["limite_sup"])}.',
+              f'5. Comparamos cada dado aos limites; identificamos {len(r["outliers"])} outlier(s).',
+              '6. Calculamos cada escore Z = (valor−média)/desvio amostral.']
+    aviso = 'Desvio-padrão zero: todos os dados são iguais; z foi exibido como 0 por conveniência.' if not r['desvio'] else ''
+    if r['n']<4:
+        aviso += ' Amostra muito pequena: interpretação de outliers é limitada.'
+    return saida('Quartis e boxplot',
+                 'Q1 = '+texto_num(r['q1'])+' · Mediana = '+texto_num(r['q2'])+' · Q3 = '+texto_num(r['q3']),
+                 'AIQ = Q3 − Q1; limites = Q1−1,5AIQ e Q3+1,5AIQ',passos,
+                 'Outliers pelo critério interquartil não são necessariamente os mesmos valores com z extremo.',
+                 aviso=aviso, tabela=pares,
+                 valores_calculados={'q1':texto_num(r['q1']), 'q2':texto_num(r['q2']),
+                   'q3':texto_num(r['q3']),'aiq':texto_num(r['iqr']),
+                   'outliers':'; '.join(texto_num(x) for x in r['outliers']) or 'Nenhum'},
+                 grafico={'tipo':'boxplot','min':r['bigode_inf'],'q1':r['q1'],
+                          'mediana':r['q2'],'q3':r['q3'],'max':r['bigode_sup'],
+                          'outliers':r['outliers']})
+
+
+# ============================================================
+# FREQUÊNCIA SIMPLES, RELATIVA E ACUMULADA
+# Quando a variável é numérica, pode-se agrupar em intervalos de classe.
+# ============================================================
+
+def lista_categorias(raw):
+    if not isinstance(raw,str) or not raw.strip():
+        raise ValueError('Cole uma coluna com pelo menos um valor.')
+    texto = raw.replace('\r','\n').replace('\t',';')
+    partes=[x.strip() for x in texto.replace('\n',';').split(';') if x.strip()]
+    if not partes:
+        raise ValueError('A coluna não possui dados.')
+    if len(partes)>10000:
+        raise ValueError('Limite de 10.000 observações por tabela.')
+    return partes
+
+
+def frequencia(dados):
+    from collections import Counter
+    modo = dados.get('formato','categorica')
+    entrada = lista_categorias(dados.get('valores',''))
+    n=len(entrada)
+    # Numérico: ordenar do menor para o maior. Categórico: alfabético;
+    # escolaridade usa ordem de níveis, quando for o caso.
+    if modo in ('exata','classes'):
+        valores=[numero(x,'Valor da coluna') for x in entrada]
+        if modo == 'exata':
+            ordem = sorted(set(valores))
+            cont = Counter(valores)
+            pares=[(texto_num(x,6),cont[x]) for x in ordem]
+        else:
+            k=inteiro(dados.get('classes') or 5,'Número de classes')
+            if k>30: raise ValueError('Use no máximo 30 classes para o gráfico ficar legível.')
+            menor,maior=min(valores),max(valores)
+            if menor==maior:
+                pares=[(texto_num(menor,6),n)]
+            else:
+                larg=(maior-menor)/k
+                cont=[0]*k
+                for v in valores:
+                    i=min(k-1,int((v-menor)/larg))
+                    cont[i]+=1
+                pares=[(f'{texto_num(menor+i*larg,4)} até {texto_num(menor+(i+1)*larg,4)}'+(' (incl.)' if i==k-1 else ''),cont[i]) for i in range(k)]
+    elif modo == 'categorica':
+        cont=Counter(x.strip() for x in entrada)
+        ordem=sorted(cont,key=lambda x: (['fundamental','médio','superior'].index(x.lower()) if x.lower() in ('fundamental','médio','superior') else 999,x.lower()))
+        pares=[(v,cont[v]) for v in ordem]
+    else:
+        raise ValueError('Escolha categoria, valor exato ou classes.')
+    tabela=[];acumulada=0
+    for rotulo,fi in pares:
+        acumulada+=fi
+        tabela.append({'Valor / classe':rotulo,'Frequência fi':str(fi),
+                      'Percentual fr':texto_num(100*fi/n,2)+'%',
+                      'Acumulada Fi':str(acumulada), 'Acumulada Fr':texto_num(100*acumulada/n,2)+'%'})
+    passos=[f'1. Lemos {n} observações.',
+            f'2. Reunimos os valores em {len(pares)} categorias/classes.',
+            '3. Contamos quantas ocorrências há em cada classe (fi).',
+            '4. Dividimos fi pelo total para obter fr (%).',
+            '5. Somamos as frequências na ordem para obter Fi acumulada.']
+    return saida('Tabela de frequências', f'{n} observações · {len(pares)} classes',
+                 'fr (%) = fi / n × 100; Fi = soma das frequências até esta linha',
+                 passos, 'A frequência acumulada depende da ordem das classes; para categorias nominais essa ordem é apenas de apresentação.',
+                 tabela=tabela, valores_calculados={'n':str(n),'categorias':str(len(pares))},
+                 grafico={'tipo':'histograma' if modo == 'classes' else 'barras','rotulos':[v for v,_ in pares],
+                          'valores':[fi for _,fi in pares], 'titulo':'Frequência simples'})
+
+
+# ============================================================
+# CLASSIFICAÇÃO DE VARIÁVEIS DOS MATERIAIS DA PROFESSORA
+# A classificação exige conhecer o SIGNIFICADO da variável, não só números.
+# ============================================================
+
+TIPOS_VARIAVEIS = {
+ 'sexo':('Qualitativa nominal','Categorias sem ordem natural.'),
+ 'idade':('Quantitativa discreta (anos completos)','Idade em anos inteiros é contagem; idade exata pode ser contínua.'),
+ 'tempo_acesso':('Quantitativa contínua','Tempo é uma duração, ainda que anotada em horas inteiras.'),
+ 'tempo_servico':('Quantitativa contínua','Tempo decorrido em anos.'),
+ 'escolaridade':('Qualitativa ordinal','Níveis fundamental, médio, superior têm ordem.'),
+ 'salario':('Quantitativa contínua','Valores monetários medidos em reais e centavos.'),
+ 'dependentes':('Quantitativa discreta','É uma contagem de pessoas.'),
+ 'automovel':('Qualitativa nominal','Respostas sim/não sem ordem.'),
+}
+
+def classificar_variavel(dados):
+    nome = dados.get('variavel','')
+    if nome not in TIPOS_VARIAVEIS:
+        raise ValueError('Selecione uma das variáveis da planilha.')
+    categoria,porque = TIPOS_VARIAVEIS[nome]
+    return saida('Classificação de variáveis', categoria,
+                 'Qualitativa: categorias; quantitativa: números; discreta: contagem; contínua: medida',
+                 ['1. Identificamos o significado da coluna.',
+                  '2. Verificamos se contém categorias ou uma medida numérica.',
+                  '3. Se qualitativa, verificamos se há ordem; se quantitativa, contagem ou medida.',
+                  '4. Classificação: '+categoria],porque)
+
+
 FORMULAS = {
+    'descritiva': estatistica_descritiva,
+    'frequencia': frequencia,
+    'boxplot': boxplot,
+    'classificacao': classificar_variavel,
     'correlacao': correlacao,
     'regressao': regressao,
     'ic_media': ic_media,
