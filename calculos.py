@@ -618,7 +618,7 @@ def escore(dados):
 # ============================================================
 
 def tamanho_amostra(dados):
-    """Tamanho mínimo: usa desvio/proporção prontos ou uma amostra piloto."""
+    """Calcula o tamanho mínimo usando dados fornecidos ou uma lista de valores."""
     entrada = modo_entrada(dados)
     tipo = dados.get('tipo', 'media')
     z = z_critico(dados.get('confianca', 95))
@@ -627,7 +627,8 @@ def tamanho_amostra(dados):
 
     if tipo == 'media':
         if entrada == 'lista':
-            # Uma amostra PILOTO estima o desvio; ela NÃO é a amostra final.
+            # Quando recebemos uma lista, estimamos o desvio a partir dos valores.
+            # A lista não é o tamanho final da amostra calculada.
             _, dp, n_piloto = resumo_de_valores(dados, dispersao=dados.get('tipo_dispersao', 'amostral'))
             valores.update(resumo_mostrado(desvio=dp, n=n_piloto))
         else:
@@ -667,9 +668,11 @@ def tamanho_amostra(dados):
         valores['populacao'] = str(N)
         valores['amostra_sem_correcao'] = str(max(1, math.ceil(original)))
     n_final = min(N, math.ceil(calculado)) if N is not None else max(1, math.ceil(calculado))
-    passos = [f'1. Objetivo: {tipo}; modo: {entrada}',
-              f'2. Confiança: {dados.get("confianca", 95)}%; z = {texto_num(z, 3)}',
-              f'3. Margem máxima E = {texto_num(erro_informado)}',
+    nome_estimativa = 'média' if tipo == 'media' else 'proporção'
+    nome_erro = 'Em' if tipo == 'media' else 'Ep'
+    passos = [f'1. Estimativa da {nome_estimativa}',
+              f'2. Grau de confiança: {dados.get("confianca", 95)}%; valor z = {texto_num(z, 3)}',
+              f'3. {"Erro amostral máximo aceito" if tipo == "media" else "Margem de erro da proporção"} ({nome_erro}) = {texto_num(erro_informado)}',
               f'4. Substituir: {conta} = {texto_num(original, 6)}']
     if N is not None:
         passos.append(f'5. Corrigir população N={N}: n = N × n0 / (N + n0 − 1) = {texto_num(calculado, 6)}')

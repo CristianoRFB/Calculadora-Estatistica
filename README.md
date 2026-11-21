@@ -218,14 +218,14 @@ A apresentação exibe o resultado em porcentagens e também identifica casos no
 | **Intervalo da média** | Média, desvio, tamanho e alfa. | Números individuais, tipo de desvio e alfa. |
 | **Intervalo da proporção** | Total, contagem ou porcentagem, alfa. | Respostas 1/0 ou sim/não; alfa. |
 | **Escore Z** | Valor observado, média e desvio. | Valor observado e lista de números; tipo de desvio. |
-| **Tamanho da amostra** | Tipo (média/proporção), desvio ou proporção prevista, margem e confiança. | Lista de uma **amostra piloto**, margem e confiança. |
+| **Tamanho da amostra** | Tipo (média/proporção), desvio ou proporção prevista, margem e confiança. | Lista de uma **lista de valores da amostra**, margem e confiança. |
 | **Média amostral** | — | Apenas a lista de números. |
 | **Desvio-padrão** | — | Lista de números e tipo amostral/populacional. |
 | **Variância** | — | Lista de números e tipo amostral/populacional. |
 | **Proporção amostral** | Quantidade com característica e total. | Respostas 1/0 ou sim/não. |
 | **Erro-padrão** | Tipo, desvio/porcentagem e tamanho. | Lista numérica (média) ou binária (proporção). |
 
-A função **Tamanho da amostra** sempre **arredonda para cima**. Quando a questão de proporção não traz uma estimativa prévia e você está no modo informado, pode deixar a proporção em branco; o programa usa 50%, valor conservador. Uma **amostra piloto** serve para estimar a variabilidade, não representa o tamanho final calculado.
+A função **Tamanho da amostra** sempre **arredonda para cima**. Quando a questão de proporção não traz uma estimativa prévia e você está no modo informado, pode deixar a proporção em branco; o programa usa 50%, valor conservador. Uma **lista de valores** serve para estimar a variabilidade, não representa o tamanho final calculado.
 
 ### Alfa e grau de confiança
 
@@ -414,3 +414,22 @@ A apresentação oral é mais simples se a sequência for: **identificar o objet
 - **Layout da tela**: abra `web/styles.css` ou `web/mobile.css` (celular).
 - **Hospedagem**: `cloudflare/worker.py` só atende requisições. Não deve conter fórmulas.
 
+
+
+## Termos dos slides — tamanho da amostra
+
+Os campos de **Tamanho da amostra** seguem a terminologia de
+`Tamanho da Amostra_AMS.pdf` da professora:
+
+- **Estimativa da Média (μ):** desvio-padrão populacional (σ),
+  erro amostral máximo aceito (Em) e grau de confiança.
+- **Estimativa da Proporção (p):** proporção estimada (p),
+  margem de erro da proporção (Ep) e grau de confiança.
+- **Valores informados:** para quando o exercício já fornece σ ou p.
+- **Lista de valores:** opção adicional para quando há observações brutas.
+  O Python estima o desvio-padrão amostral, sem solicitar um campo extra.
+- **Comparar 90%, 95% e 99%:** opção para o exercício de comparação.
+
+O nome "valores piloto" não é usado na interface. Se o desvio é
+obtido a partir de uma lista, esse valor não é necessariamente o desvio
+populacional conhecido do enunciado. O resultado n é arredondado para cima.

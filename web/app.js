@@ -62,9 +62,9 @@ const MODULOS = {
     fluxo: ['Dados da média', 'Valor crítico z', 'Margem E', 'Limites', 'Intervalo de confiança'],
     campos: [
       {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
-      {id:'media', titulo:'Média', tipo:'texto', entrada:'direto'},
-      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', entrada:'direto'},
-      {id:'n', titulo:'Tamanho (n)', tipo:'texto', entrada:'direto'},
+      {id:'media', titulo:'Média amostral (x̄)', tipo:'texto', entrada:'direto'},
+      {id:'desvio', titulo:'Desvio-padrão (σ ou s)', tipo:'texto', entrada:'direto'},
+      {id:'n', titulo:'Tamanho da amostra (n)', tipo:'texto', entrada:'direto'},
       {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista',
        dica:'Cole os números de uma coluna do Excel ou separe por ponto e vírgula.'},
       {id:'tipo_dispersao', titulo:'Tipo de desvio', tipo:'tipo_dispersao', entrada:'lista'},
@@ -174,29 +174,33 @@ const MODULOS = {
   // O objetivo é estimar a dispersão antes de decidir quantos coletar.
   amostra: {
     nome:'Tamanho da amostra',
-    formula:'Média: n = (z × σ / E)²; Proporção: n = z² × p(1 − p) / E²',
-    pista:'Estima quantas observações é necessário coletar para uma margem de erro desejada.',
-    fluxo:['Objetivo', 'Confiança z', 'Margem de erro', 'Calcular n', 'Arredondar'],
+    formula:'Média: n = (z × σ / Em)²  |  Proporção: n = z² × p(1 − p) / Ep²',
+    pista:'Determine o número mínimo de observações necessárias.',
+    fluxo:['Estimativa', 'Grau de confiança', 'Margem de erro', 'Cálculo', 'Tamanho da amostra'],
     campos:[
+      // O PDF tem duas situações: estimativa da média ou da proporção.
       {id:'tipo', titulo:'O que deseja estimar?', tipo:'tipo_amostra'},
-      {id:'entrada', titulo:'Forma de entrada', tipo:'modo_entrada'},
-      {id:'desvio', titulo:'Desvio-padrão', tipo:'texto', mostrar:'media', entrada:'direto'},
-      {id:'percentual', titulo:'Proporção prevista (%)', tipo:'texto', mostrar:'proporcao', entrada:'direto', opcional:true},
-      {id:'valores', titulo:'Valores piloto', tipo:'lista', entrada:'lista',
-       dica:'Média: números. Proporção: 1/0 ou sim/não.'},
-      {id:'tipo_dispersao', titulo:'Tipo de desvio piloto', tipo:'tipo_dispersao', mostrar:'media', entrada:'lista'},
-      {id:'erro', titulo:'Margem de erro desejada', tipo:'texto'},
+      // Os exercícios normalmente já informam o desvio ou a proporção.
+      // A lista permanece disponível para quando só forem dados os valores.
+      {id:'entrada', titulo:'Dados do exercício', tipo:'modo_entrada'},
+      {id:'desvio', titulo:'Desvio-padrão populacional (σ)', tipo:'texto', mostrar:'media', entrada:'direto'},
+      {id:'percentual', titulo:'Proporção estimada (p) (%)', tipo:'texto', mostrar:'proporcao', entrada:'direto', opcional:true,
+       dica:'Se o exercício não informar p, deixe vazio: será utilizado 50%.'},
+      {id:'valores', titulo:'Valores da amostra', tipo:'lista', entrada:'lista',
+       dica:'Cole os números. Para proporção, use sim/não ou 1/0.'},
+      // Na lista, o Python calcula o desvio amostral (n - 1) sozinho.
+      {id:'erro', titulo:'Erro amostral máximo aceito (Em)', tipo:'texto'},
       {id:'confianca', titulo:'Grau de confiança', tipo:'confianca'},
-      {id:'comparar_confiancas', titulo:'Comparar 90%, 95% e 99%', tipo:'comparar_confiancas'},
-      {id:'populacao', titulo:'Tamanho da população (N) — opcional', tipo:'texto', opcional:true,
-       dica:'Se N é conhecido, aplicamos correção de população finita ao tamanho da amostra.'}
+      // Campos opcionais usados em exercícios de comparação ou N conhecido.
+      {id:'comparar_confiancas', titulo:'Comparar 90%, 95% e 99%?', tipo:'comparar_confiancas'},
+      {id:'populacao', titulo:'Tamanho da população (N) — se informado', tipo:'texto', opcional:true}
     ],
     guia:{
-      conceito:'Estima a quantidade necessária para atingir a precisão e confiança desejadas.',
-      reconhecer:'Perguntas como quantas entrevistas, quantas medições ou amostra mínima.',
-      entradas:'Dados informados: desvio (média) ou proporção prevista (proporção). Lista: informe observações de uma pesquisa piloto. Margem e confiança são sempre necessárias.',
-      simbolos:'n é a quantidade final, E a margem máxima, z o valor crítico e σ ou p a dispersão estimada.',
-      cuidado:'A amostra piloto usada para estimar o desvio não é o tamanho final. Sempre arredonde n para cima.'
+      conceito:'Calcula quantas observações são necessárias para estimar uma média ou uma proporção.',
+      reconhecer:'O enunciado pergunta quantas pessoas, medições, casos de teste ou requisições são necessários.',
+      entradas:'Para média, informe o desvio-padrão populacional (σ) e o erro máximo (Em). Para proporção, informe p e a margem (Ep). Em ambos, escolha o grau de confiança.',
+      simbolos:'n é o tamanho da amostra, z é o valor crítico, σ é o desvio-padrão, p é a proporção e Em/Ep são as margens de erro.',
+      cuidado:'Se o enunciado não informar p, use 50%. Arredonde sempre o tamanho da amostra para cima. Se usar uma lista para estimar o desvio, esse valor não é necessariamente o desvio da população.'
     }
   },
   // ========================================================
@@ -462,7 +466,7 @@ function construirCampos() {
           ? [['90', '0,10  ·  90%'], ['95', '0,05  ·  95%'], ['99', '0,01  ·  99%']]
           : [['90', '90%  (α = 0,10)'], ['95', '95%  (α = 0,05)'], ['99', '99%  (α = 0,01)']])
         : definicao.tipo === 'modo_entrada'
-        ? [['direto', 'Dados informados'], ['lista', 'Lista de valores']]
+        ? [['direto', 'Valores informados'], ['lista', 'Lista de valores']]
         : definicao.tipo === 'modo_proporcao'
         ? [['contagem', 'Quantidade'], ['porcentagem', 'Porcentagem']]
         : definicao.tipo === 'tipo_dispersao'
@@ -480,7 +484,9 @@ function construirCampos() {
            ['tempo_servico', 'Tempo de serviço'], ['escolaridade', 'Escolaridade'],
            ['salario', 'Salário'], ['dependentes', 'Número de dependentes'],
            ['automovel', 'Automóvel próprio']]
-        : [['media', 'Média'], ['proporcao', 'Proporção']];
+        : (formulaSelecionada === 'amostra'
+          ? [['media', 'Estimativa da média'], ['proporcao', 'Estimativa da proporção']]
+          : [['media', 'Média'], ['proporcao', 'Proporção']]);
       for (const [valor, titulo] of opcoes) campo.append(new Option(titulo, valor));
       if (definicao.tipo === 'confianca') campo.value = '95';
     } else if (definicao.tipo === 'lista') {
@@ -600,8 +606,8 @@ function linhasQueFazemSentido() {
     adicionar('diferenca', 'Valor menos média');
   } else if (formula === 'amostra') {
     if (lista) {
-      adicionar('n', 'Quantidade piloto');
-      adicionar('desvio', 'Desvio-padrão piloto');
+      adicionar('n', 'Quantidade de valores');
+      adicionar('desvio', 'Desvio-padrão calculado');
     }
     adicionar('z', 'Valor crítico z');
     adicionar('amostra_sem_correcao', 'Amostra sem correção');
@@ -717,6 +723,13 @@ function exibirCamposCorretos() {
   const tipo = el('campo-tipo')?.value || '';
   const modo = el('campo-modo')?.value || '';
   const formato = el('campo-formato')?.value || '';
+  // O rótulo acompanha a fórmula indicada no slide. O nome interno
+  // do campo continua sendo "erro", pois é assim que o Python o recebe.
+  if (formulaSelecionada === 'amostra') {
+    const labelErro = el('campo-erro')?.closest('.campo')?.querySelector('.celula-nome');
+    if (labelErro) labelErro.textContent = tipo === 'proporcao'
+      ? 'Margem de erro da proporção (Ep)' : 'Erro amostral máximo aceito (Em)';
+  }
   el('campos').querySelectorAll('.campo').forEach(grupo => {
     const entradaCorreta = !grupo.dataset.entrada || grupo.dataset.entrada === entrada;
     const opcao = grupo.dataset.mostrar;
@@ -1112,7 +1125,7 @@ const EXPLICACOES_FLUXO = {
   ic_media: ['Lemos ou calculamos média, desvio e n.', 'A confiança determina o z.', 'Multiplicamos z pelo erro-padrão.', 'Subtraímos e somamos a margem.', 'A faixa encontrada estima a média.'],
   ic_proporcao: ['Contamos o total de respostas.', 'Dividimos os casos positivos pelo total.', 'A confiança determina o z.', 'Usamos p, q, n e z para achar E.', 'Subtraímos e somamos E à proporção.'],
   escore: ['Lemos o valor que será comparado.', 'Subtraímos a média do valor.', 'Identificamos o desvio-padrão.', 'Dividimos a diferença pelo desvio.', 'O z mostra quantos desvios separam.'],
-  amostra: ['Escolhemos média ou proporção.', 'A confiança define o valor z.', 'Usamos o erro máximo permitido.', 'Se N foi dado, corrigimos a amostra.', 'Arredondamos o tamanho para cima.'],
+  amostra: ['Escolhemos média ou proporção.', 'A confiança define o valor z.', 'Usamos a margem de erro informada.', 'Aplicamos a fórmula para n.', 'Arredondamos o resultado para cima.'],
   populacao: ['Lemos a amostra.', 'Dividimos casos positivos pelo total.', 'Usamos a margem dada ou calculada.', 'Multiplicamos a proporção por N.', 'Exibimos a estimativa, não uma contagem real.'],
   media_amostral: ['Lemos todos os valores.', 'Contamos quantos existem.', 'Somamos os valores.', 'Dividimos a soma pela quantidade.', 'Encontramos a média.'],
   desvio_padrao: ['Lemos todos os valores.', 'Calculamos a média.', 'Somamos os desvios ao quadrado.', 'Dividimos por n−1 ou N.', 'Tiramos a raiz da variância.'],
