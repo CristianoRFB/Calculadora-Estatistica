@@ -1,0 +1,11 @@
+{
+  "name": "calculadora-estatistica-aplicada",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calculadora de Estatística Aplicada — HTML, CSS e JavaScript puro",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node tools/build-worker.mjs",
+    "check": "node --check src/math.js && node --check src/app.js && npm test && npm run build"
+  }
+}
