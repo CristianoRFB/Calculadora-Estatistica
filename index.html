@@ -3,81 +3,147 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f7f8">
-  <meta name="description" content="Estatística Aplicada sem complicação: tamanho da amostra, intervalos de confiança, correlação, regressão e escore Z.">
+  <meta name="theme-color" content="#174CA0">
+  <meta name="description" content="Calcule tamanho da amostra e intervalos de confiança, com explicações simples e claras.">
   <title>Estatística Aplicada — Calculadora</title>
-  <link rel="stylesheet" href="./assets/styles.css">
-  <script defer src="./src/math.js"></script>
-  <script defer src="./src/app.js"></script>
+  <link rel="stylesheet" href="./assets/style.css">
+  <script src="./src/calculos.js" defer></script>
+  <script src="./src/app.js" defer></script>
 </head>
 <body>
-  <div class="site-shell">
-    <aside class="sidebar" aria-label="Navegação da calculadora">
-      <a class="brand" href="./" aria-label="Estatística Aplicada — início">
-        <span class="brand-icon" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 25 25" fill="none"><path d="M3 18.5L9 12.5L13 15.3L21 5.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 22H21" stroke="currentColor" stroke-width="1.2" opacity=".48"/></svg></span>
-        <span class="brand-wordmark">Estatística <span>Aplicada</span></span>
+  <header class="cabecalho">
+    <div class="largura topo">
+      <a class="marca" href="./" aria-label="Estatística Aplicada — início">
+        <span class="marca-sinal" aria-hidden="true">Σ</span>
+        <span>Estatística <strong>Aplicada</strong></span>
       </a>
-      <div class="side-section-label">CÁLCULOS DA DISCIPLINA</div>
-      <nav id="nav-desktop" class="nav-desktop" aria-label="Escolha o tipo de cálculo">
-        <button class="nav-link is-active" data-topic="amostra" type="button"><span class="nav-symbol">01</span><span>Tamanho da amostra</span></button>
-        <button class="nav-link" data-topic="media-ic" type="button"><span class="nav-symbol">02</span><span>Intervalo da média</span></button>
-        <button class="nav-link" data-topic="proporcao-ic" type="button"><span class="nav-symbol">03</span><span>Intervalo da proporção</span></button>
-        <button class="nav-link" data-topic="correlacao" type="button"><span class="nav-symbol">04</span><span>Correlação</span></button>
-        <button class="nav-link" data-topic="regressao" type="button"><span class="nav-symbol">05</span><span>Regressão linear</span></button>
-        <button class="nav-link" data-topic="escore" type="button"><span class="nav-symbol">06</span><span>Escore Z</span></button>
-      </nav>
-      <div class="side-section-label side-label-aux">CÁLCULO DE APOIO</div>
-      <nav class="nav-desktop" aria-label="Cálculo de apoio">
-        <button class="nav-link" data-topic="basico" type="button"><span class="nav-symbol">07</span><span>Média e desvio-padrão</span></button>
-      </nav>
-      <div class="sidebar-footer">
-        <span class="status-dot" aria-hidden="true"></span>
-        Funciona sem internet<br>
-        <small>Versão 1.0 · Sem cadastro</small>
-      </div>
-    </aside>
-    <div class="app-column">
-      <header class="topbar">
-        <div class="topbar-identity"><span class="tiny-mark">EA</span><span>Calculadora de Estatística</span></div>
-        <div class="topbar-right"><span class="quiet-version">VERSÃO 1.0</span></div>
-      </header>
-      <div class="mobile-navigation">
-        <label for="topic-mobile">Escolha o cálculo</label>
-        <select id="topic-mobile">
-          <option value="amostra">Tamanho da amostra</option>
-          <option value="media-ic">Intervalo de confiança da média</option>
-          <option value="proporcao-ic">Intervalo de confiança da proporção</option>
-          <option value="correlacao">Correlação de Pearson</option>
-          <option value="regressao">Regressão linear simples</option>
-          <option value="escore">Escore Z</option>
-          <option value="basico">Média e desvio-padrão</option>
-        </select>
-      </div>
-      <main class="main-content">
-        <div class="page-heading">
-          <div class="eyebrow"><span class="line-short"></span><span id="topic-group">TAMANHO DA AMOSTRA</span></div>
-          <h1 id="topic-title">Tamanho da amostra</h1>
-          <p id="topic-description">Descubra quantas observações são necessárias em uma pesquisa.</p>
-        </div>
-        <div class="workspace">
-          <section class="panel input-panel" aria-labelledby="form-title">
-            <div class="panel-header"><div><span class="section-number">01 / DADOS</span><h2 id="form-title">Informe os dados</h2></div></div>
-            <form id="calc-form" novalidate>
-              <div id="dynamic-form"></div>
-              <div class="form-actions"><button type="submit" id="calculate" class="primary-btn">Calcular <span aria-hidden="true">→</span></button><button type="button" id="clear" class="secondary-btn">Limpar</button></div>
-            </form>
-            <div id="form-error" class="form-error" role="alert" aria-live="polite" hidden></div>
-            <details class="help-details" id="help-details"><summary>Como sei quais valores usar?</summary><div id="topic-help"></div></details>
-          </section>
-          <section class="panel result-panel" aria-labelledby="result-title">
-            <div class="panel-header result-header"><div><span class="section-number">02 / RESPOSTA</span><h2 id="result-title">Resultado</h2></div><button type="button" class="copy-btn" id="copy-btn" hidden>Copiar</button></div>
-            <div id="result-placeholder" class="result-placeholder" aria-live="polite"><div class="placeholder-symbol" aria-hidden="true">∑</div><p>Preencha os dados ao lado<br>para ver o resultado.</p></div>
-            <div id="result-content" aria-live="polite" hidden></div>
-          </section>
-        </div>
-        <div class="bottom-note"><span>Os cálculos utilizam as fórmulas da disciplina de Estatística Aplicada.</span><span>RFB · 2026</span></div>
-      </main>
+      <span class="marca-extra">Calculadora da disciplina</span>
     </div>
-  </div>
+  </header>
+
+  <main class="largura">
+    <div class="introducao">
+      <span class="sobretitulo">FÓRMULAS DA AULA</span>
+      <h1>Qual cálculo você precisa fazer?</h1>
+      <p>Escolha o assunto, preencha os valores do exercício e veja como chegar à resposta.</p>
+    </div>
+
+    <!-- As cinco abas são os cinco assuntos do index.html de referência. -->
+    <nav class="abas" aria-label="Escolher cálculo">
+      <button type="button" class="aba ativa" data-aba="am" aria-current="page"><small>Tamanho da amostra</small><strong>Média</strong></button>
+      <button type="button" class="aba" data-aba="ap"><small>Tamanho da amostra</small><strong>Proporção</strong></button>
+      <button type="button" class="aba" data-aba="im"><small>Intervalo de confiança</small><strong>Média</strong></button>
+      <button type="button" class="aba" data-aba="ip"><small>Intervalo de confiança</small><strong>Proporção</strong></button>
+      <button type="button" class="aba" data-aba="de"><small>Ajuste da amostra</small><strong>Diminuir o erro</strong></button>
+    </nav>
+
+    <!-- Assunto 1: calcular quantas observações são necessárias para a média. -->
+    <section class="assunto visivel" id="aba-am" aria-labelledby="titulo-am">
+      <h2 id="titulo-am">Tamanho da amostra para a média</h2>
+      <p class="descricao">Quantas observações preciso para estimar uma média com a precisão desejada?</p>
+      <div class="colunas">
+        <form class="cartao dados" id="form-am" novalidate>
+          <h3>Dados do exercício</h3>
+          <label for="am-confianca">Grau de confiança</label>
+          <div class="confianca"><select id="am-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="am">Z = 1,96</output></div>
+          <label for="am-desvio">Desvio-padrão populacional (σ)</label>
+          <input id="am-desvio" name="desvio" inputmode="decimal" autocomplete="off" placeholder="Digite o desvio-padrão">
+          <label for="am-erro">Erro amostral máximo aceito (Em)</label>
+          <input id="am-erro" name="erro" inputmode="decimal" autocomplete="off" placeholder="Digite a margem de erro">
+          <div class="erro" role="alert" hidden></div>
+          <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
+        </form>
+        <aside class="cartao formula"><h3>Fórmula utilizada</h3><div class="expressao">n = (Z · σ / Em)²</div><dl><dt>n</dt><dd>Tamanho mínimo da amostra</dd><dt>σ</dt><dd>Desvio-padrão populacional</dd><dt>Em</dt><dd>Erro máximo aceito</dd><dt>Z</dt><dd>Valor relacionado à confiança</dd></dl></aside>
+      </div>
+      <div class="resultado" hidden></div>
+    </section>
+
+    <!-- Assunto 2: amostra necessária para estimar uma porcentagem. -->
+    <section class="assunto" id="aba-ap" aria-labelledby="titulo-ap" hidden>
+      <h2 id="titulo-ap">Tamanho da amostra para a proporção</h2>
+      <p class="descricao">Quantas pessoas ou observações preciso para estimar uma porcentagem?</p>
+      <div class="colunas">
+        <form class="cartao dados" id="form-ap" novalidate>
+          <h3>Dados do exercício</h3>
+          <label for="ap-confianca">Grau de confiança</label>
+          <div class="confianca"><select id="ap-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="ap">Z = 1,96</output></div>
+          <label for="ap-p">Proporção estimada (p), em %</label>
+          <input id="ap-p" name="p" inputmode="decimal" autocomplete="off" placeholder="Digite a porcentagem">
+          <label class="marcar"><input type="checkbox" name="desconhecida" id="ap-desconhecida"> Proporção desconhecida (usar 50%)</label>
+          <div class="dado-automatico"><span>Complemento (1 − p)</span><output id="ap-complemento">—</output></div>
+          <label for="ap-erro">Erro da proporção (Ep), em %</label>
+          <input id="ap-erro" name="erro" inputmode="decimal" autocomplete="off" placeholder="Digite o erro em %">
+          <div class="erro" role="alert" hidden></div>
+          <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
+        </form>
+        <aside class="cartao formula"><h3>Fórmula utilizada</h3><div class="expressao">n = Z² · p · (1 − p) / Ep²</div><dl><dt>p</dt><dd>Proporção estimada</dd><dt>1 − p</dt><dd>Complemento da proporção</dd><dt>Ep</dt><dd>Erro da proporção, em decimal</dd><dt>Z</dt><dd>Valor relacionado à confiança</dd></dl></aside>
+      </div>
+      <div class="resultado" hidden></div>
+    </section>
+
+    <!-- Assunto 3: intervalo entre dois valores para a média. -->
+    <section class="assunto" id="aba-im" aria-labelledby="titulo-im" hidden>
+      <h2 id="titulo-im">Intervalo de confiança para a média</h2>
+      <p class="descricao">Entre quais valores pode estar a média verdadeira da população?</p>
+      <div class="colunas">
+        <form class="cartao dados" id="form-im" novalidate>
+          <h3>Dados do exercício</h3>
+          <label for="im-confianca">Grau de confiança</label>
+          <div class="confianca"><select id="im-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="im">Z = 1,96</output></div>
+          <label for="im-media">Média amostral (x̄)</label><input id="im-media" name="media" inputmode="decimal" autocomplete="off" placeholder="Digite a média">
+          <label for="im-desvio">Desvio-padrão (σ ou s)</label><input id="im-desvio" name="desvio" inputmode="decimal" autocomplete="off" placeholder="Digite o desvio-padrão">
+          <label for="im-n">Tamanho da amostra (n)</label><input id="im-n" name="n" inputmode="numeric" autocomplete="off" placeholder="Digite a quantidade">
+          <div class="erro" role="alert" hidden></div>
+          <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
+        </form>
+        <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">Em = Z · σ / √n</div><div class="expressao">IC = x̄ ± Em</div><dl><dt>x̄</dt><dd>Média da amostra</dd><dt>Em</dt><dd>Margem de erro calculada</dd><dt>n</dt><dd>Quantidade de observações</dd></dl></aside>
+      </div>
+      <div class="resultado" hidden></div>
+    </section>
+
+    <!-- Assunto 4: intervalo entre duas porcentagens. -->
+    <section class="assunto" id="aba-ip" aria-labelledby="titulo-ip" hidden>
+      <h2 id="titulo-ip">Intervalo de confiança para a proporção</h2>
+      <p class="descricao">Entre quais porcentagens pode estar a proporção verdadeira da população?</p>
+      <div class="colunas">
+        <form class="cartao dados" id="form-ip" novalidate>
+          <h3>Dados do exercício</h3>
+          <label for="ip-confianca">Grau de confiança</label>
+          <div class="confianca"><select id="ip-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="ip">Z = 1,96</output></div>
+          <label for="ip-sucessos">Quantidade com a característica</label><input id="ip-sucessos" name="sucessos" inputmode="numeric" autocomplete="off" placeholder="Digite a quantidade">
+          <label for="ip-n">Tamanho da amostra (n)</label><input id="ip-n" name="n" inputmode="numeric" autocomplete="off" placeholder="Digite o total pesquisado">
+          <div class="dado-automatico"><span>Proporção da amostra</span><output id="ip-proporcao">—</output></div>
+          <label for="ip-padrao">Padrão aceitável (%) <span class="opcional">— opcional</span></label><input id="ip-padrao" name="padrao" inputmode="decimal" autocomplete="off" placeholder="Somente se o exercício pedir">
+          <div class="erro" role="alert" hidden></div>
+          <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
+        </form>
+        <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">p = sucessos / n</div><div class="expressao">Ep = Z · √[p(1 − p) / n]</div><div class="expressao">IC = p ± Ep</div><dl><dt>p</dt><dd>Proporção da amostra</dd><dt>Ep</dt><dd>Margem de erro da proporção</dd><dt>n</dt><dd>Total pesquisado</dd></dl></aside>
+      </div>
+      <div class="resultado" hidden></div>
+    </section>
+
+    <!-- Assunto 5: a amostra cresce quando exigimos erro menor. -->
+    <section class="assunto" id="aba-de" aria-labelledby="titulo-de" hidden>
+      <h2 id="titulo-de">Diminuir o erro da média</h2>
+      <p class="descricao">Se eu quiser um erro menor, quantas observações adicionais serão necessárias?</p>
+      <div class="colunas">
+        <form class="cartao dados" id="form-de" novalidate>
+          <h3>Dados do exercício</h3>
+          <label for="de-confianca">Grau de confiança</label>
+          <div class="confianca"><select id="de-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="de">Z = 1,96</output></div>
+          <label for="de-desvio">Desvio-padrão (σ ou s)</label><input id="de-desvio" name="desvio" inputmode="decimal" autocomplete="off" placeholder="Digite o desvio-padrão">
+          <label for="de-n">Tamanho atual da amostra (n)</label><input id="de-n" name="n" inputmode="numeric" autocomplete="off" placeholder="Digite o tamanho atual">
+          <div class="dado-automatico"><span>Erro atual (Em)</span><output id="de-atual">—</output></div>
+          <label for="de-k">Dividir o erro por quantas vezes?</label><input id="de-k" name="k" inputmode="decimal" autocomplete="off" placeholder="Digite um valor maior que 1">
+          <div class="erro" role="alert" hidden></div>
+          <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
+        </form>
+        <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">Novo Em = Em / k</div><div class="expressao">Novo n = (Z · σ / Novo Em)²</div><dl><dt>k</dt><dd>Quantas vezes o erro vai diminuir</dd><dt>Em</dt><dd>Margem de erro atual</dd><dt>n</dt><dd>Quantidade de observações</dd></dl><p class="nota-formula">Ao reduzir o erro pela metade, precisamos de aproximadamente 4 vezes mais observações.</p></aside>
+      </div>
+      <div class="resultado" hidden></div>
+    </section>
+
+    <footer class="rodape"><span>Uma ferramenta de apoio aos exercícios de Estatística Aplicada.</span><span>RFB · 2026</span></footer>
+  </main>
 </body>
 </html>

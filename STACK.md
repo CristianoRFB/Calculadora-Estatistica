@@ -1,17 +1,14 @@
-# STACK.md — decisão técnica
+# Stack — custo de manutenção R$ 0
 
-- **HTML5**: estrutura e acessibilidade.
-- **CSS3 puro**: layout responsivo, sem Tailwind e sem bibliotecas de componentes.
-- **JavaScript puro**: validação, matemática e interação, sem React/Next e sem dependências de produção.
-- **Node.js 22+ somente para QA/build**: testes `node:test` e empacotamento opcional.
-- **Cloudflare Workers Free / workers.dev existente**: o Worker publica os mesmos arquivos estáticos. Sem função de cálculo no servidor, banco de dados ou dependências externas.
-- **Custo recorrente esperado: R$ 0 dentro dos limites do plano gratuito**, sem cadastro de pagamento nem serviços pagos criados neste projeto.
-- **Execução offline**: abrir o `index.html` no navegador; nada precisa ser baixado da internet durante o uso.
+- HTML5: campos e cinco abas estáticas.
+- CSS3: estilo azul, sem bibliotecas.
+- JavaScript moderno: cálculos matemáticos locais.
+- Cloudflare Workers: distribuição estática usando o Worker já existente.
+- Node.js: somente para testar e preparar o pacote de publicação.
+- Sem banco de dados, login, anúncios, dependências NPM ou serviço externo para executar cálculos.
 
-## Por que não escolher Next.js ou C#?
+## Fluxo de dados
 
-Next.js adicionaria uma árvore de dependências que não é necessária para quatro arquivos de uma calculadora didática. C# Avalonia é útil para desktop, mas não entrega o mesmo site no navegador e no celular. HTML/CSS/JS do zero combina a simplicidade do projeto de Guilherme com separação de lógica e testes inspirada no projeto de Kayky, sem copiar trechos de nenhum deles.
+`Aluno digita → app.js valida e chama calculos.js → resultado aparece no navegador`
 
-## Quando revisar a decisão
-
-Somente se surgir requisito real de autenticação, persistência, colaboração ou cálculo pesado no servidor. O projeto atual não precisa desses recursos.
+O servidor não recebe nem armazena os valores digitados. Todas as contas usam o mesmo arquivo matemático e são executadas localmente pelo navegador.

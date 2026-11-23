@@ -1,25 +1,25 @@
-# RFB Method — execução desta reconstrução
+# RFB Method — V1 enxuta
 
-## Starter Pack
+**Objetivo:** atendimento aos cinco temas do index.html de referência, sem extras.
 
-- Problema definido: ferramenta didática simples para estudante leigo.
-- Referências analisadas: três repositórios de colegas; nomes e fórmulas dos slides.
-- Requisitos: sete áreas, dois modos de entrada quando úteis, resultado principal claro, detalhes ocultáveis, zero serviços pagos.
-- Arquitetura e diagramas documentados em `DIAGRAMAS.md`.
-- Stack documentada em `../STACK.md`.
+## Pesquisa e arquitetura
+- Repositórios analisados: Carlos-Candido/Calculadora (validação), KaykyOne/f-calculadora-estatistica (organização), GuilhermeOliveira0/calculadora-estatistica (cinco módulos e layout).
+- Arquitetura: HTML estático → app.js (formulário) → calculos.js (contas) → resultado. Não há API, login, banco ou Firebase.
+- Stack: HTML/CSS/JS sem frameworks, dependências de produção ou assinatura.
 
-## AntiVibeCoding
+## Simplicidade e anti-AI-slop
+- Azul discreto, contraste consistente, uma navegação com cinco opções.
+- Sem animações obrigatórias, sugestões inventadas, telas que acumulam funções ou recursos decorativos.
+- Não existem exemplos preenchidos automaticamente: o estudante fornece os valores do enunciado.
 
-Nenhum gráfico, botão ou pacote pode ser incluído sem ligação com o exercício. Não usar IA para inventar resultados; os valores são calculados por fórmulas determinísticas. Qualquer atualização precisa de teste que reproduza o problema.
+## QA
+- Testes determinísticos de fórmulas, unidades, arredondamentos, entrada brasileira e falhas.
+- Navegação de todas as abas, respostas com campos corretos, limpeza, entradas inválidas e responsividade.
+- Worker testado em Node e URL pública verificada separadamente após publicar.
+- **Limite:** testes não garantem ausência absoluta de bugs.
 
-## AntiLoop
-
-Se houver duas falhas iguais, registrar o comportamento, a hipótese e a mudança de estratégia. O QA com navegador foi adaptado para usar os arquivos locais em `about:blank` porque a navegação de rede do ambiente estava bloqueada — esse ensaio **não comprova a hospedagem**; esta deve ser testada separadamente.
-
-## GitHub
-
-Conferência antes do desenvolvimento: nenhuma Issue aberta, nenhum PR aberto no repositório da calculadora. Preservar a última versão da main numa branch de backup. V1 nova em branch `rfb/v1-clean`, com PR e relatório de QA. Após validação, mesclar; somente depois publicar no Worker existente.
-
-## Handoff
-
-Cada rodada deve registrar: commit SHA, evidências de testes, bugs conhecidos, comparação com o requisito, publicação real e o que não foi concluído. Não alegar “zero bugs absoluto”; testar casos comuns, limites, dados inválidos e responsividade.
+## Publicação e manutenção
+- Preservar a versão antiga do GitHub numa branch de backup antes de substituir o conteúdo de `main`.
+- Atualizar GitHub antes da Cloudflare.
+- Manter o mesmo endereço do Worker `77-statlab-estatistica`.
+- Registros de commit e publicação devem ser anotados no relatório final.

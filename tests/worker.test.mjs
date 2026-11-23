@@ -1,13 +1,26 @@
-import { test } from 'node:test';
+/* Verifica o mesmo arquivo usado para a publicação na Cloudflare. */
+import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../deploy/worker.js';
-const url='https://teste.invalid';
-for(const [path,tipo] of [['/','text/html'],['/index.html','text/html'],['/src/math.js','text/javascript'],['/src/app.js','text/javascript'],['/assets/styles.css','text/css']]){
- test('Worker responde '+path,async()=>{
-  const r=await worker.fetch(new Request(url+path));assert.equal(r.status,200);assert.ok(r.headers.get('content-type').startsWith(tipo));assert.ok((await r.text()).length>50);assert.equal(r.headers.get('X-Content-Type-Options'),'nosniff');
- });
-}
-test('Worker HEAD sem corpo',async()=>{const r=await worker.fetch(new Request(url+'/index.html',{method:'HEAD'}));assert.equal(r.status,200);assert.equal(await r.text(),'');});
-test('Worker JSON saúde',async()=>{const r=await worker.fetch(new Request(url+'/api/saude'));assert.equal((await r.json()).versao,'1.0.0');});
-test('Worker 404 sem vazar código',async()=>{const r=await worker.fetch(new Request(url+'/segredos'));assert.equal(r.status,404);});
-test('Worker rejeita POST inesperado',async()=>{const r=await worker.fetch(new Request(url+'/',{method:'POST'}));assert.equal(r.status,405);});
+const url=path=>'https://calculadora.example'+path;
+
+test('home responde HTML 200',async()=>{
+  const r=await worker.fetch(new Request(url('/')));
+  assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/text\/html/);
+  const html=await r.text();assert.match(html,/Estatística Aplicada/);
+  assert.equal((html.match(/data-aba="/g)||[]).length,5);
+});
+for(const p of ['/index.html','/assets/style.css','/src/calculos.js','/src/app.js'])test('arquivo '+p+' está disponível',async()=>{
+  const r=await worker.fetch(new Request(url(p)));
+  assert.equal(r.status,200);assert.ok((await r.text()).length>100);
+});
+test('rotas desconhecidas respondem 404',async()=>assert.equal((await worker.fetch(new Request(url('/inexistente')))).status,404));
+test('POST é rejeitado sem acidente',async()=>assert.equal((await worker.fetch(new Request(url('/'),{method:'POST'}))).status,405));
+test('HEAD mantém cabeçalhos e não envia HTML',async()=>{
+  const r=await worker.fetch(new Request(url('/'),{method:'HEAD'}));
+  assert.equal(r.status,200);assert.equal(await r.text(),'');
+});
+test('endpoint de diagnóstico responde',async()=>{
+  const r=await worker.fetch(new Request(url('/api/saude')));
+  assert.equal(r.status,200);assert.deepEqual(await r.json(),{ok:true,versao:'1.0.0',modo:'estatico'});
+});
