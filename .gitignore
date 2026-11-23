@@ -1,7 +1,8 @@
+node_modules/
 __pycache__/
+.pytest_cache/
 *.pyc
-.venv/
-.vscode/
+screenshots/
 .DS_Store
-cloudflare/calculos.py
-cloudflare/web_assets.py
+.env
+.env.*

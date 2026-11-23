@@ -1,0 +1,24 @@
+name: Verificar calculadora
+
+on:
+  push:
+    branches: [main, rfb/v1-clean]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar sintaxe, matemática, Worker e build
+        run: npm run check
+      - name: Verificar se o Worker publicado corresponde ao código
+        run: git diff --exit-code -- deploy/worker.js
