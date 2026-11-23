@@ -9,3 +9,10 @@
 7. Preserve os nomes e a nomenclatura da professora; não volte ao teclado científico.
 
 **Stack:** HTML/CSS/JS puro, sem serviços externos ou dependências de produção.
+
+## Último checkpoint — 23/11/2026
+
+- PR #1: mesclado em `main` (`0cb9a1fbb7743bb0d10b047f5494c35c3970dc72`).
+- 170 testes automáticos em Node passaram; browser PC/celular + dez larguras passaram.
+- Worker existente recebeu código novo, com HTTP e saúde externos confirmados.
+- Questões G1–G5 (frequência, boxplot etc.) conscientemente fora da V1.
