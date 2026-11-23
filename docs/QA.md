@@ -34,3 +34,10 @@
 - Limite: testes do navegador foram executados com os mesmos arquivos da aplicação injetados num documento em memória, porque o Chromium de QA bloqueou a navegação local. O HTTP do Worker foi testado isoladamente em Node. A URL real deve ser checada depois do deploy.
 
 - CI em `.github/workflows/qa.yml`: executa `npm run check` no PR e verifica que o Worker gerado não diverge dos arquivos da aplicação.
+
+## Publicação verificada
+
+- GitHub: PR #1 mesclado, CI de push e PR passaram.
+- Cloudflare: deploy `48ca366b65d14a9cb08cda4cd02ef2b2`, com subdomínio habilitado.
+- Leitura externa: `/`, `/api/saude`, `/src/math.js` e `/assets/styles.css` responderam e exibiram conteúdos da V1.
+- Navegação automatizada no domínio externo: indisponível pelo serviço de browser de terceiros. Isso não invalida os testes interativos locais, mas não deve ser apresentado como teste E2E de produção.
