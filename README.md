@@ -1,129 +1,67 @@
-# Estatística Aplicada — Calculadora V1
+# Calculadora de Estatística Aplicada — V1
 
-Calculadora de apoio à disciplina **Estatística Aplicada — professora Andrea P. Silva**, preparada para uma apresentação em que o aluno escuta o enunciado, identifica a operação, preenche os dados e explica a resposta.
+Site de estudo para os **cinco assuntos** presentes no `index.html` de referência da disciplina. Recriado em HTML, CSS e JavaScript puro, em português brasileiro, com foco em alunos iniciantes.
 
-Esta é uma reconstrução da antiga calculadora, **sem o teclado científico do Windows**, com interface limpa e organizada por assunto. Não há cadastro, conexão com Firebase, armazenamento pessoal ou bibliotecas de interface.
+## O que a V1 faz
 
-## Abra a calculadora
-
-- **Online:** https://77-statlab-estatistica.on7.workers.dev/
-- **Offline:** abra `index.html` no Chrome ou no Edge. Os cálculos são executados no próprio navegador.
-- **Testes:** `npm test` (Node 22+). A aplicação não precisa de Node para funcionar.
-
-## As sete áreas
-
-| Área | O que resolve | Dados que você informa |
+| Aba | Entradas que o exercício informa | Resultado |
 |---|---|---|
-| Tamanho da amostra | Estimativa da média ou proporção | Grau de confiança, erro máximo e desvio-padrão ou proporção |
-| Intervalo da média | Limite inferior, limite superior e margem | Média, desvio e n — ou uma lista |
-| Intervalo da proporção | Percentual e intervalo da população | Quantidade com a característica, total e confiança — ou lista sim/não |
-| Correlação | Coeficiente de Pearson r | Valores de X e de Y |
-| Regressão linear | Equação ŷ = aX + b e previsão | Valores de X e de Y; novo X opcional |
-| Escore Z | Distância de um valor até a média | Valor, média e desvio — ou lista |
-| Média e desvio-padrão | Média, mediana, variâncias e desvios | Lista de observações |
+| Tamanho da amostra — média | Confiança, desvio-padrão populacional σ, erro máximo Em | Tamanho mínimo n |
+| Tamanho da amostra — proporção | Confiança, proporção p (%), erro Ep (%); opção p desconhecido | Tamanho mínimo n |
+| Intervalo de confiança — média | Confiança, média x̄, desvio σ ou s, n | Margem Em, limites do intervalo |
+| Intervalo de confiança — proporção | Confiança, quantidade com a característica, total n, padrão aceitável opcional | Proporção, complemento, margem Ep, limites, comparação opcional |
+| Diminuir o erro | Confiança, desvio σ ou s, amostra atual n, fator de redução k | Erro atual, novo erro, nova amostra e observações adicionais |
 
-### Linguagem dos materiais
+**Não inclui:** correlação, regressão, escore Z, histograma, quartis, boxplot, base de planilhas ou testes formais de hipótese. Isso é uma escolha consciente de escopo, não um erro. Logo, a V1 não resolve todos os 44 exercícios que haviam sido mapeados na versão antiga.
 
-- **Desvio-padrão populacional (σ)** — dispersão conhecida da população.
-- **Erro amostral máximo aceito (Em)** — diferença máxima permitida ao estimar uma média.
-- **Erro da proporção (Ep)** — margem em porcentagem; digite `2` para 2%.
-- **Grau de confiança** — escolha 90%, 95% ou 99%.
-- **Tamanho da amostra (n)** — quantidade de observações analisadas.
-- **População (N)** — tamanho total; só informe quando conhecido.
-- **Proporção (p)** — a porcentagem com uma característica; seu complemento é `1 − p`.
+## Como usar
 
-### Como preencher os campos
+Abra `index.html` num navegador moderno. O site funciona offline, não exige instalação, conta, dados pessoais nem internet. Escolha uma das cinco abas, digite os valores no mesmo formato dos PDFs, clique em **Calcular** e, se precisar, abra **Ver resolução passo a passo**.
 
-1. Escolha o cálculo no menu à esquerda, ou no seletor do celular.
-2. Se o enunciado já disser média, desvio, proporção e total, use **Valores informados**.
-3. Se a questão fornecer uma coluna com os valores individuais, selecione **Lista de valores** e cole os números, um por linha ou separados por `;`.
-4. Se a professora informar **margem de erro já calculada** ou **população N**, abra **Mais opções**. Esses campos não são obrigatórios.
-5. Pressione **Calcular**. A resposta principal aparece imediatamente, seguida das informações calculadas automaticamente.
-6. Abra **Ver resolução passo a passo** somente quando precisar explicar como a conta foi feita.
+A vírgula é decimal (`1,25`). `1.250` é lido como mil duzentos e cinquenta, e `1.250,50` como mil duzentos e cinquenta e cinquenta centésimos. Para evitar dúvida, digite o número de milhar sem ponto (`1250`).
 
-O programa entende **vírgula decimal** (`1,5`) e **ponto de milhar** (`1.250` = mil duzentos e cinquenta). Uma coluna copiada do Excel funciona com quebras de linha. Para separar números em uma mesma linha, use `;` porque a vírgula é reservada à parte decimal.
+No caso de proporção, os campos que pedem **%** recebem valores como `30` para 30%, e `2` para erro de 2%. A calculadora transforma esses valores em decimais para usar nas fórmulas. O complemento aparece automaticamente e não pode ser alterado. Se a proporção for desconhecida, marque o campo e será utilizado 50%, como no material da aula.
 
-**Regra de arredondamento:** o tamanho mínimo da amostra sempre é arredondado para cima. Os cálculos internos não arredondam antes do resultado; a interface mostra até seis casas nos valores intermediários e duas casas nos limites exibidos.
+## Onde corrigir algo durante a apresentação
 
-## O que aparece na resposta
+- `index.html`: nome de botão, texto de campo e estrutura das cinco telas.
+- `assets/style.css`: cores, espaços, tamanho dos campos e organização no celular.
+- `src/calculos.js`: fórmulas matemáticas, validações e tabela dos valores críticos.
+- `src/app.js`: navegação das abas, leitura dos campos, respostas e explicações passo a passo.
+- `tests/calculos.test.mjs`: testes das fórmulas e dos dados incorretos.
+- `tests/navegador.py`: testes com cliques no PC e celular.
+- `tools/gerar-worker.mjs`: montagem do único Worker da Cloudflare a partir dos arquivos acima.
 
-A resposta reúne apenas:
+**Nunca altere `deploy/worker.js` manualmente:** é gerado pelo comando `npm run build` e contém o site inteiro.
 
-1. **Número ou intervalo final**, em destaque.
-2. **Valores obtidos automaticamente**, como proporção, complemento, margem, limite inferior/superior e desvio.
-3. **Interpretação breve**, com linguagem direta.
-4. **Avisos de validade**, somente quando necessários.
-5. **Passo a passo recolhido**, com a substituição e uma frase explicando cada conta.
+## Matemática utilizada
 
-Correlação e regressão também mostram um gráfico de dispersão simples, sem serviços externos.
+Os níveis de confiança são **90% (Z = 1,645)**, **95% (Z = 1,960)** e **99% (Z = 2,575)**, da tabela utilizada na disciplina.
 
-## O que foi removido da V10
+- Média, tamanho da amostra: `n = (Z × σ / Em)²`. Arredondar `n` sempre para cima.
+- Proporção, tamanho da amostra: `n = Z² × p(1 − p) / Ep²`. Se `p` for desconhecido, usar `p = 0,5`.
+- IC da média: `Em = Z × σ / √n`; `IC = (x̄ − Em ; x̄ + Em)`.
+- IC da proporção: `p = sucessos/n`; `Ep = Z × √(p(1 − p) / n)`; `IC = (p − Ep ; p + Ep)`.
+- Redução do erro: `Em atual = Z × desvio / √n`; `Novo Em = Em atual / k`; `Novo n = (Z × desvio / Novo Em)²`.
 
-- Teclado científico e visor de calculadora convencional.
-- Fluxograma horizontal com muitos nós.
-- Histórico, memória, painéis permanentes de explicações e botões abreviados.
-- Gestão de população como calculadora isolada; o tamanho N conhecido permanece como opção dentro das fórmulas.
-- As áreas especializadas de histograma, boxplot, classificação automática de variáveis e tabelas de frequência, que não fazem parte do escopo essencial da primeira versão. Podem voltar em uma versão futura após validação de necessidade.
+**Limitações:** o IC da média utiliza o método Z dos PDFs, não a distribuição t de Student; se o desvio for amostral e n for pequeno, esse método pode não ser adequado. O IC da proporção usa a aproximação normal de Wald, que pode falhar com poucas ocorrências ou proporções extremas. Se a comparação opcional com um padrão for preenchida, ela avalia o intervalo; não substitui teste formal de hipótese. Não se deve alterar os limites que ficarem fora de 0%–100% sem avisar.
 
-As **questões A–F** da lista da disciplina usam cálculos centrais presentes aqui; a parte especial de análise descritiva e gráficos G1–G5 **não tem cobertura completa nesta versão**. G6 (correlação e regressão) tem cálculo principal. A calculadora não substitui interpretação escrita nem um teste formal de hipótese.
+## Desenvolvimento e testes
 
-## Arquivos: onde consertar um erro
+A única dependência para executar testes automáticos é o Node.js. **Para abrir a calculadora não é necessário Node.js**.
 
-```text
-Calculadora-Estatistica/
-├── index.html               # Estrutura da página: cabeçalho, menu e painéis
-├── assets/styles.css        # Cores, tamanhos, espaçamentos e celular
-├── src/math.js              # Todas as fórmulas e validações matemáticas
-├── src/app.js               # Botões, campos, respostas e gráfico
-├── tools/build-worker.mjs   # Gera a publicação Cloudflare a partir dos arquivos
-├── deploy/worker.js         # Arquivo gerado para o mesmo Worker existente
-├── tests/                   # Testes matemáticos, exercícios, Worker e navegador
-├── STACK.md                 # Escolhas técnicas e custo operacional
-├── AGENTS.md                # Regras para futuras alterações
-└── docs/                    # Auditoria, diagramas, decisões e progresso RFB
+```sh
+npm run build   # atualiza deploy/worker.js
+npm test        # testa as cinco fórmulas e o Worker
+npm run check   # checa sintaxe e roda testes
 ```
 
-**Se o resultado matemático estiver errado:** abra `src/math.js`, procure a seção pelo nome da fórmula. **Se faltar um campo:** abra `src/app.js`, função `montarFormulario`. **Se o menu ou texto estiver incorreto:** também `src/app.js`, objeto `ASSUNTOS`. **Se o site ficar feio no celular:** abra `assets/styles.css`, seção `RESPONSIVO`.
+Para testes visuais com Playwright e Chromium, execute `python tests/navegador.py` em ambiente que tenha ambos instalados.
 
-## Principais fórmulas
+## Por que a stack é tão pequena?
 
-| Operação | Fórmula |
-|---|---|
-| Amostra da média | `n = (z × σ / Em)²` |
-| Amostra da proporção | `n = z² × p × (1−p) / Ep²` |
-| Intervalo da média | `E = z × desvio / √n; IC = média ± E` |
-| Intervalo da proporção | `Ep = z × √(p × (1−p) / n); IC = p ± Ep` |
-| Correlação | `r = Σ[(X−x̄)(Y−ȳ)] / √[Σ(X−x̄)² × Σ(Y−ȳ)²]` |
-| Regressão | `a = Σ[(X−x̄)(Y−ȳ)] / Σ(X−x̄)²; b = ȳ − a×x̄; ŷ = aX+b` |
-| Escore Z | `z = (x−média) / desvio` |
-| Desvio amostral | `s = √[Σ(x−x̄)² / (n−1)]` |
+Não há backend nem banco de dados. As cinco contas são puramente matemáticas e podem ser feitas no próprio navegador. A Cloudflare só distribui o HTML, o CSS e o JavaScript. Esse desenho evita dependências, reduz pontos de falha e facilita entender o código.
 
-Para os valores críticos, usa-se a tabela da aula: 90% → 1,645; 95% → 1,96; 99% → 2,575.
+## Referência funcional
 
-**Limitação estatística:** os intervalos da média usam a aproximação normal Z ensinada nos materiais. Para desvio estimado com amostra pequena, outra metodologia (t de Student) pode ser necessária. Os intervalos de proporção usam a aproximação normal de Wald, inadequada em alguns casos extremos; o programa apresenta um aviso. Intervalo de confiança e teste de hipótese são coisas distintas.
-
-## Comandos de desenvolvimento
-
-```bash
-node --version
-npm test                    # Testes matemáticos e do Worker; zero dependências
-npm run build               # Reconstrói deploy/worker.js
-npm run check               # Verifica sintaxe, testes e publicação
-python tests/browser_smoke.py  # QA real: exige Playwright/Chromium no ambiente de QA
-```
-
-O site não precisa de `npm install`. Ele é estático e também funciona ao abrir `index.html` diretamente (sem servidor). O código gerado em `deploy/worker.js` não deve ser editado à mão; use `npm run build` depois de modificar a tela.
-
-## Auditoria / RFB Method
-
-- Leia `docs/AUDITORIA.md` para comparar os três projetos analisados.
-- Leia `docs/DIAGRAMAS.md` para entender o fluxo e a arquitetura.
-- Leia `docs/QA.md` para saber **o que foi testado** e quais limites continuam.
-- Leia `docs/RFB.md` para as regras de GitHub First, Starter Pack, QA, AntiLoop e documentação de entrega.
-- Leia `docs/ESTADO.md` e `docs/HANDOFF.md` antes de continuar o projeto.
-
-## Contribuições e direitos
-
-A implementação V1 é independente e não contém código copiado dos três repositórios de referência. Os projetos de Carlos, Kayky e Guilherme foram consultados para identificar requisitos pedagógicos, métodos e padrões de interface, mas o código desta versão foi escrito novamente. Referências em `docs/AUDITORIA.md`.
-
-Projeto de estudo. Sem coleta de dados nem finalidade comercial.
+A organização por abas e os cinco temas foram estudados no repositório [GuilhermeOliveira0/calculadora-estatistica](https://github.com/GuilhermeOliveira0/calculadora-estatistica). Código e layout desta V1 foram redigidos novamente, sem copiar o projeto original.

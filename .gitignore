@@ -1,8 +1,7 @@
 node_modules/
-__pycache__/
-.pytest_cache/
-*.pyc
-screenshots/
+*.log
 .DS_Store
-.env
-.env.*
+__pycache__/
+*.pyc
+tests/*.png
+tests/resultado-testes.txt
