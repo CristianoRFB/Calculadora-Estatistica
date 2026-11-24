@@ -48,6 +48,8 @@ with sync_playwright() as p:
     assert '40%' in relatorio.inner_text() and '2305' in relatorio.inner_text()
     assert '38,01% a 42,00%' in relatorio.inner_text()
     assert 'Resolução passo a passo' in relatorio.inner_text()
+    assert 'Resolução com fórmula' in relatorio.inner_text()
+    assert relatorio.locator('.conta-fracao').count() > 0
     assert relatorio.locator('.grafico-ic').is_visible()
     assert not page.locator('.abas').is_visible()
     assert not resposta_pdf.locator('.imprimir-pdf').is_visible()
@@ -77,7 +79,18 @@ with sync_playwright() as p:
     assert frase.inner_text() == original
     submit(page,'am',{'desvio':'1.250','erro':'100'},'601')
     page.screenshot(path=str(root/'tests/desktop-azul.png'),full_page=True)
-    submit(page,'ap',{'p':'30','erro':'2'},'2.017')
+    resposta_ap = submit(page,'ap',{'p':'30','erro':'2'},'2.017')
+    formula_ap = resposta_ap.locator(':scope > .resolucao-formula')
+    assert formula_ap.count() == 1
+    formula_ap.locator('summary').click()
+    assert formula_ap.locator('.conta-fracao').count() >= 3
+    assert '1,96² · 0,3 · 0,7' in formula_ap.inner_text()
+    assert '2.016,84' in formula_ap.inner_text()
+    assert '2.017' in formula_ap.inner_text()
+    resposta_ap.locator('[data-precisao="completo"]').click()
+    assert formula_ap.evaluate('(el) => el.open')
+    resposta_ap.locator('[data-precisao="2"]').click()
+    assert formula_ap.evaluate('(el) => el.open')
     assert '70%' in page.locator('#ap-complemento').inner_text()
     page.locator('#ap-desconhecida').check()
     assert page.locator('#ap-p').is_disabled()
@@ -89,7 +102,7 @@ with sync_playwright() as p:
     assert page.locator('#aba-im .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['307,53','320,00','332,48']
     # Alterna precisão e verifica que a resolução permanece aberta.
     answer=page.locator('#aba-im .resultado')
-    answer.locator('summary').click()
+    answer.locator(':scope > .passos:not(.resolucao-formula) > summary').click()
     # A opção inteira também arredonda ambos os limites para cima.
     answer.locator('[data-precisao="0"]').click()
     assert answer.locator(':scope > .numero-resposta').inner_text() == '308 a 333'
@@ -98,7 +111,7 @@ with sync_playwright() as p:
         answer.locator('[data-precisao="completo"]').click()
         assert '307,526636' in answer.locator(':scope > .numero-resposta').inner_text()
         assert '307,526636' in answer.locator(':scope > .grafico-ic .grafico-rotulos strong').first.inner_text()
-        assert answer.locator('details').evaluate('(el) => el.open')
+        assert answer.locator(':scope > .passos:not(.resolucao-formula)').evaluate('(el) => el.open')
         assert page.locator('#im-media').input_value()=='320'
         answer.locator('[data-precisao="2"]').click()
         assert '307,53 a 332,48' in answer.locator(':scope > .numero-resposta').inner_text()

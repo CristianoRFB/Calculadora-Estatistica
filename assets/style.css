@@ -205,3 +205,20 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .precisao-opcoes .precisao { margin:0; min-height:36px; }
 .precisao-opcoes .precisao[aria-pressed="true"] { background:var(--azul-claro); border-color:var(--azul); color:var(--azul-forte); }
 .relatorio-precisao { font-size:9pt; color:var(--secundario); margin:0 0 8pt; }
+
+/* Resolução matemática: cada linha é uma conta separada, como no caderno. */
+.contas-formula { display:grid; gap:8px; margin:12px 0 4px; }
+.conta-formula { min-width:0; padding:11px 12px; background:#f4f7fc; border:1px solid var(--linha); border-radius:8px; break-inside:avoid; }
+.conta-rotulo { display:block; font-size:12px; color:var(--secundario); margin-bottom:7px; }
+.conta-expressao { display:flex; flex-wrap:wrap; align-items:center; gap:4px; color:var(--azul-forte); font-family:"Cambria Math",Georgia,serif; font-size:clamp(15px,2.2vw,21px); line-height:1.4; min-width:0; }
+.conta-texto { min-width:0; max-width:100%; overflow-wrap:anywhere; white-space:pre-wrap; }
+/* A linha entre numerador e denominador cria uma fração visual sem biblioteca. */
+.conta-fracao { display:inline-flex; flex-direction:column; align-items:stretch; text-align:center; min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.conta-numerador { display:block; padding:0 5px 3px; border-bottom:1.5px solid currentColor; }
+.conta-denominador { display:block; padding:3px 5px 0; }
+@media print {
+  .relatorio-impressao .contas-formula { gap:4pt; margin:4pt 0; }
+  .relatorio-impressao .conta-formula { background:white; border:1px solid #dbe3ef; padding:5pt 7pt; }
+  .relatorio-impressao .conta-rotulo { font-size:8pt; margin-bottom:2pt; }
+  .relatorio-impressao .conta-expressao { font-size:11pt; }
+}

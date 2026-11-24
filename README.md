@@ -88,3 +88,7 @@ A frase de resposta dos cálculos de tamanho de amostra e redução do erro tamb
 ### Imprimir ou salvar a resolução em PDF
 
 Depois de calcular, clique em **Imprimir / Salvar em PDF**, abaixo do passo a passo. Na janela do navegador, escolha Salvar como PDF ou uma impressora. A folha A4 contém os dados, fórmulas, resposta, gráfico (quando disponível), avisos e resolução completa, na precisão escolhida. Não imprime menus, botões ou outras abas. O recurso usa a impressão nativa do navegador, sem dependências ou serviço externo.
+
+### Resolução com fórmula
+
+Após calcular, abra **Ver resolução com fórmula** para ver a expressão original, frações com os números substituídos, resultados intermediários e a resposta. O passo a passo em texto continua separado. Os dois painéis preservam seu estado ao mudar as casas decimais, e ambos são incluídos na impressão. Os operandos usam a precisão original; os resultados finais seguem a opção de exibição. Não há biblioteca matemática externa.

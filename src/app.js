@@ -105,6 +105,14 @@
     // O próprio navegador transforma a fração em porcentagem sem multiplicações extras.
     const pct = (p, casas) => formatar(p, casas, 'percent');
     const z = M.valorCritico(confianca(form));
+    // A resolução matemática usa os mesmos números da resposta, sem refazer a conta.
+    // x mostra um número sem limitar suas casas; F representa uma fração (parte de cima e de baixo).
+    const x = n => dec(n, 'completo');
+    const F = (numerador, denominador) => ({numerador, denominador});
+    // Cada linha é uma lista de textos e frações, na ordem em que aparecem no papel.
+    // O sinal ≈ indica que o número exibido pode ter sido arredondado.
+    const eq = (...partes) => partes;
+    const fim = (n, casas) => ' ≈ ' + dec(n, casas);
     // O tamanho mínimo é sempre inteiro: não podemos pesquisar uma parte de uma pessoa.
     // A frase mostra também o resultado decimal ANTES de arredondar para cima.
     // Assim, ao clicar em mais casas, a frase acompanha a precisão escolhida.
@@ -115,6 +123,12 @@
         titulo: 'Tamanho mínimo da amostra', valor: `n = ${fmt(r.n, 0)}`,
         frase: `O cálculo resulta em ${dec(r.exato, casas)}. Arredondando para cima, são necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a média com ${confianca(form)}% de confiança.`,
         extras: [['Antes de arredondar', dec(r.exato, casas)]],
+        formulas: [
+          ['Fórmula original', eq('n = (', F('Z · σ', 'Em'), ')²')],
+          ['Substituindo os valores', eq('n = (', F(x(z) + ' · ' + x(r.desvio), x(r.erro)), ')²')],
+          ['Resultado do cálculo', eq('n', fim(r.exato, casas))],
+          ['Tamanho mínimo (arredondando para cima)', eq('n = ', fmt(r.n, 0))]
+        ],
         passos: [
           ['Identificar o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
           ['Substituir na fórmula', `n = (${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ ${dec(r.erro, 'completo')})² ≈ ${dec(r.exato, casas)}.`],
@@ -130,6 +144,13 @@
         titulo: 'Tamanho mínimo da amostra', valor: `n = ${fmt(r.n, 0)}`,
         frase: `O cálculo resulta em ${dec(r.exato, casas)}. Arredondando para cima, são necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a proporção com ${confianca(form)}% de confiança.`,
         extras: [['Proporção (p)', pct(r.p, casas)], ['Complemento (1 − p)', pct(r.q, casas)], ['Antes de arredondar', dec(r.exato, casas)]],
+        formulas: [
+          ['Fórmula original', eq('n = ', F('Z² · p · (1 − p)', 'Ep²'))],
+          ['Transformando os percentuais', eq('p = ', F(x(p), '100'), ' = ' + x(r.p) + '; 1 − p = ' + x(r.q) + '; Ep = ' + x(r.ep))],
+          ['Substituindo os valores', eq('n = ', F(x(z) + '² · ' + x(r.p) + ' · ' + x(r.q), x(r.ep) + '²'))],
+          ['Resultado do cálculo', eq('n', fim(r.exato, casas))],
+          ['Tamanho mínimo (arredondando para cima)', eq('n = ', fmt(r.n, 0))]
+        ],
         passos: [
           ['Transformar porcentagens em decimais', `p = ${dec(r.p, 'completo')}, complemento = ${dec(r.q, 'completo')} e Ep = ${dec(r.ep, 'completo')}.`],
           ['Aplicar a fórmula', `n = ${fmt(z, 3)}² × ${dec(r.p, 'completo')} × ${dec(r.q, 'completo')} ÷ ${dec(r.ep, 'completo')}² ≈ ${dec(r.exato, casas)}.`],
@@ -145,6 +166,14 @@
         titulo: 'Intervalo de confiança', valor: `${dec(r.inferior, casas)} a ${dec(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a média populacional entre ${dec(r.inferior, casas)} e ${dec(r.superior, casas)}.`,
         extras: [['Margem de erro (Em)', dec(r.margem, casas)], ['Limite inferior', dec(r.inferior, casas)], ['Limite superior', dec(r.superior, casas)]],
+        formulas: [
+          ['Fórmula da margem de erro', eq('Em = ', F('Z · σ', '√n'))],
+          ['Substituindo os valores', eq('Em = ', F(x(z) + ' · ' + x(r.desvio), '√' + fmt(r.n, 0)), fim(r.margem, casas))],
+          ['Fórmula do intervalo', eq('IC = x̄ ± Em')],
+          ['Limite inferior', eq('x̄ − Em = ' + x(r.media) + ' − ' + x(r.margem), fim(r.inferior, casas))],
+          ['Limite superior', eq('x̄ + Em = ' + x(r.media) + ' + ' + x(r.margem), fim(r.superior, casas))],
+          ['Intervalo de confiança', eq('IC ≈ [' + dec(r.inferior, casas) + ' ; ' + dec(r.superior, casas) + ']')]
+        ],
         aviso: [r.aviso, casas === 'completo' ? '' : 'Exibição arredondada para cima. Para conferir os limites originais, selecione Valor completo.'].filter(Boolean).join(' '),
         passos: [
           ['Escolher o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
@@ -166,6 +195,18 @@
         titulo: 'Intervalo de confiança', valor: `${pct(r.inferior, casas)} a ${pct(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a proporção populacional entre ${pct(r.inferior, casas)} e ${pct(r.superior, casas)}.`,
         extras: [['Com a característica', pct(r.p, casas)], ['Sem a característica', pct(r.q, casas)], ['Margem de erro', `${dec(deslocar(r.margem, 2), casas)} pontos percentuais`]],
+        formulas: [
+          ['Proporção amostral', r.percentualInformado === null
+            ? eq('p = ', F('sucessos', 'n'), ' = ', F(fmt(r.sucessos, 0), fmt(r.n, 0)), ' ≈ ' + x(r.p))
+            : eq('p = ', F(x(r.percentualInformado), '100'), ' = ' + x(r.p))],
+          ['Complemento', eq('1 − p = 1 − ' + x(r.p) + ' ≈ ' + x(r.q))],
+          ['Fórmula da margem de erro', eq('Ep = Z · √(p · (1 − p) / n)')],
+          ['Substituindo os valores', eq('Ep = ' + x(z) + ' · √(', F(x(r.p) + ' · ' + x(r.q), fmt(r.n, 0)), ') ≈ ' + x(r.margem))],
+          ['Fórmula do intervalo', eq('IC = p ± Ep')],
+          ['Limite inferior', eq('p − Ep = ' + x(r.p) + ' − ' + x(r.margem) + ' ≈ ' + pct(r.inferior, casas))],
+          ['Limite superior', eq('p + Ep = ' + x(r.p) + ' + ' + x(r.margem) + ' ≈ ' + pct(r.superior, casas))],
+          ['Intervalo de confiança', eq('IC ≈ [' + pct(r.inferior, casas) + ' ; ' + pct(r.superior, casas) + ']')]
+        ],
         aviso: [...r.avisos, comparacao, casas === 'completo' ? '' : 'Exibição arredondada para cima. Para conferir os limites originais, selecione Valor completo.'].filter(Boolean).join(' '),
         passos: [
           // Se o exercício já der a porcentagem, basta dividir por 100, sem descobrir uma contagem.
@@ -184,6 +225,15 @@
         titulo: 'Novo tamanho da amostra', valor: `n = ${fmt(r.novoN, 0)}`,
         frase: `O cálculo resulta em ${dec(r.exato, casas)} observações antes de arredondar para cima. Para dividir o erro por ${dec(r.fator, 'completo')} é preciso aumentar a amostra em ${fmt(r.adicionar, 0)} observações, chegando a ${fmt(r.novoN, 0)} no total.`,
         extras: [['Amostra atual', fmt(r.n, 0)], ['Antes de arredondar', dec(r.exato, casas)], ['Erro atual', dec(r.erroAtual, casas)], ['Novo erro', dec(r.novoErro, casas)], ['Observações adicionais', fmt(r.adicionar, 0)]],
+        formulas: [
+          ['Margem de erro atual', eq('Em = ', F('Z · σ', '√n'), ' = ', F(x(z) + ' · ' + x(r.desvio), '√' + fmt(r.n, 0)), fim(r.erroAtual, casas))],
+          ['Nova margem de erro', eq('Novo Em = ', F('Em', 'k'), ' = ', F(x(r.erroAtual), x(r.fator)), fim(r.novoErro, casas))],
+          ['Fórmula da nova amostra', eq('Novo n = (', F('Z · σ', 'Novo Em'), ')²')],
+          ['Substituindo os valores', eq('Novo n = (', F(x(z) + ' · ' + x(r.desvio), x(r.novoErro)), ')²')],
+          ['Resultado do cálculo', eq('Novo n', fim(r.exato, casas))],
+          ['Tamanho mínimo (arredondando para cima)', eq('Novo n = ' + fmt(r.novoN, 0))],
+          ['Observações adicionais', eq(fmt(r.novoN, 0) + ' − ' + fmt(r.n, 0) + ' = ' + fmt(r.adicionar, 0))]
+        ],
         passos: [
           ['Calcular o erro atual', `Em = ${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ √${fmt(r.n, 0)} ≈ ${dec(r.erroAtual, casas)}.`],
           ['Diminuir o erro', `Novo Em = ${dec(r.erroAtual, 'completo')} ÷ ${dec(r.fator, 'completo')} ≈ ${dec(r.novoErro, casas)}.`],
@@ -231,6 +281,34 @@
       ? 'Os dois limites coincidem: a margem de erro calculada é nula ou indistinguível na precisão numérica.'
       : 'A linha azul representa a faixa estimada. O ponto central é o valor da amostra.'));
     return figura;
+  }
+
+  // RESOLUÇÃO COM FÓRMULA: monta expressões com frações de verdade, como no caderno.
+  // Usamos elementos HTML e textContent, não HTML vindo dos dados digitados.
+  function criarResolucaoFormula(formulas) {
+    const bloco = colocarTexto('div', 'contas-formula', '');
+    for (const [rotulo, partes] of formulas) {
+      const linha = colocarTexto('div', 'conta-formula', '');
+      linha.append(colocarTexto('span', 'conta-rotulo', rotulo));
+      const expressao = colocarTexto('div', 'conta-expressao', '');
+      for (const parte of partes) {
+        if (typeof parte === 'string') {
+          expressao.append(colocarTexto('span', 'conta-texto', parte));
+        } else {
+          // Uma fração é composta por dois textos separados por uma linha horizontal.
+          const fracao = colocarTexto('span', 'conta-fracao', '');
+          fracao.append(colocarTexto('span', 'conta-numerador', parte.numerador),
+            colocarTexto('span', 'conta-denominador', parte.denominador));
+          // O texto alternativo ajuda quem usa leitor de tela.
+          fracao.setAttribute('role', 'math');
+          fracao.setAttribute('aria-label', parte.numerador + ' dividido por ' + parte.denominador);
+          expressao.append(fracao);
+        }
+      }
+      linha.append(expressao);
+      bloco.append(linha);
+    }
+    return bloco;
   }
 
   // IMPRESSÃO: prepara uma cópia organizada da resolução para a folha de papel.
@@ -288,12 +366,19 @@
     const passos = colocarTexto('section', 'relatorio-bloco passos', '');
     passos.append(colocarTexto('h3', '', 'Resolução passo a passo'), lista.cloneNode(true));
     relatorio.append(passos);
+    // A resolução matemática também sai no PDF, mesmo que esteja fechada na tela.
+    const contas = painel.querySelector('.contas-formula');
+    if (contas) {
+      const secaoFormula = colocarTexto('section', 'relatorio-bloco', '');
+      secaoFormula.append(colocarTexto('h3', '', 'Resolução com fórmula'), contas.cloneNode(true));
+      relatorio.append(secaoFormula);
+    }
     return relatorio;
   }
 
   // A resposta é uma função que lembra os valores da conta original.
   // As três opções são 0 casas, 2 casas (padrão) e precisão completa.
-  function mostrarResultado(secao, criarResposta, casas = 2, aberto = false, focar = false) {
+  function mostrarResultado(secao, criarResposta, casas = 2, aberto = false, focar = false, formulaAberta = false) {
     const resposta = criarResposta(casas);
     const painel = secao.querySelector('.resultado');
     painel.replaceChildren();
@@ -312,7 +397,7 @@
       botao.setAttribute('aria-pressed', String(casas === modo));
       if (casas === modo) botaoAtivo = botao;
       botao.addEventListener('click', () => {
-        if (casas !== modo) mostrarResultado(secao, criarResposta, modo, detalhes.open, true);
+        if (casas !== modo) mostrarResultado(secao, criarResposta, modo, detalhes.open, true, detalhesFormula.open);
       });
       controles.append(botao);
     }
@@ -345,6 +430,15 @@
     });
     detalhes.append(lista);
     painel.append(detalhes);
+
+    // A nova seção é independente do passo a passo e começa recolhida.
+    // Ao alterar a precisão, preservamos o estado aberto/fechado das duas seções.
+    const detalhesFormula = document.createElement('details');
+    detalhesFormula.className = 'passos resolucao-formula';
+    detalhesFormula.open = formulaAberta;
+    const tituloFormula = colocarTexto('summary', '', 'Ver resolução com fórmula');
+    detalhesFormula.append(tituloFormula, criarResolucaoFormula(resposta.formulas));
+    painel.append(detalhesFormula);
 
     // O botão aparece só depois que uma conta foi resolvida com sucesso.
     // window.print abre a janela nativa: escolha "Salvar como PDF" como destino.
