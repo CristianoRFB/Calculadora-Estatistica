@@ -84,3 +84,7 @@ Os intervalos da média e da proporção mostram uma régua com os dois limites 
 No intervalo de confiança da proporção, digite uma quantidade inteira (por exemplo, 922) ou uma porcentagem com o símbolo % (por exemplo, 40%). O total da amostra é obrigatório nos dois casos. A entrada percentual entra diretamente como p na fórmula; não arredondamos uma quantidade de pessoas. O campo aceita 0% a 100% e mantém os avisos sobre aproximação normal.
 
 A frase de resposta dos cálculos de tamanho de amostra e redução do erro também mostra o valor antes de arredondar, na precisão selecionada. O número mínimo de observações permanece inteiro.
+
+### Imprimir ou salvar a resolução em PDF
+
+Depois de calcular, clique em **Imprimir / Salvar em PDF**, abaixo do passo a passo. Na janela do navegador, escolha Salvar como PDF ou uma impressora. A folha A4 contém os dados, fórmulas, resposta, gráfico (quando disponível), avisos e resolução completa, na precisão escolhida. Não imprime menus, botões ou outras abas. O recurso usa a impressão nativa do navegador, sem dependências ou serviço externo.

@@ -208,6 +208,61 @@
     return figura;
   }
 
+  // IMPRESSÃO: prepara uma cópia organizada da resolução para a folha de papel.
+  // Esta cópia fica escondida na tela. O CSS só a revela no modo de impressão.
+  // Não existe servidor de PDF: o navegador consegue salvar a folha como PDF sozinho.
+  function criarRelatorio(secao, painel, lista) {
+    const relatorio = colocarTexto('article', 'relatorio-impressao', '');
+    relatorio.append(colocarTexto('p', 'relatorio-marca', 'ESTATÍSTICA APLICADA • RESOLUÇÃO'));
+    relatorio.append(colocarTexto('h2', '', secao.querySelector('h2').textContent));
+
+    // Copia os nomes dos campos e os valores que foram usados na conta.
+    const dados = colocarTexto('section', 'relatorio-bloco', '');
+    dados.append(colocarTexto('h3', '', 'Dados do exercício'));
+    const tabela = colocarTexto('dl', 'relatorio-dados', '');
+    const form = secao.querySelector('form.dados');
+    for (const rotulo of form.querySelectorAll('label[for]')) {
+      const campo = document.getElementById(rotulo.htmlFor);
+      if (!campo) continue;
+      // Se a proporção é desconhecida, a fórmula usa 50% mesmo com o campo desativado.
+      const valor = campo.id === 'ap-p' && campo.disabled
+        ? '50% (proporção desconhecida)'
+        : campo.tagName === 'SELECT'
+          ? (campo.selectedOptions[0]?.textContent || campo.value)
+          : campo.value.trim();
+      if (!valor) continue; // Não imprime campos opcionais que ficaram vazios.
+      tabela.append(colocarTexto('dt', '', rotulo.textContent.trim()), colocarTexto('dd', '', valor));
+    }
+    const z = form.querySelector('[data-z]');
+    if (z) tabela.append(colocarTexto('dt', '', 'Valor crítico'), colocarTexto('dd', '', z.textContent));
+    dados.append(tabela);
+    relatorio.append(dados);
+
+    // Copia as fórmulas mostradas na aba selecionada, sem duplicar a matemática.
+    const formulas = colocarTexto('section', 'relatorio-bloco', '');
+    formulas.append(colocarTexto('h3', '', 'Fórmula utilizada'));
+    for (const expressao of secao.querySelectorAll('.formula .expressao')) {
+      formulas.append(colocarTexto('p', 'relatorio-formula', expressao.textContent));
+    }
+    relatorio.append(formulas);
+
+    // A resposta, os valores intermediários e o gráfico já estão prontos.
+    // cloneNode(true) faz uma cópia, sem retirar nada da tela original.
+    const resposta = colocarTexto('section', 'relatorio-bloco', '');
+    resposta.append(colocarTexto('h3', '', 'Resposta do exercício'));
+    for (const classe of ['.numero-resposta', '.frase-resposta', '.extras', '.grafico-ic', '.aviso']) {
+      const item = painel.querySelector(classe);
+      if (item) resposta.append(item.cloneNode(true));
+    }
+    relatorio.append(resposta);
+
+    // O passo a passo sai completo mesmo se estiver recolhido na tela.
+    const passos = colocarTexto('section', 'relatorio-bloco passos', '');
+    passos.append(colocarTexto('h3', '', 'Resolução passo a passo'), lista.cloneNode(true));
+    relatorio.append(passos);
+    return relatorio;
+  }
+
   // A resposta é uma função que lembra os valores da conta original.
   // 2 e 10 são as quantidades de casas decimais disponíveis para visualização.
   function mostrarResultado(secao, criarResposta, casas = 2, aberto = false, focar = false) {
@@ -251,6 +306,13 @@
     });
     detalhes.append(lista);
     painel.append(detalhes);
+
+    // O botão aparece só depois que uma conta foi resolvida com sucesso.
+    // window.print abre a janela nativa: escolha "Salvar como PDF" como destino.
+    const imprimir = colocarTexto('button', 'imprimir-pdf', 'Imprimir / Salvar em PDF');
+    imprimir.type = 'button';
+    imprimir.addEventListener('click', () => window.print());
+    painel.append(imprimir, criarRelatorio(secao, painel, lista));
     painel.hidden = false;
     // Devolve o foco ao botão para quem navega com o teclado.
     if (focar) botao.focus({preventScroll:true});

@@ -159,3 +159,43 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .grafico-rotulos span { display:block; color:var(--secundario); font-size:11px; }
 .grafico-rotulos strong { display:block; color:var(--azul-forte); font-size:clamp(12px,2vw,16px); font-variant-numeric:tabular-nums; margin-top:3px; }
 .grafico-nota { color:var(--secundario); font-size:12px; margin:16px 0 0; }
+
+/* IMPRESSÃO: o botão combina com a interface azul. O relatório não aparece na tela. */
+.imprimir-pdf { display:inline-flex; align-items:center; justify-content:center; min-height:44px; margin-top:18px; padding:10px 16px; border:1px solid var(--azul); border-radius:8px; color:var(--azul-forte); background:white; font-size:13px; font-weight:700; }
+.imprimir-pdf:hover { background:var(--azul-claro); }
+.relatorio-impressao { display:none; }
+
+/* @page define o papel e as margens. @media print só funciona ao imprimir. */
+@page { size:A4; margin:14mm; }
+@media print {
+  /* Folha branca, letras legíveis e sem navegação ou campos editáveis. */
+  body { background:white; color:#192638; font-size:10pt; line-height:1.4; }
+  .largura { width:100%; max-width:none; margin:0; }
+  .cabecalho, .introducao, .abas, .rodape, .assunto > h2,
+  .assunto > .descricao, .assunto > .colunas, #aba-ex { display:none !important; }
+  .assunto[hidden], .resultado[hidden] { display:none !important; }
+  .resultado { margin:0; padding:0; border:0; border-radius:0; box-shadow:none; }
+  /* Imprime somente a cópia preparada do resultado atual. */
+  .resultado > :not(.relatorio-impressao) { display:none !important; }
+  .relatorio-impressao { display:block; }
+  .relatorio-marca { color:#153f85; font-size:9pt; font-weight:800; letter-spacing:.8px; margin:0 0 5pt; }
+  .relatorio-impressao h2 { font-size:18pt; line-height:1.2; margin:0 0 12pt; }
+  .relatorio-bloco { border-top:1px solid #dbe3ef; padding-top:8pt; margin-top:9pt; }
+  .relatorio-bloco h3 { font-size:11pt; margin:0 0 6pt; break-after:avoid; }
+  .relatorio-dados { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:3pt 12pt; margin:0; }
+  .relatorio-dados dt { color:#465970; }
+  .relatorio-dados dd { margin:0; font-weight:600; overflow-wrap:anywhere; }
+  .relatorio-formula { margin:3pt 0; color:#153f85; font-size:12pt; overflow-wrap:anywhere; }
+  .relatorio-impressao .numero-resposta { font-size:22pt; padding:0; }
+  .relatorio-impressao .frase-resposta { margin:5pt 0 8pt; }
+  .relatorio-impressao .extras { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 12pt; margin:4pt 0; padding-top:2pt; }
+  .relatorio-impressao .extra-linha { padding:4pt 0; font-size:9pt; break-inside:avoid; }
+  .relatorio-impressao .grafico-ic { margin:8pt 0; padding:6pt 0; break-inside:avoid; }
+  .relatorio-impressao .grafico-regua { margin:2pt 0; }
+  .relatorio-impressao .grafico-faixa, .relatorio-impressao .grafico-centro, .relatorio-impressao .grafico-regua { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .relatorio-impressao .grafico-nota { margin:5pt 0 0; }
+  .relatorio-impressao .aviso { padding:6pt; margin:6pt 0; border:1px solid #dbe3ef; break-inside:avoid; }
+  .relatorio-impressao .passos ol { margin:4pt 0 0; }
+  .relatorio-impressao .passos li { padding:2pt 0 5pt 4pt; break-inside:avoid; }
+  .relatorio-impressao .passos li p { margin:2pt 0 0; font-size:9pt; }
+}
