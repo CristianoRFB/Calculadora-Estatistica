@@ -4,7 +4,9 @@
  */
 (function (global) {
   'use strict';
+  // Cada cenário guarda o texto do botão e os valores que serão preenchidos.
   const caso = (rotulo, campos) => ({rotulo, campos});
+  // Cada linha tem código, aba, título, enunciado e cenários de treino.
   const exemplos = [
     ['A1','am','Tempo de resposta de API','Uma API tem desvio-padrão populacional de 980 ms. Com 95% de confiança e erro máximo de 75 ms, quantas requisições devem ser medidas?',[caso('Preencher dados',{confianca:95,desvio:980,erro:75})]],
     ['A2','am','Comparar graus de confiança','Para uma API com σ = 870 ms e Em = 65 ms, compare as amostras mínimas com 90%, 95% e 99% de confiança.',[90,95,99].map(confianca=>caso(`${confianca}% de confiança`,{confianca,desvio:870,erro:65}))],
@@ -36,6 +38,7 @@
     const form = document.getElementById(`form-${aba}`);
     const tab = document.querySelector(`.aba[data-aba="${aba}"]`);
     if (!form || !tab) return;
+    // Apaga os campos antigos antes de colocar os novos.
     form.reset();
     for (const [nome, valor] of Object.entries(campos)) {
       const campo = form.elements.namedItem(nome);
@@ -43,16 +46,19 @@
       if (campo.type === 'checkbox') campo.checked = Boolean(valor);
       else campo.value = String(valor);
     }
+    // Avisa a interface da mudança e abre a aba correta.
     form.dispatchEvent(new Event('change', {bubbles:true}));
     tab.click();
     form.querySelector('button[type="submit"]').focus();
   }
+  // Cria um elemento visual e coloca texto nele.
   function criar(tag, texto, classe) {
     const el = document.createElement(tag);
     el.textContent = texto;
     if (classe) el.className = classe;
     return el;
   }
+  // Monta os cartões de exercício, separados por assunto.
   for (const [aba, titulo] of Object.entries(grupos)) {
     const grupo = criar('section','','grupo-exemplos');
     grupo.append(criar('h3',titulo));

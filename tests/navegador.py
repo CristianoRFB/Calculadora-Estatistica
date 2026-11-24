@@ -44,7 +44,17 @@ with sync_playwright() as p:
     assert page.locator('#ap-complemento').inner_text()=='50%'
     page.locator('#form-ap button[type="submit"]').click()
     assert page.locator('#aba-ap .resultado').is_visible()
-    submit(page,'im',{'media':'320','desvio':'45','n':'50'},'307,5266 a 332,4734')
+    submit(page,'im',{'media':'320','desvio':'45','n':'50'},'307,53 a 332,47')
+    # Alterna precisão e verifica que a resolução permanece aberta.
+    answer=page.locator('#aba-im .resultado')
+    answer.locator('summary').click()
+    for _ in range(10):
+        answer.locator('.precisao').click()
+        assert '307,526636' in answer.locator('.numero-resposta').inner_text()
+        assert answer.locator('details').evaluate('(el) => el.open')
+        assert page.locator('#im-media').input_value()=='320'
+        answer.locator('.precisao').click()
+        assert '307,53 a 332,47' in answer.locator('.numero-resposta').inner_text()
     page.locator('[data-aba="ip"]').click()
     page.locator('#ip-confianca').select_option('90')
     submit(page,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
@@ -104,6 +114,8 @@ with sync_playwright() as p:
             q.locator('[data-aba="ip"]').click()
             q.locator('#ip-confianca').select_option('90')
             submit(q,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
+            q.locator('#aba-ip .precisao').click()
+            assert not q.evaluate('document.documentElement.scrollWidth > window.innerWidth + 1')
             q.screenshot(path=str(root/'tests/celular-azul.png'),full_page=True)
         q.close()
     print('Responsividade: 11 larguras entre 320px e 1920px: OK')

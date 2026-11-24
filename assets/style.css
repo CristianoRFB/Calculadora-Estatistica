@@ -2,24 +2,30 @@
  * VISUAL — modifique cores e espaços aqui, sem mexer nas fórmulas.
  * Apenas azul, tons neutros e branco. Não usamos bibliotecas de estilo.
  */
+/* Apelidos das cores usados no site inteiro. */
 :root { color-scheme: light; --azul:#2157af; --azul-forte:#153f85; --azul-claro:#edf3fd;
   --texto:#192638; --secundario:#617188; --linha:#dbe3ef; --fundo:#f7f9fc; --branco:#fff; }
 * { box-sizing:border-box; }
+/* Fonte, cor do texto e fundo geral. */
 body { margin:0; font:15px/1.55 system-ui,-apple-system,"Segoe UI",Arial,sans-serif; background:var(--fundo); color:var(--texto); }
 button, input, select { font:inherit; }
 button { cursor:pointer; }
 [hidden] { display:none !important; }
+/* Centraliza o conteúdo e limita sua largura. */
 .largura { width:min(1130px,calc(100% - 44px)); margin-inline:auto; }
+/* Barra do topo e identificação. */
 .cabecalho { background:#fff; border-bottom:1px solid var(--linha); }
 .topo { min-height:73px; display:flex; justify-content:space-between; align-items:center; gap:20px; }
 .marca { display:inline-flex; align-items:center; gap:11px; color:var(--texto); text-decoration:none; font-size:19px; letter-spacing:-.55px; }
 .marca strong { color:var(--azul); font-weight:700; }
 .marca-sinal { display:grid; place-items:center; background:var(--azul-forte); color:white; width:37px; height:37px; border-radius:9px; font-size:22px; font-weight:650; }
 .marca-extra { color:var(--secundario); font-size:13px; }
+/* Título e descrição da página. */
 .introducao { padding:40px 0 23px; }
 .sobretitulo { font-size:11px; font-weight:800; letter-spacing:1.5px; color:var(--azul); }
 h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; margin:9px 0 9px; font-weight:750; }
 .introducao p { margin:0; color:var(--secundario); max-width:660px; }
+/* Organiza os botões de assunto. */
 .abas { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:9px; margin:0 0 33px; }
 .aba { min-width:0; text-align:left; display:flex; flex-direction:column; justify-content:center; gap:2px; padding:13px 15px; border-radius:10px; border:1px solid var(--linha); color:var(--texto); background:white; min-height:70px; transition:border-color .12s,background .12s; }
 .aba small { color:var(--secundario); font-size:11px; line-height:1.25; }
@@ -29,44 +35,55 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .aba.ativa strong { color:var(--azul-forte); }
 .assunto > h2 { margin:0 0 4px; font-size:23px; letter-spacing:-.6px; line-height:1.3; }
 .descricao { margin:0 0 22px; color:var(--secundario); }
+/* Coloca dados e fórmula lado a lado. */
 .colunas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.95fr); gap:19px; align-items:start; }
+/* Caixas brancas que agrupam informações. */
 .cartao { background:var(--branco); border:1px solid var(--linha); border-radius:13px; padding:26px 28px; box-shadow:0 3px 16px rgba(25,50,80,.025); }
 .cartao h3 { font-size:16px; margin:0 0 18px; font-weight:740; letter-spacing:-.2px; }
+/* Campos do formulário em uma coluna. */
 .dados { display:flex; flex-direction:column; }
 .dados > label:not(.marcar) { font-weight:630; font-size:13px; margin:0 0 6px; }
 .dados > input, .confianca select { width:100%; border:1px solid #cdd8e7; border-radius:7px; padding:11px 13px; height:44px; color:var(--texto); background:white; outline:none; margin:0 0 17px; }
 .dados > input::placeholder { color:#97a3b2; }
 .dados > input:focus, .confianca select:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(33,87,175,.11); }
 .dados > input:disabled { background:#f4f6fa; color:var(--secundario); }
+/* Lista de confiança e valor Z ao lado. */
 .confianca { display:flex; align-items:start; gap:12px; }
 .confianca select { flex:1; min-width:0; }
 .confianca output { flex:0 0 auto; margin-top:4px; padding:7px 11px; color:var(--azul-forte); background:var(--azul-claro); border-radius:7px; font-weight:700; font-size:12px; }
 .marcar { display:flex; align-items:center; gap:9px; margin:-4px 0 18px; color:var(--texto); font-size:13px; cursor:pointer; }
 .marcar input { width:17px; height:17px; accent-color:var(--azul); }
+/* Resultados automáticos que o usuário não edita. */
 .dado-automatico { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#f4f7fc; border:1px solid #e5eaf4; border-radius:7px; padding:11px 13px; margin:0 0 17px; font-size:13px; color:var(--secundario); }
 .dado-automatico output { color:var(--azul-forte); font-weight:740; text-align:right; }
 .opcional { color:var(--secundario); font-weight:400; }
+/* Aparência dos botões. */
 .acoes { display:flex; gap:10px; margin-top:6px; }
 .acoes button { border-radius:8px; border:1px solid var(--linha); height:44px; padding:0 22px; font-weight:700; }
 .primario { color:white; background:var(--azul); border-color:var(--azul) !important; }
 .primario:hover { background:var(--azul-forte); }
 .limpar { background:white; color:var(--secundario); }
 .limpar:hover { border-color:#93a8c9; color:var(--texto); }
+/* Mensagem vermelha quando o valor é inválido. */
 .erro { background:#fff1ef; border:1px solid #efbeb8; border-radius:8px; color:#9b3127; padding:10px 12px; margin-bottom:10px; font-size:13px; }
+/* Aparência da expressão matemática. */
 .formula .expressao { display:block; color:var(--azul-forte); background:#f2f6fc; border:1px solid #e0e9f8; border-radius:8px; font-family:"Cambria Math",Georgia,serif; font-size:clamp(18px,2.2vw,24px); text-align:center; padding:17px 10px; margin:12px 0; overflow-wrap:anywhere; }
 .formula dl { display:grid; grid-template-columns:65px 1fr; gap:8px 14px; font-size:13px; margin:23px 0 0; }
 .formula dt { color:var(--azul-forte); font-weight:740; }
 .formula dd { margin:0; color:var(--secundario); }
 .nota-formula { color:var(--secundario); font-size:13px; margin:19px 0 0; }
+/* Painel da resposta calculada. */
 .resultado { border:1px solid #bfceea; border-radius:13px; background:white; padding:27px 28px; margin-top:19px; margin-bottom:20px; box-shadow:0 3px 16px rgba(25,50,80,.025); }
 .resposta-superior { font-size:11px; letter-spacing:1.3px; font-weight:800; color:var(--azul); }
 .numero-resposta { display:block; color:var(--azul-forte); font-size:clamp(30px,4.3vw,43px); letter-spacing:-1.1px; line-height:1.25; padding:8px 0 3px; overflow-wrap:anywhere; }
 .frase-resposta { margin:5px 0 18px; max-width:760px; color:#3a4a60; }
+/* Organiza os valores intermediários. */
 .extras { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; border-top:1px solid var(--linha); margin:13px 0 12px; padding-top:8px; }
 .extra-linha { display:flex; gap:12px; align-items:center; justify-content:space-between; border-bottom:1px solid #eef2f7; padding:9px 0; font-size:13px; }
 .extra-linha span { color:var(--secundario); }
 .extra-linha strong { color:var(--texto); text-align:right; }
 .aviso { background:var(--azul-claro); color:var(--azul-forte); padding:12px 14px; border-radius:7px; font-size:13px; margin:18px 0; }
+/* Resolução que pode abrir e fechar. */
 .passos { border-top:1px solid var(--linha); margin:20px 0 0; padding-top:12px; }
 .passos summary { color:var(--azul-forte); font-weight:700; cursor:pointer; padding:5px 0; }
 .passos summary:hover { text-decoration:underline; }
@@ -75,14 +92,17 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .passos li::marker { color:var(--azul); font-weight:700; }
 .passos li strong { font-size:14px; }
 .passos li p { font-size:13px; color:var(--secundario); margin:4px 0 0; overflow-wrap:anywhere; }
+/* Identificação no fim da página. */
 .rodape { display:flex; justify-content:space-between; gap:14px; border-top:1px solid var(--linha); padding:24px 0 30px; margin-top:58px; color:var(--secundario); font-size:12px; }
 :focus-visible { outline:3px solid #79a8f4; outline-offset:2px; }
+/* Adapta a largura para tablets. */
 @media (max-width: 860px) {
   .colunas { grid-template-columns:1fr; }
   .abas { gap:7px; }
   .aba { padding:11px 9px; min-height:72px; }
   .aba strong { font-size:13px; }
 }
+/* Adapta a página para celular. */
 @media (max-width: 620px) {
   .largura { width:min(100% - 28px,500px); }
   .topo { min-height:63px; }
@@ -113,3 +133,9 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .exemplo-acoes { flex-wrap:wrap; margin-top:auto; }
 .exemplo-acoes button { min-height:44px; height:auto; padding:9px 14px; }
 @media (max-width:620px) { .grade-exemplos { grid-template-columns:1fr; } }
+
+/* Botão de precisão: muda só a aparência dos números. */
+.precisao { background:transparent; color:var(--azul-forte); border:1px solid var(--linha); border-radius:7px; padding:7px 12px; font-size:13px; font-weight:650; margin:4px 0 9px; }
+.precisao:hover { background:var(--azul-claro); }
+/* Permite quebrar números longos em telas pequenas. */
+.extra-linha > * { min-width:0; overflow-wrap:anywhere; }

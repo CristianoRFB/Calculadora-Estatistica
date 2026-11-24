@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- Instruções ao navegador: título, tamanho da tela e arquivos necessários. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#174CA0">
   <meta name="description" content="Calcule tamanho da amostra e intervalos de confiança, com explicações simples e claras.">
   <title>Estatística Aplicada — Calculadora</title>
+  <!-- CSS controla a aparência. JavaScript conecta os campos aos cálculos. -->
   <link rel="stylesheet" href="./assets/style.css">
   <script src="./src/calculos.js" defer></script>
   <script src="./src/app.js" defer></script>
@@ -30,6 +32,7 @@
     </div>
 
     <!-- As cinco abas são os cinco assuntos do index.html de referência. -->
+    <!-- data-aba indica qual seção abrir ao clicar no botão. -->
     <nav class="abas" aria-label="Escolher cálculo">
       <button type="button" class="aba ativa" data-aba="am" aria-current="page"><small>Tamanho da amostra</small><strong>Média</strong></button>
       <button type="button" class="aba" data-aba="ap"><small>Tamanho da amostra</small><strong>Proporção</strong></button>
@@ -44,6 +47,7 @@
       <h2 id="titulo-am">Tamanho da amostra para a média</h2>
       <p class="descricao">Quantas observações preciso para estimar uma média com a precisão desejada?</p>
       <div class="colunas">
+        <!-- form reúne as entradas; label é o nome visível, input é o espaço para digitar. -->
         <form class="cartao dados" id="form-am" novalidate>
           <h3>Dados do exercício</h3>
           <label for="am-confianca">Grau de confiança</label>
@@ -57,6 +61,7 @@
         </form>
         <aside class="cartao formula"><h3>Fórmula utilizada</h3><div class="expressao">n = (Z · σ / Em)²</div><dl><dt>n</dt><dd>Tamanho mínimo da amostra</dd><dt>σ</dt><dd>Desvio-padrão populacional</dd><dt>Em</dt><dd>Erro máximo aceito</dd><dt>Z</dt><dd>Valor relacionado à confiança</dd></dl></aside>
       </div>
+      <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>
     </section>
 
@@ -65,6 +70,7 @@
       <h2 id="titulo-ap">Tamanho da amostra para a proporção</h2>
       <p class="descricao">Quantas pessoas ou observações preciso para estimar uma porcentagem?</p>
       <div class="colunas">
+        <!-- form reúne as entradas; label é o nome visível, input é o espaço para digitar. -->
         <form class="cartao dados" id="form-ap" novalidate>
           <h3>Dados do exercício</h3>
           <label for="ap-confianca">Grau de confiança</label>
@@ -80,6 +86,7 @@
         </form>
         <aside class="cartao formula"><h3>Fórmula utilizada</h3><div class="expressao">n = Z² · p · (1 − p) / Ep²</div><dl><dt>p</dt><dd>Proporção estimada</dd><dt>1 − p</dt><dd>Complemento da proporção</dd><dt>Ep</dt><dd>Erro da proporção, em decimal</dd><dt>Z</dt><dd>Valor relacionado à confiança</dd></dl></aside>
       </div>
+      <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>
     </section>
 
@@ -88,6 +95,7 @@
       <h2 id="titulo-im">Intervalo de confiança para a média</h2>
       <p class="descricao">Entre quais valores pode estar a média verdadeira da população?</p>
       <div class="colunas">
+        <!-- form reúne as entradas; label é o nome visível, input é o espaço para digitar. -->
         <form class="cartao dados" id="form-im" novalidate>
           <h3>Dados do exercício</h3>
           <label for="im-confianca">Grau de confiança</label>
@@ -100,6 +108,7 @@
         </form>
         <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">Em = Z · σ / √n</div><div class="expressao">IC = x̄ ± Em</div><dl><dt>x̄</dt><dd>Média da amostra</dd><dt>Em</dt><dd>Margem de erro calculada</dd><dt>n</dt><dd>Quantidade de observações</dd></dl></aside>
       </div>
+      <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>
     </section>
 
@@ -108,6 +117,7 @@
       <h2 id="titulo-ip">Intervalo de confiança para a proporção</h2>
       <p class="descricao">Entre quais porcentagens pode estar a proporção verdadeira da população?</p>
       <div class="colunas">
+        <!-- form reúne as entradas; label é o nome visível, input é o espaço para digitar. -->
         <form class="cartao dados" id="form-ip" novalidate>
           <h3>Dados do exercício</h3>
           <label for="ip-confianca">Grau de confiança</label>
@@ -121,6 +131,7 @@
         </form>
         <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">p = sucessos / n</div><div class="expressao">Ep = Z · √[p(1 − p) / n]</div><div class="expressao">IC = p ± Ep</div><dl><dt>p</dt><dd>Proporção da amostra</dd><dt>Ep</dt><dd>Margem de erro da proporção</dd><dt>n</dt><dd>Total pesquisado</dd></dl></aside>
       </div>
+      <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>
     </section>
 
@@ -129,6 +140,7 @@
       <h2 id="titulo-de">Diminuir o erro da média</h2>
       <p class="descricao">Se eu quiser um erro menor, quantas observações adicionais serão necessárias?</p>
       <div class="colunas">
+        <!-- form reúne as entradas; label é o nome visível, input é o espaço para digitar. -->
         <form class="cartao dados" id="form-de" novalidate>
           <h3>Dados do exercício</h3>
           <label for="de-confianca">Grau de confiança</label>
@@ -142,6 +154,7 @@
         </form>
         <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">Novo Em = Em / k</div><div class="expressao">Novo n = (Z · σ / Novo Em)²</div><dl><dt>k</dt><dd>Quantas vezes o erro vai diminuir</dd><dt>Em</dt><dd>Margem de erro atual</dd><dt>n</dt><dd>Quantidade de observações</dd></dl><p class="nota-formula">Ao reduzir o erro pela metade, precisamos de aproximadamente 4 vezes mais observações.</p></aside>
       </div>
+      <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>
     </section>
 

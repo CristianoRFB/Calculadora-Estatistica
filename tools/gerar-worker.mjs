@@ -1,13 +1,16 @@
 /*
  * GERAÇÃO PARA CLOUDFLARE
- * Converte os quatro arquivos do site num único Worker estático.
+ * Converte os cinco arquivos do site num único Worker estático.
  * O site NÃO precisa de API nem de banco: todas as fórmulas rodam no navegador.
  * Se alterar o CSS, HTML ou JavaScript, execute 'npm run build' novamente.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+// Lista dos arquivos do site.
 const files = ['index.html', 'assets/style.css', 'src/calculos.js', 'src/app.js', 'src/exemplos.js'];
+// Lê o texto de cada arquivo e associa ao endereço público.
 const paths = Object.fromEntries(files.map(name => ['/'.concat(name), readFileSync(new URL('../' + name, import.meta.url), 'utf8')]));
 paths['/'] = paths['/index.html'];
+// Cria o Worker que entrega os arquivos ao navegador.
 const script = `// Gerado automaticamente. Edite os arquivos na raiz, não este arquivo.\n` +
   `const FILES = ${JSON.stringify(paths)};\n` +
   `export default { async fetch(request) {\n` +

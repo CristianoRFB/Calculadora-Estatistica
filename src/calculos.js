@@ -33,22 +33,26 @@
     return resultado;
   }
 
+  // Verifica se um valor passa do mínimo permitido.
   function validarMaior(valor, nome, limite = 0) {
     if (valor <= limite) throw new Error(`${nome}: deve ser maior que ${limite}.`);
     return valor;
   }
+  // Contagens precisam ser inteiras: não existe meia pessoa pesquisada.
   function inteiro(valor, nome, permiteZero = false) {
     if (!Number.isSafeInteger(valor) || valor < (permiteZero ? 0 : 1)) {
       throw new Error(`${nome}: digite um número inteiro ${permiteZero ? 'a partir de zero' : 'maior que zero'}.`);
     }
     return valor;
   }
+  // Divide por 100: 30% vira 0,30 para entrar na fórmula.
   function porcentagem(valor, nome, permiteZero = false) {
     if (valor < (permiteZero ? 0 : Number.MIN_VALUE) || valor >= 100) {
       throw new Error(`${nome}: informe uma porcentagem ${permiteZero ? 'de 0 a menos de 100' : 'maior que 0 e menor que 100'}.`);
     }
     return valor / 100;
   }
+  // Procura o número Z na tabela, usando a confiança escolhida.
   function valorCritico(confianca) {
     if (!Object.prototype.hasOwnProperty.call(TABELA_Z, confianca)) {
       throw new Error('Grau de confiança: escolha 90%, 95% ou 99%.');
@@ -70,6 +74,7 @@
     const z = valorCritico(confianca);
     validarMaior(desvio, 'Desvio-padrão');
     validarMaior(erro, 'Erro máximo');
+    // Elevar ao quadrado significa multiplicar o número por ele mesmo.
     const exato = (z * desvio / erro) ** 2;
     return {z, desvio, erro, exato, n: amostraInteira(exato)};
   }
@@ -80,6 +85,7 @@
     const z = valorCritico(confianca);
     const p = porcentagem(percentual, 'Proporção estimada');
     const ep = porcentagem(erro, 'Erro da proporção');
+    // O complemento é o que falta para completar 100%.
     const q = 1 - p;
     const exato = z ** 2 * p * q / ep ** 2;
     return {z, p, q, ep, exato, n: amostraInteira(exato)};
@@ -91,7 +97,9 @@
     const z = valorCritico(confianca);
     if (desvio < 0) throw new Error('Desvio-padrão: não pode ser negativo.');
     inteiro(n, 'Tamanho da amostra');
+    // Math.sqrt calcula a raiz quadrada. A margem mostra a distância até os limites.
     const margem = z * desvio / Math.sqrt(n);
+    // Subtrai e soma a margem para obter os extremos.
     const inferior = media - margem, superior = media + margem;
     if (![inferior, superior].every(Number.isFinite)) throw new Error('Resultado grande demais. Revise os dados.');
     return {z, media, desvio, n, margem, inferior, superior, amplitude: superior - inferior, aviso: n <= 30 ? 'Se o desvio é amostral e n é pequeno, pode ser necessário usar t de Student. Esta calculadora segue o método Z da aula.' : ''};
@@ -105,9 +113,12 @@
     inteiro(n, 'Tamanho da amostra');
     inteiro(sucessos, 'Quantidade com a característica', true);
     if (sucessos > n) throw new Error('Quantidade com a característica: não pode ultrapassar o total pesquisado.');
+    // Por exemplo, 40 de 100 = 0,40 = 40%; os demais são 60%.
     const p = sucessos / n, q = 1 - p;
+    // Aplica a fórmula da incerteza da proporção, usando a tabela Z.
     const margem = z * Math.sqrt(p * q / n);
     const inferior = p - margem, superior = p + margem;
+    // Uma lista que guarda alertas sem impedir a exibição do cálculo.
     const avisos = [];
     if (sucessos < 5 || n - sucessos < 5) avisos.push('Poucos casos em um dos grupos: este método de aproximação pode não ser adequado.');
     if (inferior < 0 || superior > 1) avisos.push('A fórmula produziu um limite fora de 0% a 100%. Confira a adequação do método.');
@@ -123,6 +134,7 @@
     validarMaior(desvio, 'Desvio-padrão');
     inteiro(n, 'Tamanho atual da amostra');
     validarMaior(fator, 'Dividir o erro por', 1);
+    // Descobre o erro antes de reduzir; depois divide pelo fator escolhido.
     const erroAtual = z * desvio / Math.sqrt(n);
     const novoErro = erroAtual / fator;
     const exato = (z * desvio / novoErro) ** 2;
@@ -130,6 +142,7 @@
     return {z, desvio, n, fator, erroAtual, novoErro, exato, novoN, adicionar: novoN - n};
   }
 
+  // Compartilha as funções com a interface e os testes.
   global.Calculos = Object.freeze({numero, inteiro, porcentagem, valorCritico,
     amostraInteira, amostraMedia, amostraProporcao, intervaloMedia,
     intervaloProporcao, diminuirErro});

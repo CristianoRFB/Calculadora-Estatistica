@@ -68,3 +68,9 @@ A organização por abas e os cinco temas foram estudados no repositório [Guilh
 
 ## Exemplos para praticar
 A aba Exemplos contém 18 adaptações dos exercícios A1–A4, B1–B7 e C1–C7 dos três PDFs, mais um treino extra de redução de erro (19 enunciados). Os 23 botões preenchem os dados sem calcular automaticamente. Para editar os exemplos, abra `src/exemplos.js`.
+
+## Casas decimais
+
+Os resultados exibem duas casas decimais por padrão. O botão **Mostrar mais casas decimais** mostra até dez casas e permite voltar a duas. Contagens inteiras continuam inteiras. O botão não refaz a conta: apenas apresenta os números já calculados. O valor Z e os dados originais permanecem com a precisão necessária à resolução.
+
+Os comentários em português explicam as partes do HTML, CSS, funções matemáticas, interface, exemplos e geração do Worker. Comece por index.html (campos), src/calculos.js (contas), src/app.js (botões e respostas), assets/style.css (aparência) e src/exemplos.js (enunciados).
