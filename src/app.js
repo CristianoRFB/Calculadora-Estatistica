@@ -58,8 +58,9 @@
     try {
       const form = $('form-ip');
       const n = M.inteiro(lido(form, 'n', 'Tamanho da amostra'), 'Tamanho da amostra');
-      const k = M.inteiro(lido(form, 'sucessos', 'Quantidade com a característica'), 'Quantidade com a característica', true);
-      $('ip-proporcao').textContent = k <= n ? `${percentual(k / n)} com a característica` : '—';
+      // Lê o texto inteiro para não perder o símbolo %. A matemática decide qual modo usar.
+      const dado = M.lerCaracteristica(form.elements.namedItem('sucessos').value, n);
+      $('ip-proporcao').textContent = `${percentual(dado.p)} com a característica`;
     } catch (_) { $('ip-proporcao').textContent = '—'; }
   }
   // Calcula o erro atual para descobrir como diminuir a margem.
@@ -127,7 +128,7 @@
     // IP: proporção menos a margem e proporção mais a margem.
     if (id === 'ip') {
       const padraoTexto = form.elements.namedItem('padrao').value.trim();
-      const r = M.intervaloProporcao({confianca: confianca(form), sucessos: lido(form, 'sucessos', 'Quantidade com a característica'), n: lido(form, 'n', 'Tamanho da amostra'), padrao: padraoTexto ? lido(form, 'padrao', 'Padrão aceitável') : null});
+      const r = M.intervaloProporcao({confianca: confianca(form), sucessos: form.elements.namedItem('sucessos').value, n: lido(form, 'n', 'Tamanho da amostra'), padrao: padraoTexto ? lido(form, 'padrao', 'Padrão aceitável') : null});
       let comparacao = '';
       if (r.padrao !== null) comparacao = r.atendePadrao
         ? `O limite superior está abaixo do padrão de ${fmt(r.padrao)}%. Pelo critério informado, a condição foi atendida.`
@@ -139,7 +140,10 @@
         extras: [['Com a característica', pct(r.p, casas)], ['Sem a característica', pct(r.q, casas)], ['Margem de erro', `${dec(r.margem * 100, casas)} pontos percentuais`]],
         aviso: [...r.avisos, comparacao].filter(Boolean).join(' '),
         passos: [
-          ['Encontrar a proporção', `p = ${fmt(r.sucessos, 0)} ÷ ${fmt(r.n, 0)} = ${fmt(r.p, 6)}; complemento = ${fmt(r.q, 6)}.`],
+          // Se o exercício já der a porcentagem, basta dividir por 100, sem descobrir uma contagem.
+          ['Encontrar a proporção', r.percentualInformado === null
+            ? `p = ${fmt(r.sucessos, 0)} ÷ ${fmt(r.n, 0)} = ${fmt(r.p, 6)}; complemento = ${fmt(r.q, 6)}.`
+            : `p = ${fmt(r.percentualInformado, 10)}% ÷ 100 = ${fmt(r.p, 10)}; complemento = ${fmt(r.q, 10)}.`],
           ['Calcular a margem de erro', `Ep = ${fmt(z, 3)} × √(${fmt(r.p, 6)} × ${fmt(r.q, 6)} ÷ ${fmt(r.n, 0)}) = ${dec(r.margem, casas)}.`],
           ['Encontrar os limites', `Subtraímos e somamos a margem à proporção: ${pct(r.inferior, casas)} a ${pct(r.superior, casas)}.`]
         ]

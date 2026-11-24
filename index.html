@@ -122,14 +122,14 @@
           <h3>Dados do exercício</h3>
           <label for="ip-confianca">Grau de confiança</label>
           <div class="confianca"><select id="ip-confianca" name="confianca"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select><output data-z="ip">Z = 1,96</output></div>
-          <label for="ip-sucessos">Quantidade com a característica</label><input id="ip-sucessos" name="sucessos" inputmode="numeric" autocomplete="off" placeholder="Digite a quantidade">
+          <label for="ip-sucessos">Quantidade ou porcentagem com a característica</label><input id="ip-sucessos" name="sucessos" inputmode="text" autocomplete="off" placeholder="Ex.: 922 ou 40%">
           <label for="ip-n">Tamanho da amostra (n)</label><input id="ip-n" name="n" inputmode="numeric" autocomplete="off" placeholder="Digite o total pesquisado">
           <div class="dado-automatico"><span>Proporção da amostra</span><output id="ip-proporcao">—</output></div>
           <label for="ip-padrao">Padrão aceitável (%) <span class="opcional">— opcional</span></label><input id="ip-padrao" name="padrao" inputmode="decimal" autocomplete="off" placeholder="Somente se o exercício pedir">
           <div class="erro" role="alert" hidden></div>
           <div class="acoes"><button class="primario" type="submit">Calcular</button><button class="limpar" type="reset">Limpar</button></div>
         </form>
-        <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">p = sucessos / n</div><div class="expressao">Ep = Z · √[p(1 − p) / n]</div><div class="expressao">IC = p ± Ep</div><dl><dt>p</dt><dd>Proporção da amostra</dd><dt>Ep</dt><dd>Margem de erro da proporção</dd><dt>n</dt><dd>Total pesquisado</dd></dl></aside>
+        <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">p = sucessos / n ou % / 100</div><div class="expressao">Ep = Z · √[p(1 − p) / n]</div><div class="expressao">IC = p ± Ep</div><dl><dt>p</dt><dd>Proporção da amostra</dd><dt>Ep</dt><dd>Margem de erro da proporção</dd><dt>n</dt><dd>Total pesquisado</dd></dl></aside>
       </div>
       <!-- Espaço vazio: app.js só mostra a resposta depois de Calcular. -->
       <div class="resultado" hidden></div>

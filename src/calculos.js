@@ -105,25 +105,42 @@
     return {z, media, desvio, n, margem, inferior, superior, amplitude: superior - inferior, aviso: n <= 30 ? 'Se o desvio é amostral e n é pequeno, pode ser necessário usar t de Student. Esta calculadora segue o método Z da aula.' : ''};
   }
 
+  // Lê o mesmo campo de duas maneiras: 40 significa 40 pessoas; 40% significa 40 de cada 100.
+  // O símbolo % é o sinal de que a pessoa já informou a proporção, não uma contagem.
+  // n continua sendo o total pesquisado. Não arredondamos nem inventamos pessoas.
+  function lerCaracteristica(texto, n) {
+    inteiro(n, 'Tamanho da amostra');
+    const entrada = String(texto ?? '').trim();
+    if (entrada.endsWith('%')) {
+      // Retira somente o último símbolo %. Um texto como 40%% continua inválido.
+      const percentual = numero(entrada.slice(0, -1), 'Porcentagem com a característica');
+      if (percentual < 0 || percentual > 100) throw new Error('Porcentagem com a característica: use um valor entre 0% e 100%.');
+      return {p: percentual / 100, sucessos: null, percentualInformado: percentual};
+    }
+    // Sem %, o número precisa representar uma quantidade inteira de pessoas ou itens.
+    const sucessos = inteiro(numero(texto, 'Quantidade com a característica'), 'Quantidade com a característica', true);
+    if (sucessos > n) throw new Error('Quantidade com a característica: não pode ultrapassar o total pesquisado.');
+    return {p: sucessos / n, sucessos, percentualInformado: null};
+  }
+
   // FUNCIONAMENTO DA FÓRMULA: INTERVALO DE CONFIANÇA DA PROPORÇÃO
   // p = pessoas com a característica / pessoas pesquisadas.
   // Ep = Z × raiz[p(1-p)/n]. Não alteramos os limites artificialmente.
   function intervaloProporcao({confianca = 95, sucessos, n, padrao = null}) {
     const z = valorCritico(confianca);
-    inteiro(n, 'Tamanho da amostra');
-    inteiro(sucessos, 'Quantidade com a característica', true);
-    if (sucessos > n) throw new Error('Quantidade com a característica: não pode ultrapassar o total pesquisado.');
-    // Por exemplo, 40 de 100 = 0,40 = 40%; os demais são 60%.
-    const p = sucessos / n, q = 1 - p;
+    // Descobre p pela quantidade ou usa diretamente a porcentagem informada.
+    const dado = lerCaracteristica(sucessos, n);
+    const p = dado.p, q = 1 - p;
     // Aplica a fórmula da incerteza da proporção, usando a tabela Z.
     const margem = z * Math.sqrt(p * q / n);
     const inferior = p - margem, superior = p + margem;
     // Uma lista que guarda alertas sem impedir a exibição do cálculo.
     const avisos = [];
-    if (sucessos < 5 || n - sucessos < 5) avisos.push('Poucos casos em um dos grupos: este método de aproximação pode não ser adequado.');
+    // Na entrada percentual, p vezes n serve apenas para avaliar a aproximação.
+    if (p * n < 5 || q * n < 5) avisos.push('Poucos casos em um dos grupos: este método de aproximação pode não ser adequado.');
     if (inferior < 0 || superior > 1) avisos.push('A fórmula produziu um limite fora de 0% a 100%. Confira a adequação do método.');
     if (padrao !== null && (padrao < 0 || padrao > 100)) throw new Error('Padrão aceitável: use uma porcentagem entre 0 e 100.');
-    return {z, n, sucessos, p, q, margem, inferior, superior, padrao, avisos,
+    return {z, n, sucessos: dado.sucessos, percentualInformado: dado.percentualInformado, p, q, margem, inferior, superior, padrao, avisos,
       atendePadrao: padrao === null ? null : superior * 100 < padrao};
   }
 
@@ -143,7 +160,7 @@
   }
 
   // Compartilha as funções com a interface e os testes.
-  global.Calculos = Object.freeze({numero, inteiro, porcentagem, valorCritico,
+  global.Calculos = Object.freeze({numero, inteiro, porcentagem, valorCritico, lerCaracteristica,
     amostraInteira, amostraMedia, amostraProporcao, intervaloMedia,
     intervaloProporcao, diminuirErro});
 })(globalThis);

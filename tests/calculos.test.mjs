@@ -62,3 +62,21 @@ for(const dado of [
   ()=>C.diminuirErro({desvio:2,n:40,fator:-2}),
   ()=>C.diminuirErro({desvio:0,n:40,fator:2}),
 ])test('dados incorretos geram erro compreensível',()=>assert.throws(dado));
+
+test('IC proporção: candidato B, 40% de 2305 = 922 de 2305',()=>{
+  const a=C.intervaloProporcao({sucessos:'40%',n:2305});
+  const b=C.intervaloProporcao({sucessos:922,n:2305});
+  perto(a.p,.4); perto(a.margem,b.margem); perto(a.inferior,b.inferior); perto(a.superior,b.superior);
+  assert.equal(a.sucessos,null); assert.equal(a.percentualInformado,40);
+});
+test('IC proporção percentual não arredonda pessoas',()=>{
+  const r=C.intervaloProporcao({sucessos:'37,5%',n:101});
+  perto(r.p,.375); perto(r.q,.625); assert.equal(r.sucessos,null);
+  perto(r.margem,1.96*Math.sqrt(.375*.625/101));
+});
+test('sem sinal percentual continua quantidade',()=>{
+  const r=C.intervaloProporcao({sucessos:'40',n:200});
+  perto(r.p,.2); assert.equal(r.sucessos,40);
+});
+for(const [v,p] of [['0%',0],['100%',1],[' 40 % ',.4],['0,5%',.005],['1,250%',.0125]])test('porcentagem aceita: '+v,()=>perto(C.lerCaracteristica(v,1000).p,p));
+for(const v of ['%','40%%','%40','101%','-1%','NaN%','Infinity%','40,5','201','abc%'])test('entrada de proporção inválida: '+v,()=>assert.throws(()=>C.intervaloProporcao({sucessos:v,n:200})));

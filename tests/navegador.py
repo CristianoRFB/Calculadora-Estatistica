@@ -35,6 +35,18 @@ def submit(page,topic,values,expected):
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage'])
     page,errors=start(browser)
+    # A mesma caixa aceita número de pessoas ou porcentagem literal.
+    submit(page,'ip',{'sucessos':'40%','n':'2305'},'38,00% a 42,00%')
+    assert '40%' in page.locator('#ip-proporcao').inner_text()
+    submit(page,'ip',{'sucessos':'922','n':'2305'},'38,00% a 42,00%')
+    submit(page,'ip',{'sucessos':'37,5%','n':'101'},'28,06% a 46,94%')
+    page.locator('#ip-sucessos').fill('101%')
+    page.locator('#form-ip button[type="submit"]').click()
+    assert page.locator('#form-ip .erro').is_visible()
+    assert not page.locator('#aba-ip .resultado').is_visible()
+    page.locator('#form-ip button[type="reset"]').click()
+    assert page.locator('#ip-sucessos').input_value()==''
+
     submit(page,'am',{'desvio':'1.250','erro':'100'},'601')
     page.screenshot(path=str(root/'tests/desktop-azul.png'),full_page=True)
     submit(page,'ap',{'p':'30','erro':'2'},'2.017')

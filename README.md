@@ -78,3 +78,7 @@ Os comentários em português explicam as partes do HTML, CSS, funções matemá
 ### Visualização do intervalo
 
 Os intervalos da média e da proporção mostram uma régua com os dois limites e a estimativa amostral. O botão de precisão atualiza também os números do gráfico. Não existe dependência de biblioteca gráfica nem cálculo novo. Quando os limites coincidem, é mostrado apenas um ponto.
+
+### Quantidade ou porcentagem
+
+No intervalo de confiança da proporção, digite uma quantidade inteira (por exemplo, 922) ou uma porcentagem com o símbolo % (por exemplo, 40%). O total da amostra é obrigatório nos dois casos. A entrada percentual entra diretamente como p na fórmula; não arredondamos uma quantidade de pessoas. O campo aceita 0% a 100% e mantém os avisos sobre aproximação normal.
