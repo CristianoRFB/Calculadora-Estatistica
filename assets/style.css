@@ -139,3 +139,23 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
 .precisao:hover { background:var(--azul-claro); }
 /* Permite quebrar números longos em telas pequenas. */
 .extra-linha > * { min-width:0; overflow-wrap:anywhere; }
+
+/* Gráfico do intervalo de confiança: três números e uma régua azul. */
+.grafico-ic { margin:20px 0 0; padding:18px 0 2px; border-top:1px solid var(--linha); min-width:0; }
+.grafico-ic figcaption { font-size:14px; font-weight:700; color:var(--texto); }
+/* Linha cinza de referência e trecho azul entre os dois limites. */
+.grafico-regua { position:relative; height:42px; margin:14px 0 2px; }
+.grafico-regua::before { content:""; position:absolute; top:19px; left:5%; right:5%; height:2px; background:var(--linha); }
+.grafico-faixa { position:absolute; left:16.6667%; right:16.6667%; top:18px; height:4px; background:var(--azul); border-radius:2px; }
+/* Pequenos traços verticais marcam as pontas do intervalo. */
+.grafico-faixa::before,.grafico-faixa::after { content:""; position:absolute; top:-6px; width:2px; height:16px; background:var(--azul-forte); }
+.grafico-faixa::before { left:0; }.grafico-faixa::after { right:0; }
+/* A bolinha marca a estimativa da amostra, bem no meio da régua. */
+.grafico-centro { position:absolute; top:14px; left:50%; width:12px; height:12px; transform:translateX(-50%); border-radius:50%; background:var(--azul-forte); box-shadow:0 0 0 3px white; }
+.grafico-regua.pontual .grafico-faixa { display:none; }
+/* Os textos podem quebrar linha, inclusive com dez casas decimais. */
+.grafico-rotulos { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; text-align:center; }
+.grafico-rotulos > div { min-width:0; overflow-wrap:anywhere; }
+.grafico-rotulos span { display:block; color:var(--secundario); font-size:11px; }
+.grafico-rotulos strong { display:block; color:var(--azul-forte); font-size:clamp(12px,2vw,16px); font-variant-numeric:tabular-nums; margin-top:3px; }
+.grafico-nota { color:var(--secundario); font-size:12px; margin:16px 0 0; }

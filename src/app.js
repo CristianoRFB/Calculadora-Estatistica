@@ -112,6 +112,7 @@
     if (id === 'im') {
       const r = M.intervaloMedia({confianca: confianca(form), media: lido(form, 'media', 'Média amostral'), desvio: lido(form, 'desvio', 'Desvio-padrão'), n: lido(form, 'n', 'Tamanho da amostra')});
       return (casas = 2) => ({
+        grafico: { inferior: dec(r.inferior, casas), centro: dec(r.media, casas), superior: dec(r.superior, casas), rotulo: 'Média amostral', pontual: r.inferior === r.superior },
         titulo: 'Intervalo de confiança', valor: `${dec(r.inferior, casas)} a ${dec(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a média populacional entre ${dec(r.inferior, casas)} e ${dec(r.superior, casas)}.`,
         extras: [['Margem de erro (Em)', dec(r.margem, casas)], ['Limite inferior', dec(r.inferior, casas)], ['Limite superior', dec(r.superior, casas)]],
@@ -132,6 +133,7 @@
         ? `O limite superior está abaixo do padrão de ${fmt(r.padrao)}%. Pelo critério informado, a condição foi atendida.`
         : `O intervalo não fica inteiro abaixo do padrão de ${fmt(r.padrao)}%. Não dá para garantir a condição.`;
       return (casas = 2) => ({
+        grafico: { inferior: pct(r.inferior, casas), centro: pct(r.p, casas), superior: pct(r.superior, casas), rotulo: 'Proporção amostral', pontual: r.inferior === r.superior },
         titulo: 'Intervalo de confiança', valor: `${pct(r.inferior, casas)} a ${pct(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a proporção populacional entre ${pct(r.inferior, casas)} e ${pct(r.superior, casas)}.`,
         extras: [['Com a característica', pct(r.p, casas)], ['Sem a característica', pct(r.q, casas)], ['Margem de erro', `${dec(r.margem * 100, casas)} pontos percentuais`]],
@@ -167,6 +169,38 @@
     filho.textContent = texto;
     return filho;
   }
+  // O gráfico é uma régua do intervalo: a ponta esquerda é o menor valor,
+  // a ponta direita é o maior, e a bolinha é a média ou proporção da amostra.
+  // Ele usa os mesmos números da resposta, sem fazer outra conta matemática.
+  function criarGrafico(intervalo) {
+    const figura = document.createElement('figure');
+    figura.className = 'grafico-ic';
+    figura.append(colocarTexto('figcaption', '', 'Visualização do intervalo de confiança'));
+
+    // Três colunas deixam os textos legíveis até na tela de um celular.
+    const rotulos = colocarTexto('div', 'grafico-rotulos', '');
+    for (const [nome, valor] of [
+      ['Limite inferior', intervalo.inferior],
+      [intervalo.rotulo, intervalo.centro],
+      ['Limite superior', intervalo.superior]
+    ]) {
+      const coluna = colocarTexto('div', '', '');
+      coluna.append(colocarTexto('span', '', nome), colocarTexto('strong', '', valor));
+      rotulos.append(coluna);
+    }
+
+    // A linha de fundo é apenas uma referência visual, não uma escala absoluta.
+    // Quando os limites são iguais, a linha azul vira somente um ponto.
+    const regua = colocarTexto('div', 'grafico-regua' + (intervalo.pontual ? ' pontual' : ''), '');
+    regua.setAttribute('aria-hidden', 'true');
+    regua.append(colocarTexto('div', 'grafico-faixa', ''), colocarTexto('span', 'grafico-centro', ''));
+    figura.append(regua, rotulos);
+    figura.append(colocarTexto('p', 'grafico-nota', intervalo.pontual
+      ? 'Os dois limites coincidem: a margem de erro calculada é nula ou indistinguível na precisão numérica.'
+      : 'A linha azul representa a faixa estimada. O ponto central é o valor da amostra.'));
+    return figura;
+  }
+
   // A resposta é uma função que lembra os valores da conta original.
   // 2 e 10 são as quantidades de casas decimais disponíveis para visualização.
   function mostrarResultado(secao, criarResposta, casas = 2, aberto = false, focar = false) {
@@ -192,6 +226,8 @@
       }
       painel.append(tabela);
     }
+    // Só os intervalos de confiança têm uma régua de limites.
+    if (resposta.grafico) painel.append(criarGrafico(resposta.grafico));
     if (resposta.aviso) painel.append(colocarTexto('p', 'aviso', resposta.aviso));
     const detalhes = document.createElement('details');
     detalhes.className = 'passos';
