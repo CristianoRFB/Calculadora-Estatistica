@@ -36,7 +36,7 @@ with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage'])
     page,errors=start(browser)
     # A mesma caixa aceita número de pessoas ou porcentagem literal.
-    resposta_pdf = submit(page,'ip',{'sucessos':'40%','n':'2305'},'38,00% a 42,00%')
+    resposta_pdf = submit(page,'ip',{'sucessos':'40%','n':'2305'},'38,01% a 42,00%')
     # A impressão usa o navegador e não depende de uma aba nova.
     page.evaluate("window.__chamadasPrint = 0; window.print = () => { window.__chamadasPrint++; }")
     assert not resposta_pdf.locator('.relatorio-impressao').is_visible()
@@ -46,7 +46,7 @@ with sync_playwright() as p:
     relatorio = resposta_pdf.locator('.relatorio-impressao')
     assert relatorio.is_visible()
     assert '40%' in relatorio.inner_text() and '2305' in relatorio.inner_text()
-    assert '38,00% a 42,00%' in relatorio.inner_text()
+    assert '38,01% a 42,00%' in relatorio.inner_text()
     assert 'Resolução passo a passo' in relatorio.inner_text()
     assert relatorio.locator('.grafico-ic').is_visible()
     assert not page.locator('.abas').is_visible()
@@ -55,8 +55,8 @@ with sync_playwright() as p:
     assert not relatorio.is_visible()
     assert resposta_pdf.locator('.imprimir-pdf').is_visible()
     assert '40%' in page.locator('#ip-proporcao').inner_text()
-    submit(page,'ip',{'sucessos':'922','n':'2305'},'38,00% a 42,00%')
-    submit(page,'ip',{'sucessos':'37,5%','n':'101'},'28,06% a 46,94%')
+    submit(page,'ip',{'sucessos':'922','n':'2305'},'38,01% a 42,00%')
+    submit(page,'ip',{'sucessos':'37,5%','n':'101'},'28,06% a 46,95%')
     page.locator('#ip-sucessos').fill('101%')
     page.locator('#form-ip button[type="submit"]').click()
     assert page.locator('#form-ip .erro').is_visible()
@@ -84,12 +84,16 @@ with sync_playwright() as p:
     assert page.locator('#ap-complemento').inner_text()=='50%'
     page.locator('#form-ap button[type="submit"]').click()
     assert page.locator('#aba-ap .resultado').is_visible()
-    submit(page,'im',{'media':'320','desvio':'45','n':'50'},'307,53 a 332,47')
+    submit(page,'im',{'media':'320','desvio':'45','n':'50'},'307,53 a 332,48')
     assert page.locator('#aba-im .resultado > .grafico-ic').is_visible()
-    assert page.locator('#aba-im .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['307,53','320,00','332,47']
+    assert page.locator('#aba-im .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['307,53','320,00','332,48']
     # Alterna precisão e verifica que a resolução permanece aberta.
     answer=page.locator('#aba-im .resultado')
     answer.locator('summary').click()
+    # A opção inteira também arredonda ambos os limites para cima.
+    answer.locator('[data-precisao="0"]').click()
+    assert answer.locator(':scope > .numero-resposta').inner_text() == '308 a 333'
+    answer.locator('[data-precisao="2"]').click()
     for _ in range(10):
         answer.locator('[data-precisao="completo"]').click()
         assert '307,526636' in answer.locator(':scope > .numero-resposta').inner_text()
@@ -97,16 +101,16 @@ with sync_playwright() as p:
         assert answer.locator('details').evaluate('(el) => el.open')
         assert page.locator('#im-media').input_value()=='320'
         answer.locator('[data-precisao="2"]').click()
-        assert '307,53 a 332,47' in answer.locator(':scope > .numero-resposta').inner_text()
+        assert '307,53 a 332,48' in answer.locator(':scope > .numero-resposta').inner_text()
     page.locator('#aba-im .resultado > .grafico-ic').screenshot(path=str(root/'tests/grafico.png'))
     submit(page,'im',{'media':'320','desvio':'0','n':'50'},'320,00 a 320,00')
-    assert page.locator('#aba-im .grafico-regua.pontual').is_visible()
-    assert not page.locator('#aba-im .grafico-faixa').is_visible()
+    assert page.locator('#aba-im .resultado > .grafico-ic .grafico-regua.pontual').is_visible()
+    assert not page.locator('#aba-im .resultado > .grafico-ic .grafico-faixa').is_visible()
     page.locator('[data-aba="ip"]').click()
     page.locator('#ip-confianca').select_option('90')
-    submit(page,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
+    submit(page,'ip',{'sucessos':'40','n':'100'},'31,95% a 48,06%')
     assert '40%' in page.locator('#ip-proporcao').inner_text()
-    assert page.locator('#aba-ip .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['31,94%','40,00%','48,06%']
+    assert page.locator('#aba-ip .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['31,95%','40,00%','48,06%']
     submit(page,'de',{'desvio':'12','n':'40','k':'2'},'160')
     assert '120' in page.locator('#aba-de .resultado').inner_text()
     assert page.locator('#aba-de .grafico-ic').count()==0
@@ -162,7 +166,7 @@ with sync_playwright() as p:
             q.screenshot(path=str(root/'tests/exemplos-celular.png'),full_page=True)
             q.locator('[data-aba="ip"]').click()
             q.locator('#ip-confianca').select_option('90')
-            submit(q,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
+            submit(q,'ip',{'sucessos':'40','n':'100'},'31,95% a 48,06%')
             q.locator('#aba-ip [data-precisao="completo"]').click()
             assert q.locator('#aba-ip .resultado > .grafico-ic').is_visible()
             assert not q.evaluate('document.documentElement.scrollWidth > window.innerWidth + 1')

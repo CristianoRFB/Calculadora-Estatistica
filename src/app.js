@@ -77,13 +77,33 @@
   // Cada operação usa EXCLUSIVAMENTE as funções matemáticas do arquivo calculos.js.
   function executar(id, form) {
     // Estas funções só transformam números em texto. Não mudam a conta.
-    // 0: arredonda para o inteiro mais próximo; 2: duas casas depois da vírgula.
-    // "completo": mostra a precisão disponível do número JavaScript, sem limitar a dez casas.
-    // Nenhuma opção modifica o número usado nas fórmulas, apenas o texto que aparece.
-    const dec = (n, casas) => casas === 'completo'
-      ? n.toLocaleString('pt-BR', {maximumSignificantDigits:21})
-      : n.toLocaleString('pt-BR', {minimumFractionDigits:casas, maximumFractionDigits:casas});
-    const pct = (p, casas) => dec(p * 100, casas) + '%';
+    // Nos intervalos de confiança (IM e IP), os resultados visíveis arredondam para cima.
+    // Exemplo: 1,231 vira 1,24 com duas casas; -1,231 vira -1,23 (em direção ao maior número).
+    // Nas demais abas, a exibição usa o arredondamento normal. O valor completo não arredonda.
+    // Nenhuma opção altera os valores guardados nem as contas feitas com eles.
+    const paraCima = id === 'im' || id === 'ip';
+    // Alguns navegadores antigos não conhecem roundingMode. Este teste detecta isso.
+    const aceitaCeil = new Intl.NumberFormat('pt-BR', {roundingMode:'ceil'}).resolvedOptions().roundingMode === 'ceil';
+    // Deslocar a vírgula pela notação científica evita erros de multiplicação como 0,07 × 100.
+    const deslocar = (n, k) => {
+      const [coef, expoente = '0'] = String(n).split('e');
+      return Number(coef + 'e' + (Number(expoente) + k));
+    };
+    const formatar = (n, casas, estilo = 'decimal') => {
+      if (casas === 'completo') return n.toLocaleString('pt-BR', {style:estilo, maximumSignificantDigits:21});
+      const opcoes = {style:estilo, minimumFractionDigits:casas, maximumFractionDigits:casas};
+      if (paraCima && aceitaCeil) opcoes.roundingMode = 'ceil';
+      if (paraCima && !aceitaCeil) {
+        // Alternativa para navegadores antigos: desloca, arredonda para cima e volta a vírgula.
+        const k = casas + (estilo === 'percent' ? 2 : 0);
+        const ampliado = deslocar(n, k);
+        if (Number.isFinite(ampliado)) n = deslocar(Math.ceil(ampliado), -k);
+      }
+      return n.toLocaleString('pt-BR', opcoes);
+    };
+    const dec = (n, casas) => formatar(n, casas);
+    // O próprio navegador transforma a fração em porcentagem sem multiplicações extras.
+    const pct = (p, casas) => formatar(p, casas, 'percent');
     const z = M.valorCritico(confianca(form));
     // O tamanho mínimo é sempre inteiro: não podemos pesquisar uma parte de uma pessoa.
     // A frase mostra também o resultado decimal ANTES de arredondar para cima.
@@ -125,7 +145,7 @@
         titulo: 'Intervalo de confiança', valor: `${dec(r.inferior, casas)} a ${dec(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a média populacional entre ${dec(r.inferior, casas)} e ${dec(r.superior, casas)}.`,
         extras: [['Margem de erro (Em)', dec(r.margem, casas)], ['Limite inferior', dec(r.inferior, casas)], ['Limite superior', dec(r.superior, casas)]],
-        aviso: r.aviso,
+        aviso: [r.aviso, casas === 'completo' ? '' : 'Exibição arredondada para cima. Para conferir os limites originais, selecione Valor completo.'].filter(Boolean).join(' '),
         passos: [
           ['Escolher o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
           ['Calcular a margem de erro', `Em = ${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ √${fmt(r.n, 0)} ≈ ${dec(r.margem, casas)}.`],
@@ -145,14 +165,14 @@
         grafico: { inferior: pct(r.inferior, casas), centro: pct(r.p, casas), superior: pct(r.superior, casas), rotulo: 'Proporção amostral', pontual: r.inferior === r.superior },
         titulo: 'Intervalo de confiança', valor: `${pct(r.inferior, casas)} a ${pct(r.superior, casas)}`,
         frase: `Com ${confianca(form)}% de confiança, estimamos a proporção populacional entre ${pct(r.inferior, casas)} e ${pct(r.superior, casas)}.`,
-        extras: [['Com a característica', pct(r.p, casas)], ['Sem a característica', pct(r.q, casas)], ['Margem de erro', `${dec(r.margem * 100, casas)} pontos percentuais`]],
-        aviso: [...r.avisos, comparacao].filter(Boolean).join(' '),
+        extras: [['Com a característica', pct(r.p, casas)], ['Sem a característica', pct(r.q, casas)], ['Margem de erro', `${dec(deslocar(r.margem, 2), casas)} pontos percentuais`]],
+        aviso: [...r.avisos, comparacao, casas === 'completo' ? '' : 'Exibição arredondada para cima. Para conferir os limites originais, selecione Valor completo.'].filter(Boolean).join(' '),
         passos: [
           // Se o exercício já der a porcentagem, basta dividir por 100, sem descobrir uma contagem.
           ['Encontrar a proporção', r.percentualInformado === null
             ? `p = ${fmt(r.sucessos, 0)} ÷ ${fmt(r.n, 0)} = ${dec(r.p, 'completo')}; complemento = ${dec(r.q, 'completo')}.`
             : `p = ${dec(r.percentualInformado, 'completo')}% ÷ 100 = ${dec(r.p, 'completo')}; complemento = ${dec(r.q, 'completo')}.`],
-          ['Calcular a margem de erro', `Ep = ${fmt(z, 3)} × √(${dec(r.p, 'completo')} × ${dec(r.q, 'completo')} ÷ ${fmt(r.n, 0)}) ≈ ${dec(r.margem, casas)}.`],
+          ['Calcular a margem de erro', `Ep = ${fmt(z, 3)} × √(${dec(r.p, 'completo')} × ${dec(r.q, 'completo')} ÷ ${fmt(r.n, 0)}) = ${dec(r.margem, 'completo')}, ou ${dec(deslocar(r.margem, 2), casas)} pontos percentuais.`],
           ['Encontrar os limites', `Subtraímos e somamos a margem à proporção: ${pct(r.inferior, casas)} a ${pct(r.superior, casas)}.`]
         ]
       });
