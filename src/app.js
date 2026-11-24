@@ -80,12 +80,15 @@
     const dec = (n, casas) => n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:casas});
     const pct = (p, casas) => dec(p * 100, casas) + '%';
     const z = M.valorCritico(confianca(form));
+    // O tamanho mínimo é sempre inteiro: não podemos pesquisar uma parte de uma pessoa.
+    // A frase mostra também o resultado decimal ANTES de arredondar para cima.
+    // Assim, ao clicar em mais casas, a frase acompanha a precisão escolhida.
     // AM: número mínimo de medições para estimar uma média.
     if (id === 'am') {
       const r = M.amostraMedia({confianca: confianca(form), desvio: lido(form, 'desvio', 'Desvio-padrão'), erro: lido(form, 'erro', 'Erro máximo')});
       return (casas = 2) => ({
         titulo: 'Tamanho mínimo da amostra', valor: `n = ${fmt(r.n, 0)}`,
-        frase: `São necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a média com ${confianca(form)}% de confiança.`,
+        frase: `O cálculo resulta em ${dec(r.exato, casas)}. Arredondando para cima, são necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a média com ${confianca(form)}% de confiança.`,
         extras: [['Antes de arredondar', dec(r.exato, casas)]],
         passos: [
           ['Identificar o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
@@ -100,7 +103,7 @@
       const r = M.amostraProporcao({confianca: confianca(form), percentual: p, erro: lido(form, 'erro', 'Erro da proporção')});
       return (casas = 2) => ({
         titulo: 'Tamanho mínimo da amostra', valor: `n = ${fmt(r.n, 0)}`,
-        frase: `São necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a proporção com ${confianca(form)}% de confiança.`,
+        frase: `O cálculo resulta em ${dec(r.exato, casas)}. Arredondando para cima, são necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a proporção com ${confianca(form)}% de confiança.`,
         extras: [['Proporção (p)', pct(r.p, casas)], ['Complemento (1 − p)', pct(r.q, casas)], ['Antes de arredondar', dec(r.exato, casas)]],
         passos: [
           ['Transformar porcentagens em decimais', `p = ${fmt(r.p, 4)}, complemento = ${fmt(r.q, 4)} e Ep = ${fmt(r.ep, 4)}.`],
@@ -154,8 +157,8 @@
       const r = M.diminuirErro({confianca: confianca(form), desvio: lido(form, 'desvio', 'Desvio-padrão'), n: lido(form, 'n', 'Tamanho atual da amostra'), fator: lido(form, 'k', 'Dividir o erro por')});
       return (casas = 2) => ({
         titulo: 'Novo tamanho da amostra', valor: `n = ${fmt(r.novoN, 0)}`,
-        frase: `Para dividir o erro por ${fmt(r.fator)} é preciso aumentar a amostra em ${fmt(r.adicionar, 0)} observações.`,
-        extras: [['Amostra atual', fmt(r.n, 0)], ['Erro atual', dec(r.erroAtual, casas)], ['Novo erro', dec(r.novoErro, casas)], ['Observações adicionais', fmt(r.adicionar, 0)]],
+        frase: `O cálculo resulta em ${dec(r.exato, casas)} observações antes de arredondar para cima. Para dividir o erro por ${fmt(r.fator)} é preciso aumentar a amostra em ${fmt(r.adicionar, 0)} observações, chegando a ${fmt(r.novoN, 0)} no total.`,
+        extras: [['Amostra atual', fmt(r.n, 0)], ['Antes de arredondar', dec(r.exato, casas)], ['Erro atual', dec(r.erroAtual, casas)], ['Novo erro', dec(r.novoErro, casas)], ['Observações adicionais', fmt(r.adicionar, 0)]],
         passos: [
           ['Calcular o erro atual', `Em = ${fmt(z, 3)} × ${fmt(r.desvio)} ÷ √${fmt(r.n, 0)} = ${dec(r.erroAtual, casas)}.`],
           ['Diminuir o erro', `Novo Em = ${dec(r.erroAtual, casas)} ÷ ${fmt(r.fator)} = ${dec(r.novoErro, casas)}.`],

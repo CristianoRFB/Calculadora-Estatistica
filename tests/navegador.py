@@ -47,6 +47,15 @@ with sync_playwright() as p:
     page.locator('#form-ip button[type="reset"]').click()
     assert page.locator('#ip-sucessos').input_value()==''
 
+    # O tamanho mínimo permanece inteiro, mas a frase acompanha o botão de precisão.
+    resposta = submit(page,'am',{'desvio':'1.250','erro':'101'},'589')
+    frase = resposta.locator('.frase-resposta')
+    original = frase.inner_text()
+    resposta.locator('.precisao').click()
+    assert frase.inner_text() != original
+    assert resposta.locator('.numero-resposta').inner_text() == 'n = 589'
+    resposta.locator('.precisao').click()
+    assert frase.inner_text() == original
     submit(page,'am',{'desvio':'1.250','erro':'100'},'601')
     page.screenshot(path=str(root/'tests/desktop-azul.png'),full_page=True)
     submit(page,'ap',{'p':'30','erro':'2'},'2.017')

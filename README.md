@@ -82,3 +82,5 @@ Os intervalos da média e da proporção mostram uma régua com os dois limites 
 ### Quantidade ou porcentagem
 
 No intervalo de confiança da proporção, digite uma quantidade inteira (por exemplo, 922) ou uma porcentagem com o símbolo % (por exemplo, 40%). O total da amostra é obrigatório nos dois casos. A entrada percentual entra diretamente como p na fórmula; não arredondamos uma quantidade de pessoas. O campo aceita 0% a 100% e mantém os avisos sobre aproximação normal.
+
+A frase de resposta dos cálculos de tamanho de amostra e redução do erro também mostra o valor antes de arredondar, na precisão selecionada. O número mínimo de observações permanece inteiro.
