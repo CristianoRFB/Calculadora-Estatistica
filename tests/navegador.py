@@ -7,6 +7,7 @@ html=(root/'index.html').read_text(encoding='utf-8')
 style=(root/'assets/style.css').read_text(encoding='utf-8')
 math=(root/'src/calculos.js').read_text(encoding='utf-8')
 app=(root/'src/app.js').read_text(encoding='utf-8')
+examples=(root/'src/exemplos.js').read_text(encoding='utf-8')
 
 def start(browser,w=1366,h=900):
     page=browser.new_page(viewport={'width':w,'height':h},device_scale_factor=1)
@@ -16,6 +17,7 @@ def start(browser,w=1366,h=900):
     page.add_style_tag(content=style)
     page.add_script_tag(content=math)
     page.add_script_tag(content=app)
+    page.add_script_tag(content=examples)
     assert not errors,errors
     return page,errors
 
@@ -60,7 +62,30 @@ with sync_playwright() as p:
     assert page.locator('#de-n').input_value()==''
     assert not page.locator('#form-de .erro').is_visible()
     assert not errors,errors
+    # Exercícios: verifica cada cenário, a limpeza de valores antigos e o cálculo.
+    cases=page.evaluate('ExemplosEstatistica.map(([codigo,tipo,,,casos])=>({codigo,tipo,casos}))')
+    for item in cases:
+        for i,case in enumerate(item['casos']):
+            page.locator('[data-aba="ex"]').click()
+            card=page.locator('.exemplo-card').filter(has=page.locator('h4',has_text=item['codigo']+' ·'))
+            card.locator('button').nth(i).click()
+            topic=item['tipo']
+            form=page.locator(f'#form-{topic}')
+            assert form.is_visible()
+            assert not page.locator(f'#aba-{topic} .resultado').is_visible()
+            for name,value in case['campos'].items():
+                field=form.locator(f'[name="{name}"]')
+                if isinstance(value,bool): assert field.is_checked()==value
+                else: assert field.input_value()==str(value),(name,value,field.input_value())
+            if topic=='ip' and 'padrao' not in case['campos']: assert form.locator('[name="padrao"]').input_value()==''
+            if topic=='ap' and 'desconhecida' not in case['campos']: assert not form.locator('[name="desconhecida"]').is_checked()
+            form.locator('button[type="submit"]').click()
+            assert page.locator(f'#aba-{topic} .resultado').is_visible(),(item,form.locator('.erro').inner_text())
+    page.locator('[data-aba="ex"]').click()
+    page.screenshot(path=str(root/'tests/exemplos-desktop.png'),full_page=True)
+    assert not errors,errors
     page.close()
+    print('23 cenários de exemplo: OK')
     print('Desktop: 5 fórmulas, dados derivados, erro, alterar, limpar, troca de abas: OK')
     # Verificar telas estreitas: a página não deve ter rolagem horizontal.
     for width in (320,360,375,390,430,620,768,900,1024,1366,1920):
@@ -69,8 +94,14 @@ with sync_playwright() as p:
         assert not overflow,f'Rolagem horizontal em {width}px: {q.evaluate("document.documentElement.scrollWidth")}'
         q.locator('[data-aba="ip"]').click()
         assert q.locator('#aba-ip').is_visible()
+        q.locator('[data-aba="ex"]').click()
+        assert q.locator('#aba-ex').is_visible()
+        assert q.locator('.exemplo-card').count()==19
+        assert not q.evaluate('document.documentElement.scrollWidth > window.innerWidth + 1'), f'Exemplos: overflow em {width}px'
         assert not err,err
         if width==390:
+            q.screenshot(path=str(root/'tests/exemplos-celular.png'),full_page=True)
+            q.locator('[data-aba="ip"]').click()
             q.locator('#ip-confianca').select_option('90')
             submit(q,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
             q.screenshot(path=str(root/'tests/celular-azul.png'),full_page=True)

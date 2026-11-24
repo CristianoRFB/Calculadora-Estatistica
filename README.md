@@ -65,3 +65,6 @@ Não há backend nem banco de dados. As cinco contas são puramente matemáticas
 ## Referência funcional
 
 A organização por abas e os cinco temas foram estudados no repositório [GuilhermeOliveira0/calculadora-estatistica](https://github.com/GuilhermeOliveira0/calculadora-estatistica). Código e layout desta V1 foram redigidos novamente, sem copiar o projeto original.
+
+## Exemplos para praticar
+A aba Exemplos contém 18 adaptações dos exercícios A1–A4, B1–B7 e C1–C7 dos três PDFs, mais um treino extra de redução de erro (19 enunciados). Os 23 botões preenchem os dados sem calcular automaticamente. Para editar os exemplos, abra `src/exemplos.js`.

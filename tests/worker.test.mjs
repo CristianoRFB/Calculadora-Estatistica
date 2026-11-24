@@ -8,9 +8,9 @@ test('home responde HTML 200',async()=>{
   const r=await worker.fetch(new Request(url('/')));
   assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/text\/html/);
   const html=await r.text();assert.match(html,/Estatística Aplicada/);
-  assert.equal((html.match(/data-aba="/g)||[]).length,5);
+  assert.equal((html.match(/data-aba="/g)||[]).length,6);
 });
-for(const p of ['/index.html','/assets/style.css','/src/calculos.js','/src/app.js'])test('arquivo '+p+' está disponível',async()=>{
+for(const p of ['/index.html','/assets/style.css','/src/calculos.js','/src/app.js','/src/exemplos.js'])test('arquivo '+p+' está disponível',async()=>{
   const r=await worker.fetch(new Request(url(p)));
   assert.equal(r.status,200);assert.ok((await r.text()).length>100);
 });

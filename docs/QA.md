@@ -10,3 +10,9 @@
 - Responsividade: larguras 320, 360, 375, 390, 430, 620, 768, 900, 1024, 1366, 1920px sem rolagem horizontal.
 - Segurança de interface: os dados dos usuários são inseridos como texto, nunca avaliados como código ou HTML.
 - Limites: a distribuição normal Z segue o material da disciplina e não substitui t Student. Nem a quantidade de testes garante ausência absoluta de defeitos.
+
+## Revisão da aba Exemplos
+- 143 testes Node aprovados, incluindo os 23 cenários e 19 enunciados distintos.
+- Chromium: os 23 botões preenchem corretamente a aba de cálculo, não mostram resultado antigo e permitem calcular.
+- 11 larguras verificadas também na aba Exemplos, sem rolagem horizontal.
+- Escopo: A1–A4, B1–B7, C1–C7 dos PDFs e um treino extra de redução da margem de erro. Correlação e regressão permanecem fora da versão simplificada.

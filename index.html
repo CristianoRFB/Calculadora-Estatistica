@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./assets/style.css">
   <script src="./src/calculos.js" defer></script>
   <script src="./src/app.js" defer></script>
+  <script src="./src/exemplos.js" defer></script>
 </head>
 <body>
   <header class="cabecalho">
@@ -35,6 +36,7 @@
       <button type="button" class="aba" data-aba="im"><small>Intervalo de confiança</small><strong>Média</strong></button>
       <button type="button" class="aba" data-aba="ip"><small>Intervalo de confiança</small><strong>Proporção</strong></button>
       <button type="button" class="aba" data-aba="de"><small>Ajuste da amostra</small><strong>Diminuir o erro</strong></button>
+      <button type="button" class="aba" data-aba="ex"><small>Treinar</small><strong>Exemplos</strong></button>
     </nav>
 
     <!-- Assunto 1: calcular quantas observações são necessárias para a média. -->
@@ -141,6 +143,12 @@
         <aside class="cartao formula"><h3>Fórmulas utilizadas</h3><div class="expressao">Novo Em = Em / k</div><div class="expressao">Novo n = (Z · σ / Novo Em)²</div><dl><dt>k</dt><dd>Quantas vezes o erro vai diminuir</dd><dt>Em</dt><dd>Margem de erro atual</dd><dt>n</dt><dd>Quantidade de observações</dd></dl><p class="nota-formula">Ao reduzir o erro pela metade, precisamos de aproximadamente 4 vezes mais observações.</p></aside>
       </div>
       <div class="resultado" hidden></div>
+    </section>
+
+    <section class="assunto" id="aba-ex" aria-labelledby="titulo-ex" hidden>
+      <h2 id="titulo-ex">Exemplos para praticar</h2>
+      <p class="descricao">Exercícios adaptados dos PDFs da aula, com valores diferentes. Preencha os dados e clique em Calcular quando quiser conferir.</p>
+      <div id="lista-exemplos"></div>
     </section>
 
     <footer class="rodape"><span>Uma ferramenta de apoio aos exercícios de Estatística Aplicada.</span><span>RFB · 2026</span></footer>
