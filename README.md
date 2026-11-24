@@ -71,7 +71,7 @@ A aba Exemplos contém 18 adaptações dos exercícios A1–A4, B1–B7 e C1–C
 
 ## Casas decimais
 
-Os resultados exibem duas casas decimais por padrão. O botão **Mostrar mais casas decimais** mostra até dez casas e permite voltar a duas. Contagens inteiras continuam inteiras. O botão não refaz a conta: apenas apresenta os números já calculados. O valor Z e os dados originais permanecem com a precisão necessária à resolução.
+Os resultados exibem duas casas decimais por padrão. Escolha **Sem casas decimais**, **2 casas decimais** ou **Valor completo** para mostrar a precisão disponível do JavaScript. A opção inteira arredonda os valores exibidos para o inteiro mais próximo; o tamanho mínimo da amostra continua arredondado para cima. Nenhuma opção refaz a conta. Os dados originais, o valor Z e os operandos permanecem com a precisão necessária à resolução. O PDF segue a opção selecionada.
 
 Os comentários em português explicam as partes do HTML, CSS, funções matemáticas, interface, exemplos e geração do Worker. Comece por index.html (campos), src/calculos.js (contas), src/app.js (botões e respostas), assets/style.css (aparência) e src/exemplos.js (enunciados).
 

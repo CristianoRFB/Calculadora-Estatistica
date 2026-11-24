@@ -66,12 +66,14 @@ with sync_playwright() as p:
 
     # O tamanho mínimo permanece inteiro, mas a frase acompanha o botão de precisão.
     resposta = submit(page,'am',{'desvio':'1.250','erro':'101'},'589')
-    frase = resposta.locator('.frase-resposta')
+    frase = resposta.locator(':scope > .frase-resposta')
     original = frase.inner_text()
-    resposta.locator('.precisao').click()
+    resposta.locator('[data-precisao="completo"]').click()
     assert frase.inner_text() != original
-    assert resposta.locator('.numero-resposta').inner_text() == 'n = 589'
-    resposta.locator('.precisao').click()
+    assert resposta.locator(':scope > .numero-resposta').inner_text() == 'n = 589'
+    resposta.locator('[data-precisao="0"]').click()
+    assert '588' in frase.inner_text() and '588,42' not in frase.inner_text()
+    resposta.locator('[data-precisao="2"]').click()
     assert frase.inner_text() == original
     submit(page,'am',{'desvio':'1.250','erro':'100'},'601')
     page.screenshot(path=str(root/'tests/desktop-azul.png'),full_page=True)
@@ -83,20 +85,20 @@ with sync_playwright() as p:
     page.locator('#form-ap button[type="submit"]').click()
     assert page.locator('#aba-ap .resultado').is_visible()
     submit(page,'im',{'media':'320','desvio':'45','n':'50'},'307,53 a 332,47')
-    assert page.locator('#aba-im .grafico-ic').is_visible()
-    assert page.locator('#aba-im .grafico-rotulos strong').all_inner_texts()==['307,53','320,00','332,47']
+    assert page.locator('#aba-im .resultado > .grafico-ic').is_visible()
+    assert page.locator('#aba-im .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['307,53','320,00','332,47']
     # Alterna precisão e verifica que a resolução permanece aberta.
     answer=page.locator('#aba-im .resultado')
     answer.locator('summary').click()
     for _ in range(10):
-        answer.locator('.precisao').click()
-        assert '307,526636' in answer.locator('.numero-resposta').inner_text()
-        assert '307,526636' in answer.locator('.grafico-rotulos strong').first.inner_text()
+        answer.locator('[data-precisao="completo"]').click()
+        assert '307,526636' in answer.locator(':scope > .numero-resposta').inner_text()
+        assert '307,526636' in answer.locator(':scope > .grafico-ic .grafico-rotulos strong').first.inner_text()
         assert answer.locator('details').evaluate('(el) => el.open')
         assert page.locator('#im-media').input_value()=='320'
-        answer.locator('.precisao').click()
-        assert '307,53 a 332,47' in answer.locator('.numero-resposta').inner_text()
-    page.locator('#aba-im .grafico-ic').screenshot(path=str(root/'tests/grafico.png'))
+        answer.locator('[data-precisao="2"]').click()
+        assert '307,53 a 332,47' in answer.locator(':scope > .numero-resposta').inner_text()
+    page.locator('#aba-im .resultado > .grafico-ic').screenshot(path=str(root/'tests/grafico.png'))
     submit(page,'im',{'media':'320','desvio':'0','n':'50'},'320,00 a 320,00')
     assert page.locator('#aba-im .grafico-regua.pontual').is_visible()
     assert not page.locator('#aba-im .grafico-faixa').is_visible()
@@ -104,7 +106,7 @@ with sync_playwright() as p:
     page.locator('#ip-confianca').select_option('90')
     submit(page,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
     assert '40%' in page.locator('#ip-proporcao').inner_text()
-    assert page.locator('#aba-ip .grafico-rotulos strong').all_inner_texts()==['31,94%','40,00%','48,06%']
+    assert page.locator('#aba-ip .resultado > .grafico-ic .grafico-rotulos strong').all_inner_texts()==['31,94%','40,00%','48,06%']
     submit(page,'de',{'desvio':'12','n':'40','k':'2'},'160')
     assert '120' in page.locator('#aba-de .resultado').inner_text()
     assert page.locator('#aba-de .grafico-ic').count()==0
@@ -161,8 +163,8 @@ with sync_playwright() as p:
             q.locator('[data-aba="ip"]').click()
             q.locator('#ip-confianca').select_option('90')
             submit(q,'ip',{'sucessos':'40','n':'100'},'31,94% a 48,06%')
-            q.locator('#aba-ip .precisao').click()
-            assert q.locator('#aba-ip .grafico-ic').is_visible()
+            q.locator('#aba-ip [data-precisao="completo"]').click()
+            assert q.locator('#aba-ip .resultado > .grafico-ic').is_visible()
             assert not q.evaluate('document.documentElement.scrollWidth > window.innerWidth + 1')
             q.screenshot(path=str(root/'tests/celular-azul.png'),full_page=True)
         q.close()

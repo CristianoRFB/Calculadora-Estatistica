@@ -77,7 +77,12 @@
   // Cada operação usa EXCLUSIVAMENTE as funções matemáticas do arquivo calculos.js.
   function executar(id, form) {
     // Estas funções só transformam números em texto. Não mudam a conta.
-    const dec = (n, casas) => n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:casas});
+    // 0: arredonda para o inteiro mais próximo; 2: duas casas depois da vírgula.
+    // "completo": mostra a precisão disponível do número JavaScript, sem limitar a dez casas.
+    // Nenhuma opção modifica o número usado nas fórmulas, apenas o texto que aparece.
+    const dec = (n, casas) => casas === 'completo'
+      ? n.toLocaleString('pt-BR', {maximumSignificantDigits:21})
+      : n.toLocaleString('pt-BR', {minimumFractionDigits:casas, maximumFractionDigits:casas});
     const pct = (p, casas) => dec(p * 100, casas) + '%';
     const z = M.valorCritico(confianca(form));
     // O tamanho mínimo é sempre inteiro: não podemos pesquisar uma parte de uma pessoa.
@@ -92,7 +97,7 @@
         extras: [['Antes de arredondar', dec(r.exato, casas)]],
         passos: [
           ['Identificar o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
-          ['Substituir na fórmula', `n = (${fmt(z, 3)} × ${fmt(r.desvio)} ÷ ${fmt(r.erro)})² = ${dec(r.exato, casas)}.`],
+          ['Substituir na fórmula', `n = (${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ ${dec(r.erro, 'completo')})² ≈ ${dec(r.exato, casas)}.`],
           ['Arredondar para cima', `Precisamos de ${fmt(r.n, 0)} observações, pois não existe uma fração de pessoa ou medição.`]
         ]
       });
@@ -106,8 +111,8 @@
         frase: `O cálculo resulta em ${dec(r.exato, casas)}. Arredondando para cima, são necessárias pelo menos ${fmt(r.n, 0)} observações para estimar a proporção com ${confianca(form)}% de confiança.`,
         extras: [['Proporção (p)', pct(r.p, casas)], ['Complemento (1 − p)', pct(r.q, casas)], ['Antes de arredondar', dec(r.exato, casas)]],
         passos: [
-          ['Transformar porcentagens em decimais', `p = ${fmt(r.p, 4)}, complemento = ${fmt(r.q, 4)} e Ep = ${fmt(r.ep, 4)}.`],
-          ['Aplicar a fórmula', `n = ${fmt(z, 3)}² × ${fmt(r.p, 4)} × ${fmt(r.q, 4)} ÷ ${fmt(r.ep, 4)}² = ${dec(r.exato, casas)}.`],
+          ['Transformar porcentagens em decimais', `p = ${dec(r.p, 'completo')}, complemento = ${dec(r.q, 'completo')} e Ep = ${dec(r.ep, 'completo')}.`],
+          ['Aplicar a fórmula', `n = ${fmt(z, 3)}² × ${dec(r.p, 'completo')} × ${dec(r.q, 'completo')} ÷ ${dec(r.ep, 'completo')}² ≈ ${dec(r.exato, casas)}.`],
           ['Arredondar para cima', `A amostra mínima é de ${fmt(r.n, 0)} observações.`]
         ]
       });
@@ -123,8 +128,8 @@
         aviso: r.aviso,
         passos: [
           ['Escolher o valor crítico', `Para ${confianca(form)}% de confiança, usamos Z = ${fmt(z, 3)}.`],
-          ['Calcular a margem de erro', `Em = ${fmt(z, 3)} × ${fmt(r.desvio)} ÷ √${fmt(r.n, 0)} = ${dec(r.margem, casas)}.`],
-          ['Encontrar os dois limites', `${fmt(r.media)} − ${dec(r.margem, casas)} = ${dec(r.inferior, casas)}; ${fmt(r.media)} + ${dec(r.margem, casas)} = ${dec(r.superior, casas)}.`]
+          ['Calcular a margem de erro', `Em = ${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ √${fmt(r.n, 0)} ≈ ${dec(r.margem, casas)}.`],
+          ['Encontrar os dois limites', `${dec(r.media, 'completo')} − ${dec(r.margem, 'completo')} ≈ ${dec(r.inferior, casas)}; ${dec(r.media, 'completo')} + ${dec(r.margem, 'completo')} ≈ ${dec(r.superior, casas)}.`]
         ]
       });
     }
@@ -134,8 +139,8 @@
       const r = M.intervaloProporcao({confianca: confianca(form), sucessos: form.elements.namedItem('sucessos').value, n: lido(form, 'n', 'Tamanho da amostra'), padrao: padraoTexto ? lido(form, 'padrao', 'Padrão estabelecido') : null});
       let comparacao = '';
       if (r.padrao !== null) comparacao = r.atendePadrao
-        ? `O limite superior está abaixo do padrão de ${fmt(r.padrao)}%. Pelo critério informado, a condição foi atendida.`
-        : `O intervalo não fica inteiro abaixo do padrão de ${fmt(r.padrao)}%. Não dá para garantir a condição.`;
+        ? `Considerando os valores sem arredondar, o limite superior está abaixo do padrão de ${dec(r.padrao, 'completo')}%. Pelo critério informado, a condição foi atendida.`
+        : `Considerando os valores sem arredondar, o intervalo não fica inteiro abaixo do padrão de ${dec(r.padrao, 'completo')}%. Não dá para garantir a condição.`;
       return (casas = 2) => ({
         grafico: { inferior: pct(r.inferior, casas), centro: pct(r.p, casas), superior: pct(r.superior, casas), rotulo: 'Proporção amostral', pontual: r.inferior === r.superior },
         titulo: 'Intervalo de confiança', valor: `${pct(r.inferior, casas)} a ${pct(r.superior, casas)}`,
@@ -145,9 +150,9 @@
         passos: [
           // Se o exercício já der a porcentagem, basta dividir por 100, sem descobrir uma contagem.
           ['Encontrar a proporção', r.percentualInformado === null
-            ? `p = ${fmt(r.sucessos, 0)} ÷ ${fmt(r.n, 0)} = ${fmt(r.p, 6)}; complemento = ${fmt(r.q, 6)}.`
-            : `p = ${fmt(r.percentualInformado, 10)}% ÷ 100 = ${fmt(r.p, 10)}; complemento = ${fmt(r.q, 10)}.`],
-          ['Calcular a margem de erro', `Ep = ${fmt(z, 3)} × √(${fmt(r.p, 6)} × ${fmt(r.q, 6)} ÷ ${fmt(r.n, 0)}) = ${dec(r.margem, casas)}.`],
+            ? `p = ${fmt(r.sucessos, 0)} ÷ ${fmt(r.n, 0)} = ${dec(r.p, 'completo')}; complemento = ${dec(r.q, 'completo')}.`
+            : `p = ${dec(r.percentualInformado, 'completo')}% ÷ 100 = ${dec(r.p, 'completo')}; complemento = ${dec(r.q, 'completo')}.`],
+          ['Calcular a margem de erro', `Ep = ${fmt(z, 3)} × √(${dec(r.p, 'completo')} × ${dec(r.q, 'completo')} ÷ ${fmt(r.n, 0)}) ≈ ${dec(r.margem, casas)}.`],
           ['Encontrar os limites', `Subtraímos e somamos a margem à proporção: ${pct(r.inferior, casas)} a ${pct(r.superior, casas)}.`]
         ]
       });
@@ -157,12 +162,12 @@
       const r = M.diminuirErro({confianca: confianca(form), desvio: lido(form, 'desvio', 'Desvio-padrão'), n: lido(form, 'n', 'Tamanho atual da amostra'), fator: lido(form, 'k', 'Dividir o erro por')});
       return (casas = 2) => ({
         titulo: 'Novo tamanho da amostra', valor: `n = ${fmt(r.novoN, 0)}`,
-        frase: `O cálculo resulta em ${dec(r.exato, casas)} observações antes de arredondar para cima. Para dividir o erro por ${fmt(r.fator)} é preciso aumentar a amostra em ${fmt(r.adicionar, 0)} observações, chegando a ${fmt(r.novoN, 0)} no total.`,
+        frase: `O cálculo resulta em ${dec(r.exato, casas)} observações antes de arredondar para cima. Para dividir o erro por ${dec(r.fator, 'completo')} é preciso aumentar a amostra em ${fmt(r.adicionar, 0)} observações, chegando a ${fmt(r.novoN, 0)} no total.`,
         extras: [['Amostra atual', fmt(r.n, 0)], ['Antes de arredondar', dec(r.exato, casas)], ['Erro atual', dec(r.erroAtual, casas)], ['Novo erro', dec(r.novoErro, casas)], ['Observações adicionais', fmt(r.adicionar, 0)]],
         passos: [
-          ['Calcular o erro atual', `Em = ${fmt(z, 3)} × ${fmt(r.desvio)} ÷ √${fmt(r.n, 0)} = ${dec(r.erroAtual, casas)}.`],
-          ['Diminuir o erro', `Novo Em = ${dec(r.erroAtual, casas)} ÷ ${fmt(r.fator)} = ${dec(r.novoErro, casas)}.`],
-          ['Recalcular a amostra', `Novo n = (${fmt(z, 3)} × ${fmt(r.desvio)} ÷ ${dec(r.novoErro, casas)})² ≈ ${dec(r.exato, casas)}. Arredondamos para ${fmt(r.novoN, 0)}.`]
+          ['Calcular o erro atual', `Em = ${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ √${fmt(r.n, 0)} ≈ ${dec(r.erroAtual, casas)}.`],
+          ['Diminuir o erro', `Novo Em = ${dec(r.erroAtual, 'completo')} ÷ ${dec(r.fator, 'completo')} ≈ ${dec(r.novoErro, casas)}.`],
+          ['Recalcular a amostra', `Novo n = (${fmt(z, 3)} × ${dec(r.desvio, 'completo')} ÷ ${dec(r.novoErro, 'completo')})² ≈ ${dec(r.exato, casas)}. Arredondamos para ${fmt(r.novoN, 0)}.`]
         ]
       });
     }
@@ -215,6 +220,9 @@
     const relatorio = colocarTexto('article', 'relatorio-impressao', '');
     relatorio.append(colocarTexto('p', 'relatorio-marca', 'ESTATÍSTICA APLICADA • RESOLUÇÃO'));
     relatorio.append(colocarTexto('h2', '', secao.querySelector('h2').textContent));
+    // O PDF identifica a opção escolhida e usa os mesmos números da tela.
+    const precisaoAtiva = painel.querySelector('.precisao[aria-pressed="true"]');
+    if (precisaoAtiva) relatorio.append(colocarTexto('p', 'relatorio-precisao', 'Precisão: ' + precisaoAtiva.textContent));
 
     // Copia os nomes dos campos e os valores que foram usados na conta.
     const dados = colocarTexto('section', 'relatorio-bloco', '');
@@ -264,7 +272,7 @@
   }
 
   // A resposta é uma função que lembra os valores da conta original.
-  // 2 e 10 são as quantidades de casas decimais disponíveis para visualização.
+  // As três opções são 0 casas, 2 casas (padrão) e precisão completa.
   function mostrarResultado(secao, criarResposta, casas = 2, aberto = false, focar = false) {
     const resposta = criarResposta(casas);
     const painel = secao.querySelector('.resultado');
@@ -272,12 +280,23 @@
     const resumo = colocarTexto('div', 'resposta-superior', 'RESPOSTA DO EXERCÍCIO');
     const valor = colocarTexto('strong', 'numero-resposta', resposta.valor);
     const frase = colocarTexto('p', 'frase-resposta', resposta.frase);
-    // O botão alterna a precisão sem reler os campos nem recalcular a fórmula.
-    const botao = colocarTexto('button', 'precisao', casas === 2 ? 'Mostrar mais casas decimais' : 'Voltar a 2 casas decimais');
-    botao.type = 'button';
-    botao.setAttribute('aria-pressed', String(casas !== 2));
-    botao.addEventListener('click', () => mostrarResultado(secao, criarResposta, casas === 2 ? 10 : 2, detalhes.open, true));
-    painel.append(resumo, valor, botao, frase);
+    // Cada botão seleciona uma apresentação do mesmo resultado, sem refazer a conta.
+    const controles = colocarTexto('div', 'precisao-opcoes', '');
+    controles.setAttribute('role', 'group');
+    controles.setAttribute('aria-label', 'Arredondamento dos resultados');
+    let botaoAtivo;
+    for (const [modo, nome] of [[0, 'Sem casas decimais'], [2, '2 casas decimais'], ['completo', 'Valor completo']]) {
+      const botao = colocarTexto('button', 'precisao', nome);
+      botao.type = 'button';
+      botao.dataset.precisao = String(modo);
+      botao.setAttribute('aria-pressed', String(casas === modo));
+      if (casas === modo) botaoAtivo = botao;
+      botao.addEventListener('click', () => {
+        if (casas !== modo) mostrarResultado(secao, criarResposta, modo, detalhes.open, true);
+      });
+      controles.append(botao);
+    }
+    painel.append(resumo, valor, controles, frase);
 
     if (resposta.extras?.length) {
       const tabela = colocarTexto('div', 'extras', '');
@@ -315,7 +334,7 @@
     painel.append(imprimir, criarRelatorio(secao, painel, lista));
     painel.hidden = false;
     // Devolve o foco ao botão para quem navega com o teclado.
-    if (focar) botao.focus({preventScroll:true});
+    if (focar) botaoAtivo?.focus({preventScroll:true});
   }
 
   // A entrada mudou: esconde o resultado anterior para não confundir cálculos.

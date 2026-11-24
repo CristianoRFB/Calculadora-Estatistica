@@ -199,3 +199,9 @@ h1 { font-size:clamp(27px,3.8vw,38px); letter-spacing:-1.1px; line-height:1.2; m
   .relatorio-impressao .passos li { padding:2pt 0 5pt 4pt; break-inside:avoid; }
   .relatorio-impressao .passos li p { margin:2pt 0 0; font-size:9pt; }
 }
+
+/* Seletor de precisão: três escolhas, com destaque azul na opção selecionada. */
+.precisao-opcoes { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 9px; }
+.precisao-opcoes .precisao { margin:0; min-height:36px; }
+.precisao-opcoes .precisao[aria-pressed="true"] { background:var(--azul-claro); border-color:var(--azul); color:var(--azul-forte); }
+.relatorio-precisao { font-size:9pt; color:var(--secundario); margin:0 0 8pt; }
