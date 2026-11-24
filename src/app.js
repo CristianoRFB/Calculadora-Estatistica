@@ -128,7 +128,7 @@
     // IP: proporção menos a margem e proporção mais a margem.
     if (id === 'ip') {
       const padraoTexto = form.elements.namedItem('padrao').value.trim();
-      const r = M.intervaloProporcao({confianca: confianca(form), sucessos: form.elements.namedItem('sucessos').value, n: lido(form, 'n', 'Tamanho da amostra'), padrao: padraoTexto ? lido(form, 'padrao', 'Padrão aceitável') : null});
+      const r = M.intervaloProporcao({confianca: confianca(form), sucessos: form.elements.namedItem('sucessos').value, n: lido(form, 'n', 'Tamanho da amostra'), padrao: padraoTexto ? lido(form, 'padrao', 'Padrão estabelecido') : null});
       let comparacao = '';
       if (r.padrao !== null) comparacao = r.atendePadrao
         ? `O limite superior está abaixo do padrão de ${fmt(r.padrao)}%. Pelo critério informado, a condição foi atendida.`

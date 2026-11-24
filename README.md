@@ -9,7 +9,7 @@ Site de estudo para os **cinco assuntos** presentes no `index.html` de referênc
 | Tamanho da amostra — média | Confiança, desvio-padrão populacional σ, erro máximo Em | Tamanho mínimo n |
 | Tamanho da amostra — proporção | Confiança, proporção p (%), erro Ep (%); opção p desconhecido | Tamanho mínimo n |
 | Intervalo de confiança — média | Confiança, média x̄, desvio σ ou s, n | Margem Em, limites do intervalo |
-| Intervalo de confiança — proporção | Confiança, quantidade com a característica, total n, padrão aceitável opcional | Proporção, complemento, margem Ep, limites, comparação opcional |
+| Intervalo de confiança — proporção | Confiança, quantidade com a característica, total n, padrão estabelecido opcional | Proporção, complemento, margem Ep, limites, comparação opcional |
 | Diminuir o erro | Confiança, desvio σ ou s, amostra atual n, fator de redução k | Erro atual, novo erro, nova amostra e observações adicionais |
 
 **Não inclui:** correlação, regressão, escore Z, histograma, quartis, boxplot, base de planilhas ou testes formais de hipótese. Isso é uma escolha consciente de escopo, não um erro. Logo, a V1 não resolve todos os 44 exercícios que haviam sido mapeados na versão antiga.

@@ -139,7 +139,7 @@
     // Na entrada percentual, p vezes n serve apenas para avaliar a aproximação.
     if (p * n < 5 || q * n < 5) avisos.push('Poucos casos em um dos grupos: este método de aproximação pode não ser adequado.');
     if (inferior < 0 || superior > 1) avisos.push('A fórmula produziu um limite fora de 0% a 100%. Confira a adequação do método.');
-    if (padrao !== null && (padrao < 0 || padrao > 100)) throw new Error('Padrão aceitável: use uma porcentagem entre 0 e 100.');
+    if (padrao !== null && (padrao < 0 || padrao > 100)) throw new Error('Padrão estabelecido: use uma porcentagem entre 0 e 100.');
     return {z, n, sucessos: dado.sucessos, percentualInformado: dado.percentualInformado, p, q, margem, inferior, superior, padrao, avisos,
       atendePadrao: padrao === null ? null : superior * 100 < padrao};
   }
